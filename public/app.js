@@ -57,10 +57,18 @@ function voiceRecorder(accountId, onSaved) {
   let finalText = '';
   let rec = null;
 
-  const review = (text) => {
+  const review = async (text) => {
+    let pickerHtml = '';
+    if (!accountId) {
+      let accounts = [];
+      try { const data = await api('/api/accounts?sort=name'); accounts = (data && data.accounts) || []; } catch (_) {}
+      pickerHtml = `<label class="reclabel">Attach to account</label>
+        <select id="acctSel" class="recsel">${accounts.map((a) => `<option value="${a.account_id}">${esc(a.name)}</option>`).join('')}</select>`;
+    }
     sheet.innerHTML = `
       <h3>Review the note</h3>
       <div class="sub2">Edit anything, then save it to the timeline.</div>
+      ${pickerHtml}
       <textarea class="rectext" id="rt">${esc(text)}</textarea>
       <button class="aibtn" id="ai">${I.spark} Clean it up with AI</button>
       <div class="sheetbtns"><button class="ghost" id="cancel">Cancel</button><button class="go" id="save">Save to timeline</button></div>`;
@@ -79,8 +87,10 @@ function voiceRecorder(accountId, onSaved) {
     sheet.querySelector('#save').addEventListener('click', async () => {
       const body = sheet.querySelector('#rt').value.trim();
       if (!body) { close(); return; }
+      const accId = accountId || (sheet.querySelector('#acctSel') && sheet.querySelector('#acctSel').value);
+      if (!accId) { alert('Pick an account to attach this to.'); return; }
       try {
-        await api('/api/accounts/' + accountId + '/activity', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'call', body }) });
+        await api('/api/accounts/' + accId + '/activity', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'call', body }) });
         close(); if (onSaved) onSaved();
       } catch (e) { alert(e.message); }
     });
@@ -216,6 +226,9 @@ const pages = {
       more.addEventListener('click', () => { list.innerHTML = ka.map(rowHtml).join(''); });
       list.parentElement.appendChild(more);
     }
+
+    document.getElementById('app').insertAdjacentHTML('beforeend', `<button class="fab mic" id="micFabHome" title="Record a call">${I.mic}</button>`);
+    document.getElementById('micFabHome').addEventListener('click', () => voiceRecorder(null, () => pages.home()));
   },
 
   async accounts() {

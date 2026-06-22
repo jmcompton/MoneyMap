@@ -252,3 +252,5 @@ body { background: radial-gradient(1200px 500px at 50% -200px, #e9f5ef 0%, var(-
 .sheetbtns .gold { background: linear-gradient(135deg, #e8c66a, #b8860b); color: #fff; }
 .sheetbtns .go { background: var(--green); color: #fff; }
 .aibtn { width: 100%; padding: 11px; border: 1px dashed var(--indigo); background: var(--indigo-soft); color: var(--indigo); border-radius: 12px; font-weight: 650; font-size: 14px; cursor: pointer; margin-top: 10px; }
+.reclabel { display: block; font-size: 13px; color: var(--muted); margin: 4px 2px 6px; font-weight: 600; }
+.recsel { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 12px; font-size: 16px; background: #fff; color: var(--ink); margin-bottom: 10px; }
