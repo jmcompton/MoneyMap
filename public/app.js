@@ -39,6 +39,8 @@ const I = {
   up: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>',
   down: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
   x: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  pin: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>',
+  flag: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4M4 4h13l-2 4 2 4H4"/></svg>',
 };
 
 function rowHtml(a) {
@@ -352,131 +354,210 @@ const pages = {
 
   async planner() {
     const app = document.getElementById('app');
-    const state = { offset: 0, active: null };
+    const state = { offset: 0, leadDay: null, railOpen: true };
     const to24 = (s) => { if (!s) return ''; const m = s.match(/(\d+):(\d+)\s*(AM|PM)/i); if (!m) return ''; let h = +m[1] % 12; if (/PM/i.test(m[3])) h += 12; return String(h).padStart(2, '0') + ':' + m[2]; };
     const to12 = (s) => { if (!s) return ''; const [h, mm] = s.split(':').map(Number); const ap = h < 12 ? 'AM' : 'PM'; const h12 = h % 12 || 12; return `${h12}:${String(mm).padStart(2, '0')} ${ap}`; };
     const post = (path, body) => api(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const fullDay = { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday' };
+    let drag = null; // { label, city, account_id }
 
     const render = async () => {
       const d = await api('/api/plan?offset=' + state.offset);
       if (!d) return;
-      if (!state.active || !d.days.find((x) => x.date === state.active)) {
-        const today = d.days.find((x) => x.is_today);
-        const working = d.days.find((x) => x.working);
-        state.active = (today || working || d.days[0]).date;
+      const workingDays = d.days.filter((x) => x.working);
+      if (!state.leadDay || !d.days.find((x) => x.date === state.leadDay && x.working)) {
+        const today = d.days.find((x) => x.is_today && x.working);
+        state.leadDay = (today || workingDays[0] || d.days[0]).date;
       }
-      const day = d.days.find((x) => x.date === state.active);
+
+      // ---- Week board: every day, side by side, scroll across ----
+      const col = (day) => {
+        const head = `<div class="wc-head ${day.is_today ? 'today' : ''}">
+          <div><div class="wc-dow">${day.weekday}</div><div class="wc-date">${esc(day.label)}</div></div>
+          <button class="wc-toggle ${day.working ? 'on' : ''}" data-date="${day.date}" title="Working / day off"><span></span></button>
+        </div>`;
+        if (!day.working) {
+          return `<div class="wcol off" data-date="${day.date}">${head}<div class="wc-off">Day off</div></div>`;
+        }
+        const stops = day.stops.map((s, i) => {
+          const personal = s.kind === 'personal';
+          return `<div class="wstop ${personal ? 'personal' : ''} ${s.status === 'done' ? 'done' : ''}" draggable="${personal ? 'false' : 'true'}" data-id="${s.id}" data-date="${day.date}">
+            <div class="ws-top">
+              <span class="ws-ic">${personal ? I.pin : (s.account_id ? I.route : I.spark)}</span>
+              <input type="time" class="ws-time" value="${to24(s.arrival_time)}" data-id="${s.id}" />
+              <div class="ws-move"><button class="ws-up" data-id="${s.id}" data-date="${day.date}" ${i === 0 ? 'disabled' : ''}>${I.up}</button><button class="ws-dn" data-id="${s.id}" data-date="${day.date}" ${i === day.stops.length - 1 ? 'disabled' : ''}>${I.down}</button></div>
+              <button class="ws-rem" data-id="${s.id}">${I.x}</button>
+            </div>
+            <div class="ws-name">${esc(s.label)}</div>
+            ${(s.address || s.city) ? `<div class="ws-sub">${esc(s.address || s.city)}</div>` : ''}
+          </div>`;
+        }).join('');
+        return `<div class="wcol" data-date="${day.date}">
+          ${head}
+          <input class="wc-anchor" list="cities" data-date="${day.date}" placeholder="Anchor city" value="${esc(day.anchor_city)}" />
+          <div class="wc-pill start" data-edit="start" data-date="${day.date}"><span>${I.home}</span>${day.start_point ? esc(day.start_point) : 'Set start'}</div>
+          <div class="wc-drop">
+            ${stops || '<div class="wc-empty">Drag accounts here, or add a lead below.</div>'}
+          </div>
+          <button class="wc-add personal" data-date="${day.date}">${I.plus} Personal time</button>
+          <div class="wc-pill end" data-edit="end" data-date="${day.date}"><span>${I.flag}</span>${day.end_point ? esc(day.end_point) : 'Set end zone'}</div>
+        </div>`;
+      };
+
+      const board = d.days.map(col).join('');
       const cityOpts = d.cities.map((c) => `<option value="${esc(c)}"></option>`).join('');
-
-      const dayPicker = d.days.map((x) => {
-        const hasStops = x.stops.length > 0;
-        return `<button class="dchip ${x.date === state.active ? 'active' : ''} ${x.working ? 'working' : ''}" data-date="${x.date}">
-          <span class="dw">${x.weekday}</span><span class="dd">${x.label.split(' ')[1]}</span>
-          ${x.is_today ? '<span class="dtoday"></span>' : (hasStops ? '<span class="ddot"></span>' : '')}</button>`;
-      }).join('');
-
-      let dayBody = '';
-      if (!day.working) {
-        dayBody = `<div class="panel"><div style="padding:22px 16px;text-align:center">
-          <div style="color:var(--muted);font-size:14px;margin-bottom:12px">Day off. Not planning to work this day.</div>
-          <button class="btn" id="planDay" style="max-width:220px;margin:0 auto">Plan this day</button></div></div>`;
-      } else {
-        const stopsHtml = day.stops.length ? day.stops.map((s, i) => `
-          <div class="pstop" draggable="true" data-id="${s.id}">
-            <span class="grip">${I.grip}</span>
-            <input type="time" class="ptime" value="${to24(s.arrival_time)}" data-id="${s.id}" />
-            <div class="pinfo"><div class="pn">${esc(s.label)}</div><div class="pc">${esc(s.city || '')}</div></div>
-            <div class="pmove"><button class="pbtn up" data-id="${s.id}" ${i === 0 ? 'disabled' : ''}>${I.up}</button><button class="pbtn down" data-id="${s.id}" ${i === day.stops.length - 1 ? 'disabled' : ''}>${I.down}</button><button class="pbtn rem" data-id="${s.id}">${I.x}</button></div>
-          </div>`).join('') : `<div style="padding:14px 16px;color:var(--muted);font-size:14px">No stops yet. Set an anchor city and tap "Auto-plan," or add them yourself.</div>`;
-
-        dayBody = `
-          <div class="panel" style="padding:14px 16px">
-            <div class="switchrow"><div><div style="font-weight:650">Working this day</div><div style="color:var(--muted);font-size:12.5px">Turn off to mark a day off.</div></div>
-              <button class="switch on" id="workToggle"><span></span></button></div>
-            <label class="reclabel">Anchor city (where you'll be)</label>
-            <input id="anchor" list="cities" class="recsel" placeholder="e.g. Cullman" value="${esc(day.anchor_city)}" />
-            <datalist id="cities">${cityOpts}</datalist>
-            <div class="tworow"><div><label class="reclabel">Start</label><input id="startp" class="recsel" placeholder="Home" value="${esc(day.start_point)}" /></div>
-              <div><label class="reclabel">End</label><input id="endp" class="recsel" placeholder="Home" value="${esc(day.end_point)}" /></div></div>
-          </div>
-
-          ${day.anchor_city ? `<div class="panel"><div class="head"><span class="ic indigo">${I.spark}</span><h2>Suggested near ${esc(day.anchor_city)}</h2><button class="autofill" id="autofill">Auto-plan</button></div><div id="suggestList"><div style="padding:12px 16px;color:var(--muted);font-size:13px">Loading…</div></div></div>` : ''}
-
-          <div class="panel">
-            <div class="head"><span class="ic">${I.route}</span><h2>Route</h2><span class="count">${day.stops.length} stop${day.stops.length === 1 ? '' : 's'}</span></div>
-            ${day.start_point ? `<div class="endpoint start"><span class="epdot"></span>Start · ${esc(day.start_point)}</div>` : ''}
-            <div id="stopList">${stopsHtml}</div>
-            ${day.end_point ? `<div class="endpoint end"><span class="epdot"></span>End · ${esc(day.end_point)}</div>` : ''}
-          </div>
-          <div class="planhint">${I.spark} These stops become <b>Today's Route</b> on your home screen.</div>`;
-      }
+      const leadDayChips = workingDays.map((x) => `<button class="ldchip ${x.date === state.leadDay ? 'active' : ''}" data-date="${x.date}">${x.weekday}</button>`).join('');
 
       app.innerHTML = `
-        <header class="top"><div><h1>Planner</h1><div class="sub">Plan where you'll be, let the route build itself.</div></div></header>
+        <header class="top"><div><h1>Planner</h1><div class="sub">Your whole week. Drag accounts in, let the route fill itself.</div></div></header>
         <div class="weeknav"><button class="wbtn" id="prevW">${I.back}</button><div class="wlabel">${esc(d.week_label)}</div><button class="wbtn" id="nextW" style="transform:rotate(180deg)">${I.back}</button></div>
-        <div class="daypick">${dayPicker}</div>
-        <div class="dayhead">${day.weekday === 'Mon' ? 'Monday' : day.weekday === 'Tue' ? 'Tuesday' : day.weekday === 'Wed' ? 'Wednesday' : day.weekday === 'Thu' ? 'Thursday' : day.weekday === 'Fri' ? 'Friday' : 'Saturday'}, ${esc(day.label)} ${day.is_today ? '<span class="badge A">Today</span>' : ''}</div>
-        ${dayBody}`;
+        <datalist id="cities">${cityOpts}</datalist>
 
-      document.getElementById('prevW').addEventListener('click', () => { state.offset -= 1; state.active = null; render(); });
-      document.getElementById('nextW').addEventListener('click', () => { state.offset += 1; state.active = null; render(); });
-      document.querySelectorAll('.dchip').forEach((c) => c.addEventListener('click', () => { state.active = c.dataset.date; render(); }));
+        <div class="weekboard">${board}</div>
+        <div class="boardhint">${I.spark} Each day's stops become <b>Today's Route</b> on your home screen.</div>
 
-      const saveDay = (working) => post('/api/plan/day', {
-        plan_date: day.date, working,
-        anchor_city: (document.getElementById('anchor') || {}).value || day.anchor_city,
-        start_point: (document.getElementById('startp') || {}).value || '',
-        end_point: (document.getElementById('endp') || {}).value || '',
+        <div class="railwrap">
+          <div class="rail-head"><span class="ic amber">${I.alert}</span><h2>Least-touched accounts</h2><span class="count" id="railCount">…</span></div>
+          <div class="rail" id="rail"><div class="rail-load">Loading…</div></div>
+        </div>
+
+        <div class="panel leadsearch">
+          <div class="head"><span class="ic indigo">${I.spark}</span><h2>Leads along your route</h2></div>
+          <div class="ls-sub">Pick a day. We surface leads near your morning stop early, and near your end zone for the trip home.</div>
+          <div class="lddays">${leadDayChips || '<span style="color:var(--muted);font-size:13px;padding:4px 2px">Turn on a working day to search.</span>'}</div>
+          <div id="leadResults"><div class="rail-load">Loading…</div></div>
+        </div>`;
+
+      // ---- week nav ----
+      document.getElementById('prevW').addEventListener('click', () => { state.offset -= 1; state.leadDay = null; render(); });
+      document.getElementById('nextW').addEventListener('click', () => { state.offset += 1; state.leadDay = null; render(); });
+
+      const dayOf = (date) => d.days.find((x) => x.date === date);
+      const saveDay = (date, patch) => { const day = dayOf(date); return post('/api/plan/day', { plan_date: date, working: patch.working ?? day.working, anchor_city: patch.anchor_city ?? day.anchor_city, start_point: patch.start_point ?? day.start_point, end_point: patch.end_point ?? day.end_point }); };
+
+      // ---- working toggles ----
+      document.querySelectorAll('.wc-toggle').forEach((b) => b.addEventListener('click', async () => {
+        const day = dayOf(b.dataset.date);
+        await saveDay(b.dataset.date, { working: !day.working, start_point: day.start_point || 'Home — Birmingham, AL', end_point: day.end_point || 'Home — Birmingham, AL' });
+        render();
+      }));
+
+      // ---- anchor city (debounced) ----
+      let at;
+      document.querySelectorAll('.wc-anchor').forEach((inp) => inp.addEventListener('change', () => { clearTimeout(at); at = setTimeout(async () => { await saveDay(inp.dataset.date, { anchor_city: inp.value }); render(); }, 400); }));
+
+      // ---- start / end pills (tap to edit) ----
+      document.querySelectorAll('.wc-pill').forEach((p) => p.addEventListener('click', async () => {
+        const which = p.dataset.edit; const day = dayOf(p.dataset.date);
+        const cur = which === 'start' ? day.start_point : day.end_point;
+        const label = which === 'start' ? 'Where do you start the day?' : 'Where do you end the day (your end zone)?';
+        const val = prompt(label, cur || 'Home — Birmingham, AL');
+        if (val == null) return;
+        await saveDay(p.dataset.date, which === 'start' ? { start_point: val } : { end_point: val });
+        render();
+      }));
+
+      // ---- personal time ----
+      document.querySelectorAll('.wc-add.personal').forEach((b) => b.addEventListener('click', async () => {
+        const labelv = prompt('Personal block (e.g. Pick up the girls, Lunch)'); if (!labelv) return;
+        const timev = prompt('Time? (e.g. 3:30 PM) — leave blank to skip', '');
+        const addr = prompt('Address? (so the route plans around it) — optional', '');
+        await post('/api/plan/stop', { plan_date: b.dataset.date, label: labelv, kind: 'personal', city: addr || null, address: addr || null, arrival_time: timev || null });
+        render();
+      }));
+
+      // ---- stop controls: time, remove, up/down ----
+      document.querySelectorAll('.ws-time').forEach((inp) => inp.addEventListener('change', () => post('/api/plan/stop/update', { id: +inp.dataset.id, arrival_time: to12(inp.value) })));
+      document.querySelectorAll('.ws-rem').forEach((b) => b.addEventListener('click', async () => { await post('/api/plan/stop/delete', { id: +b.dataset.id }); render(); }));
+      const moveWithin = async (date, id, dir) => {
+        const day = dayOf(date); const ids = day.stops.map((s) => s.id); const i = ids.indexOf(id);
+        const j = i + dir; if (j < 0 || j >= ids.length) return;
+        [ids[i], ids[j]] = [ids[j], ids[i]]; await post('/api/plan/reorder', { ordered_ids: ids }); render();
+      };
+      document.querySelectorAll('.ws-up').forEach((b) => b.addEventListener('click', () => moveWithin(b.dataset.date, +b.dataset.id, -1)));
+      document.querySelectorAll('.ws-dn').forEach((b) => b.addEventListener('click', () => moveWithin(b.dataset.date, +b.dataset.id, +1)));
+
+      // ---- drag a stop to reorder within its day (desktop) ----
+      document.querySelectorAll('.wstop[draggable="true"]').forEach((row) => {
+        row.addEventListener('dragstart', (e) => { e.stopPropagation(); drag = { reorder: true, id: +row.dataset.id, date: row.dataset.date }; row.classList.add('dragging'); });
+        row.addEventListener('dragend', () => { row.classList.remove('dragging'); drag = null; });
+        row.addEventListener('dragover', (e) => e.preventDefault());
+        row.addEventListener('drop', async (e) => {
+          e.preventDefault(); e.stopPropagation();
+          if (!drag) return;
+          const day = dayOf(row.dataset.date); const ids = day.stops.map((s) => s.id);
+          if (drag.reorder && drag.date === row.dataset.date) {
+            const from = ids.indexOf(drag.id); const to = ids.indexOf(+row.dataset.id);
+            if (from < 0 || to < 0) return;
+            ids.splice(from, 1); ids.splice(to, 0, drag.id);
+            await post('/api/plan/reorder', { ordered_ids: ids }); render();
+          }
+        });
       });
 
-      if (!day.working) {
-        document.getElementById('planDay').addEventListener('click', async () => { await post('/api/plan/day', { plan_date: day.date, working: true, start_point: 'Home', end_point: 'Home' }); render(); });
-        return;
-      }
+      // ---- day columns are drop zones for rail/lead cards ----
+      document.querySelectorAll('.wcol').forEach((c) => {
+        c.addEventListener('dragover', (e) => { if (drag && !drag.reorder) { e.preventDefault(); c.classList.add('dropping'); } });
+        c.addEventListener('dragleave', () => c.classList.remove('dropping'));
+        c.addEventListener('drop', async (e) => {
+          c.classList.remove('dropping');
+          if (!drag || drag.reorder) return;
+          e.preventDefault();
+          await post('/api/plan/stop', { plan_date: c.dataset.date, account_id: drag.account_id || null, label: drag.label, city: drag.city || null });
+          drag = null; render();
+        });
+      });
 
-      document.getElementById('workToggle').addEventListener('click', async () => { await saveDay(false); render(); });
-      let t;
-      const onField = () => { clearTimeout(t); t = setTimeout(async () => { await saveDay(true); render(); }, 600); };
-      document.getElementById('anchor').addEventListener('change', onField);
-      document.getElementById('startp').addEventListener('change', onField);
-      document.getElementById('endp').addEventListener('change', onField);
+      // ---- least-touched rail ----
+      const rail = document.getElementById('rail');
+      const acc = await api('/api/accounts?sort=overdue');
+      const onBoard = new Set(d.days.flatMap((x) => x.stops.map((s) => (s.label || '').toLowerCase())));
+      const railItems = (acc ? acc.accounts : []).filter((a) => !onBoard.has(a.name.toLowerCase())).slice(0, 12);
+      document.getElementById('railCount').textContent = railItems.length;
+      const addMenu = (a) => workingDays.map((x) => `<button class="rmini" data-date="${x.date}">${x.weekday}</button>`).join('');
+      rail.innerHTML = railItems.length ? railItems.map((a, i) => `
+        <div class="rcard" draggable="true" data-i="${i}">
+          <div class="rc-name">${esc(a.name)}</div>
+          <div class="rc-meta">${esc(a.city || '')}${a.days_since_contact != null ? ` · ${a.days_since_contact}d quiet` : ''}</div>
+          <div class="rc-add"><button class="rc-addbtn" data-i="${i}">${I.plus} Add to…</button><div class="rc-days" data-i="${i}">${addMenu(a)}</div></div>
+        </div>`).join('') : '<div class="rail-load">Everything is on the board. Nice.</div>';
+      rail.querySelectorAll('.rcard').forEach((card) => {
+        const a = railItems[+card.dataset.i];
+        card.addEventListener('dragstart', () => { drag = { label: a.name, city: a.city, account_id: a.account_id }; card.classList.add('dragging'); });
+        card.addEventListener('dragend', () => { card.classList.remove('dragging'); });
+      });
+      rail.querySelectorAll('.rc-addbtn').forEach((b) => b.addEventListener('click', () => {
+        const menu = rail.querySelector(`.rc-days[data-i="${b.dataset.i}"]`); menu.classList.toggle('open');
+      }));
+      rail.querySelectorAll('.rc-days .rmini').forEach((b) => b.addEventListener('click', async (e) => {
+        const a = railItems[+e.target.closest('.rc-days').dataset.i];
+        await post('/api/plan/stop', { plan_date: b.dataset.date, account_id: a.account_id, label: a.name, city: a.city });
+        render();
+      }));
 
-      if (day.anchor_city) {
-        const sl = document.getElementById('suggestList');
-        const sug = await api(`/api/plan/suggest?city=${encodeURIComponent(day.anchor_city)}&plan_date=${day.date}`);
-        if (sl && sug) {
-          sl.innerHTML = sug.candidates.length ? sug.candidates.map((c, i) => `
-            <div class="scard"><div class="pinfo"><div class="pn">${esc(c.label)}</div><div class="pc">${esc(c.reason)}</div></div>
-            <button class="addbtn" data-i="${i}">${I.plus} Add</button></div>`).join('') : `<div style="padding:12px 16px;color:var(--muted);font-size:13px">No more nearby suggestions for ${esc(day.anchor_city)}.</div>`;
-          sl.querySelectorAll('.addbtn').forEach((b) => b.addEventListener('click', async () => {
-            const c = sug.candidates[+b.dataset.i];
-            await post('/api/plan/stop', { plan_date: day.date, account_id: c.account_id || null, label: c.label, city: c.city });
+      // ---- route-aware lead search ----
+      document.querySelectorAll('.ldchip').forEach((b) => b.addEventListener('click', () => { state.leadDay = b.dataset.date; render(); }));
+      const lr = document.getElementById('leadResults');
+      if (state.leadDay && lr) {
+        const ls = await api('/api/plan/leadsearch?plan_date=' + state.leadDay);
+        const grp = (title, sub, leads) => leads && leads.length ? `
+          <div class="lsgroup"><div class="lsg-title">${title}</div><div class="lsg-sub">${sub}</div>
+          ${leads.map((l, i) => `<div class="lcard"><div class="lc-info"><div class="lc-name">${esc(l.name)}</div><div class="lc-meta">${esc(l.city)} · ${l.miles} mi · ~$${Number(l.est_value).toLocaleString('en-US')}/yr</div><div class="lc-reason">${esc(l.reason)}</div></div><button class="lc-add" data-g="${title}" data-i="${i}">${I.plus}</button></div>`).join('')}</div>` : '';
+        if (!ls || !ls.ready) {
+          lr.innerHTML = `<div class="rail-load">Set this day's anchor city or first stop, then we can search.</div>`;
+        } else {
+          const mTitle = `Right after your morning stop`;
+          const hTitle = `On your way home`;
+          const html = grp(mTitle, `Near ${esc(ls.morning_city || 'your first stop')}`, ls.morning) + grp(hTitle, `Near ${esc(ls.endpoint_city || 'home')}`, ls.home);
+          lr.innerHTML = html || '<div class="rail-load">No leads on this route yet. Add more leads or change the day.</div>';
+          const pick = (title, i) => (title === mTitle ? ls.morning : ls.home)[i];
+          lr.querySelectorAll('.lc-add').forEach((b) => b.addEventListener('click', async () => {
+            const l = pick(b.dataset.g, +b.dataset.i);
+            await post('/api/plan/stop', { plan_date: state.leadDay, label: l.name, city: l.city, kind: 'lead' });
             render();
           }));
         }
-        document.getElementById('autofill').addEventListener('click', async () => { await post('/api/plan/autofill', { plan_date: day.date, city: day.anchor_city }); render(); });
       }
-
-      const ids = day.stops.map((s) => s.id);
-      const reorder = async (arr) => { await post('/api/plan/reorder', { ordered_ids: arr }); render(); };
-      document.querySelectorAll('.ptime').forEach((inp) => inp.addEventListener('change', () => post('/api/plan/stop/update', { id: +inp.dataset.id, arrival_time: to12(inp.value) })));
-      document.querySelectorAll('.pbtn.rem').forEach((b) => b.addEventListener('click', async () => { await post('/api/plan/stop/delete', { id: +b.dataset.id }); render(); }));
-      document.querySelectorAll('.pbtn.up').forEach((b) => b.addEventListener('click', () => { const i = ids.indexOf(+b.dataset.id); if (i > 0) { const a = ids.slice(); [a[i - 1], a[i]] = [a[i], a[i - 1]]; reorder(a); } }));
-      document.querySelectorAll('.pbtn.down').forEach((b) => b.addEventListener('click', () => { const i = ids.indexOf(+b.dataset.id); if (i < ids.length - 1) { const a = ids.slice(); [a[i + 1], a[i]] = [a[i], a[i + 1]]; reorder(a); } }));
-
-      let dragId = null;
-      document.querySelectorAll('.pstop').forEach((row) => {
-        row.addEventListener('dragstart', () => { dragId = +row.dataset.id; row.classList.add('dragging'); });
-        row.addEventListener('dragend', () => row.classList.remove('dragging'));
-        row.addEventListener('dragover', (e) => e.preventDefault());
-        row.addEventListener('drop', (e) => {
-          e.preventDefault();
-          const targetId = +row.dataset.id;
-          if (dragId == null || dragId === targetId) return;
-          const a = ids.slice(); const from = a.indexOf(dragId); const to = a.indexOf(targetId);
-          a.splice(from, 1); a.splice(to, 0, dragId); reorder(a);
-        });
-      });
     };
     render();
   },

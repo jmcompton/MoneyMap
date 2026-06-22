@@ -147,6 +147,11 @@ async function seed() {
     { name: 'Summit Spray Foam', city: 'Gadsden', reason: 'Buys Soudal from a competitor, 0.4 mi from your A1 stop', est: 15000, dist: 0.4 },
     { name: 'Lakeview Lumber', city: 'Cullman', reason: 'Large dealer near Cullman Lumber with no rep on file', est: 22000, dist: 1.2 },
     { name: 'Ridgeline Contractors', city: 'Huntsville', reason: 'Active Fortress buyer that matches your top accounts', est: 8000, dist: 0.8 },
+    { name: 'Rocket City Railing', city: 'Huntsville', reason: 'New Fortress railing installer, no supplier locked in', est: 12000, dist: 1.1 },
+    { name: 'Madison Pro Supply', city: 'Madison', reason: 'Two-step dealer that fits your ShurTape book', est: 18000, dist: 0.9 },
+    { name: 'River City Contractors', city: 'Decatur', reason: 'Active builder buying spray foam retail', est: 9500, dist: 1.4 },
+    { name: 'Magic City Drywall', city: 'Birmingham', reason: 'Big drywall outfit right on your way home', est: 26000, dist: 0.6 },
+    { name: 'Vulcan Building Products', city: 'Birmingham', reason: 'Dealer near home base, buys Closet Maid elsewhere', est: 20000, dist: 0.5 },
   ]) {
     await pool.query(
       `INSERT INTO leads (org_id, name, city, reason, est_value, distance_mi) VALUES ($1,$2,$3,$4,$5,$6)`,
@@ -170,8 +175,14 @@ async function seed() {
     );
   }
 
+  // A personal block on today: the route plans around it (the "end zone" idea).
+  await pool.query(
+    `INSERT INTO route_stops (org_id, user_id, account_id, label, city, arrival_time, position, status, stop_date, kind, address)
+     VALUES ($1,$2,NULL,$3,$4,$5,$6,'planned',$7,'personal',$8)`,
+    [org.id, danId, 'Pick up the girls', 'Birmingham', '3:30 PM', stops.length + 1, todayYmd, '1200 Oak Grove Rd, Birmingham, AL']
+  );
+
   for (const t of [
-    { account: 'gadsden', title: 'Call Gadsden Building Supply about the Fortress 231 promo', due: 0 },
     { account: null, title: 'Send Closet Maid holiday cutoff schedule to all dealers', due: 1 },
     { account: 'gadsden', title: 'Follow up on the Riverside Townhomes quote', due: 2 },
   ]) {

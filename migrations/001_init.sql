@@ -126,6 +126,8 @@ CREATE TABLE IF NOT EXISTS route_stops (
   position      INTEGER NOT NULL DEFAULT 0,
   status        TEXT NOT NULL DEFAULT 'planned',
   stop_date     TEXT NOT NULL,
+  kind          TEXT NOT NULL DEFAULT 'stop',
+  address       TEXT,
   created_at    TIMESTAMP NOT NULL DEFAULT now()
 );
 

@@ -487,9 +487,9 @@ router.get('/plan', async (req, res, next) => {
 
     const dayRows = (await query(`SELECT plan_date, working, anchor_city, start_point, end_point FROM plan_days WHERE org_id = $1 AND plan_date BETWEEN $2 AND $3`, [orgId, first, last])).rows;
     const dayMap = new Map(dayRows.map((r) => [asDateStr(r.plan_date), r]));
-    const stopRows = (await query(`SELECT id, account_id, label, city, arrival_time, position, status, stop_date FROM route_stops WHERE org_id = $1 AND stop_date BETWEEN $2 AND $3 ORDER BY position`, [orgId, first, last])).rows;
+    const stopRows = (await query(`SELECT id, account_id, label, city, address, arrival_time, position, status, kind, stop_date FROM route_stops WHERE org_id = $1 AND stop_date BETWEEN $2 AND $3 ORDER BY position`, [orgId, first, last])).rows;
     const stopsByDate = {};
-    for (const s of stopRows) { const k = asDateStr(s.stop_date); (stopsByDate[k] = stopsByDate[k] || []).push({ id: s.id, account_id: s.account_id, label: s.label, city: s.city, arrival_time: s.arrival_time, position: s.position, status: s.status }); }
+    for (const s of stopRows) { const k = asDateStr(s.stop_date); (stopsByDate[k] = stopsByDate[k] || []).push({ id: s.id, account_id: s.account_id, label: s.label, city: s.city, address: s.address, arrival_time: s.arrival_time, position: s.position, status: s.status, kind: s.kind || 'stop' }); }
 
     const out = days.map((d) => {
       const ds = ymd(d);
@@ -531,11 +531,11 @@ router.post('/plan/day', async (req, res, next) => {
 router.post('/plan/stop', async (req, res, next) => {
   try {
     const orgId = req.user.org_id;
-    const { plan_date, account_id, label, city, arrival_time } = req.body || {};
+    const { plan_date, account_id, label, city, arrival_time, kind, address } = req.body || {};
     if (!plan_date || !label) return res.status(400).json({ error: 'plan_date and label required' });
     const mx = (await query(`SELECT COALESCE(MAX(position),0) AS m FROM route_stops WHERE org_id=$1 AND stop_date=$2`, [orgId, plan_date])).rows[0].m;
-    await query(`INSERT INTO route_stops (org_id, user_id, account_id, label, city, arrival_time, position, status, stop_date) VALUES ($1,$2,$3,$4,$5,$6,$7,'planned',$8)`,
-      [orgId, req.user.id, account_id || null, label, city || null, arrival_time || null, Number(mx) + 1, plan_date]);
+    await query(`INSERT INTO route_stops (org_id, user_id, account_id, label, city, address, arrival_time, position, status, stop_date, kind) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'planned',$9,$10)`,
+      [orgId, req.user.id, account_id || null, label, city || null, address || null, arrival_time || null, Number(mx) + 1, plan_date, kind || 'stop']);
     res.json({ ok: true });
   } catch (e) { next(e); }
 });
@@ -622,6 +622,80 @@ router.post('/plan/autofill', async (req, res, next) => {
         [orgId, req.user.id, a.id, a.name, a.city, mx, plan_date]);
     }
     res.json({ ok: true, added: accts.length });
+  } catch (e) { next(e); }
+});
+
+// ---------- Route-aware lead search ----------
+// City centroids for the territory. Distance is computed city-to-city so the
+// search can tell "near your morning stop" from "on your way home" without a
+// maps API. Add cities here as the book grows.
+const CITY_COORDS = {
+  birmingham: [33.5186, -86.8104],
+  gadsden: [34.0143, -86.0066],
+  cullman: [34.1748, -86.8436],
+  huntsville: [34.7304, -86.5861],
+  decatur: [34.6059, -86.9833],
+  madison: [34.6993, -86.7483],
+};
+function coordOf(text) {
+  if (!text) return null;
+  const key = String(text).toLowerCase();
+  for (const c in CITY_COORDS) { if (key.includes(c)) return CITY_COORDS[c]; }
+  return null;
+}
+function haversineMi(a, b) {
+  if (!a || !b) return 99999;
+  const toR = (x) => (x * Math.PI) / 180;
+  const dLa = toR(b[0] - a[0]); const dLo = toR(b[1] - a[1]);
+  const h = Math.sin(dLa / 2) ** 2 + Math.cos(toR(a[0])) * Math.cos(toR(b[0])) * Math.sin(dLo / 2) ** 2;
+  return Math.round(2 * 3961 * Math.asin(Math.sqrt(h)));
+}
+
+// Given a day's first appointment and its endpoint, split leads into the ones
+// to hit right after the morning stop and the ones to catch on the way home.
+router.get('/plan/leadsearch', async (req, res, next) => {
+  try {
+    const orgId = req.user.org_id;
+    const planDate = String(req.query.plan_date || '').trim();
+    if (!planDate) return res.json({ ready: false, reason: 'no_date', morning: null, home: null });
+
+    const dayRow = (await query(`SELECT anchor_city, start_point, end_point FROM plan_days WHERE org_id=$1 AND plan_date=$2`, [orgId, planDate])).rows[0] || {};
+    const stops = (await query(`SELECT label, city, arrival_time, kind FROM route_stops WHERE org_id=$1 AND stop_date=$2 ORDER BY position`, [orgId, planDate])).rows;
+
+    const firstStop = stops.find((s) => s.city);
+    const morningAnchor = (firstStop && coordOf(firstStop.city)) || coordOf(dayRow.anchor_city);
+    const morningCity = (firstStop && firstStop.city) || dayRow.anchor_city || '';
+    const endpointCoord = coordOf(dayRow.end_point) || coordOf(dayRow.start_point) || coordOf(dayRow.anchor_city) || CITY_COORDS.birmingham;
+    const endpointCity = (coordOf(dayRow.end_point) && (String(dayRow.end_point).match(/birmingham|gadsden|cullman|huntsville|decatur|madison/i) || [])[0]) || dayRow.anchor_city || 'Birmingham';
+
+    if (!morningAnchor) {
+      return res.json({ ready: false, reason: 'no_anchor', morning: null, home: null, endpoint_city: endpointCity });
+    }
+
+    const taken = new Set(stops.map((s) => String(s.label || '').toLowerCase()));
+    const leads = (await query(`SELECT name, city, reason, est_value FROM leads WHERE org_id=$1`, [orgId])).rows
+      .filter((l) => !taken.has(String(l.name).toLowerCase()) && coordOf(l.city));
+
+    const scored = leads.map((l) => {
+      const lc = coordOf(l.city);
+      const dM = haversineMi(lc, morningAnchor);
+      const dE = haversineMi(lc, endpointCoord);
+      return { name: l.name, city: l.city, reason: l.reason, est_value: Number(l.est_value) || 0, d_morning: dM, d_home: dE, bucket: dM <= dE ? 'morning' : 'home' };
+    });
+
+    const morning = scored.filter((l) => l.bucket === 'morning').sort((a, b) => a.d_morning - b.d_morning).slice(0, 4)
+      .map((l) => ({ name: l.name, city: l.city, reason: l.reason, est_value: l.est_value, miles: l.d_morning }));
+    const home = scored.filter((l) => l.bucket === 'home').sort((a, b) => a.d_home - b.d_home).slice(0, 4)
+      .map((l) => ({ name: l.name, city: l.city, reason: l.reason, est_value: l.est_value, miles: l.d_home }));
+
+    res.json({
+      ready: true,
+      morning_city: morningCity,
+      endpoint_city: endpointCity,
+      has_stops: stops.some((s) => s.kind !== 'personal'),
+      morning,
+      home,
+    });
   } catch (e) { next(e); }
 });
 
