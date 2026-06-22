@@ -33,6 +33,7 @@ const I = {
   doc: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>',
   users: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/></svg>',
   clock: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  mic: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4M8 21h8"/></svg>',
 };
 
 function rowHtml(a) {
@@ -42,6 +43,82 @@ function rowHtml(a) {
     <div class="money">${money(a.commission)}</div>
     <span class="badge ${a.tier}">${a.tier}</span>
   </div>`;
+}
+
+function voiceRecorder(accountId, onSaved) {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const backdrop = el('<div class="sheet-backdrop"></div>');
+  const sheet = el('<div class="sheet"></div>');
+  backdrop.appendChild(sheet);
+  document.body.appendChild(backdrop);
+  const close = () => backdrop.remove();
+  backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close(); });
+
+  let finalText = '';
+  let rec = null;
+
+  const review = (text) => {
+    sheet.innerHTML = `
+      <h3>Review the note</h3>
+      <div class="sub2">Edit anything, then save it to the timeline.</div>
+      <textarea class="rectext" id="rt">${esc(text)}</textarea>
+      <button class="aibtn" id="ai">${I.spark} Clean it up with AI</button>
+      <div class="sheetbtns"><button class="ghost" id="cancel">Cancel</button><button class="go" id="save">Save to timeline</button></div>`;
+    sheet.querySelector('#cancel').addEventListener('click', close);
+    sheet.querySelector('#ai').addEventListener('click', async () => {
+      const btn = sheet.querySelector('#ai'); const ta = sheet.querySelector('#rt');
+      if (!ta.value.trim()) return;
+      btn.textContent = 'Polishing…'; btn.disabled = true;
+      try {
+        const r = await api('/api/ai/polish', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: ta.value }) });
+        ta.value = r.polished;
+        btn.innerHTML = r.ai ? I.spark + ' Polished' : 'Saved as-is (AI key not set)';
+      } catch (e) { btn.innerHTML = I.spark + ' Clean it up with AI'; }
+      btn.disabled = false;
+    });
+    sheet.querySelector('#save').addEventListener('click', async () => {
+      const body = sheet.querySelector('#rt').value.trim();
+      if (!body) { close(); return; }
+      try {
+        await api('/api/accounts/' + accountId + '/activity', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'call', body }) });
+        close(); if (onSaved) onSaved();
+      } catch (e) { alert(e.message); }
+    });
+  };
+
+  if (!SR) {
+    sheet.innerHTML = `<h3>Log a call</h3><div class="sub2">Voice capture isn't available in this browser, so type the note instead.</div>`;
+    review('');
+    return;
+  }
+
+  sheet.innerHTML = `
+    <h3>Recording call</h3>
+    <div class="recmic live">${I.mic}</div>
+    <div class="recstatus"><span class="live-dot">●</span> Listening… speak naturally</div>
+    <div class="rectranscript" id="tr"><span class="interim">Start talking and your words show up here.</span></div>
+    <div class="sheetbtns"><button class="ghost" id="cancel">Cancel</button><button class="gold" id="stop">Stop & review</button></div>`;
+  sheet.querySelector('#cancel').addEventListener('click', () => { try { rec && rec.stop(); } catch (_) {} close(); });
+  sheet.querySelector('#stop').addEventListener('click', () => { try { rec && rec.stop(); } catch (_) {} review(finalText.trim()); });
+
+  try {
+    rec = new SR();
+    rec.continuous = true; rec.interimResults = true; rec.lang = 'en-US';
+    rec.onresult = (e) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalText += t + ' '; else interim += t;
+      }
+      const tr = sheet.querySelector('#tr');
+      if (tr) tr.innerHTML = (esc(finalText) || '') + '<span class="interim">' + esc(interim) + '</span>' || '<span class="interim">Listening…</span>';
+    };
+    rec.onerror = (e) => {
+      const st = sheet.querySelector('.recstatus');
+      if (st) st.textContent = e.error === 'not-allowed' ? 'Mic permission is blocked. Allow it in the address bar, then reopen.' : 'Mic error: ' + e.error;
+    };
+    rec.start();
+  } catch (e) { review(''); }
 }
 
 const pages = {
@@ -235,7 +312,8 @@ const pages = {
         <div class="panel"><div class="head"><span class="ic amber">${I.clock}</span><h2>Activity</h2><span class="count">${d.activities.length}</span></div>
           <div class="tl" id="tl">${actsHtml}</div>
           <div class="lognote"><textarea id="noteText" placeholder="Log a call or add a note..."></textarea><button class="btn" id="saveNote" style="margin-top:10px">Save to timeline</button></div>
-        </div>`;
+        </div>
+        <button class="fab mic" id="micFab" title="Record a call">${I.mic}</button>`;
 
       const save = async () => {
         const body = document.getElementById('noteText').value.trim();
@@ -244,7 +322,8 @@ const pages = {
         catch (e) { alert(e.message); }
       };
       document.getElementById('saveNote').addEventListener('click', save);
-      document.getElementById('logBtn').addEventListener('click', () => document.getElementById('noteText').focus());
+      document.getElementById('logBtn').addEventListener('click', () => voiceRecorder(id, render));
+      document.getElementById('micFab').addEventListener('click', () => voiceRecorder(id, render));
     };
     render();
   },

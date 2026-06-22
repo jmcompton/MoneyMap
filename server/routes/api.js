@@ -358,4 +358,28 @@ router.post('/resolve', async (req, res, next) => {
   }
 });
 
+// Polish a raw voice memo into a clean call-log entry. Uses Anthropic if a key
+// is set; otherwise returns the transcript unchanged so it always works.
+router.post('/ai/polish', async (req, res, next) => {
+  try {
+    const text = String((req.body || {}).text || '').trim();
+    if (!text) return res.status(400).json({ error: 'No text to polish.' });
+    const key = process.env.ANTHROPIC_API_KEY;
+    if (!key) return res.json({ polished: text, ai: false });
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 400,
+        messages: [{ role: 'user', content: `Turn this rough voice memo from a building-materials sales rep into a clean, concise call-log note. Plain spoken language, first person, a few sentences at most. Keep every fact, drop the filler, no preamble, no made-up details.\n\nMemo: ${text}` }],
+      }),
+    });
+    const data = await r.json();
+    const out = (data.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('').trim();
+    res.json({ polished: out || text, ai: !!out });
+  } catch (e) {
+    res.json({ polished: String((req.body || {}).text || '').trim(), ai: false });
+  }
+});
 module.exports = router;
