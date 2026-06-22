@@ -1,6 +1,8 @@
 'use strict';
 
 const money = (n) => '$' + (Number(n) || 0).toLocaleString('en-US', { maximumFractionDigits: 0 });
+const typeLabel = (t) => ({ two_step: 'Two-step', one_step: 'One-step', dealer: 'Dealer', contractor: 'Contractor', other: 'Account' }[t] || 'Account');
+const initials = (n) => String(n || '').trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 
 async function api(path, opts) {
   const res = await fetch(path, opts);
@@ -23,6 +25,14 @@ const I = {
   deal: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M16 7h5v5"/></svg>',
   check: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
   star: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9 6.8 19.2l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>',
+  search: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>',
+  phone: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.4-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2Z"/></svg>',
+  mail: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 6 10 7L22 6"/></svg>',
+  back: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+  plus: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>',
+  doc: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>',
+  users: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/></svg>',
+  clock: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
 };
 
 function rowHtml(a) {
@@ -105,14 +115,14 @@ const pages = {
       </header>
       <div class="brief"><span class="spark">${I.spark}</span><div class="txt">${esc(d.brief)}</div></div>
       <div class="stats">
-        <div class="stat"><div class="label">Tracked commission</div><div class="value">${money(s.total_commission)}</div></div>
-        <div class="stat"><div class="label">Open pipeline</div><div class="value">${money(s.pipeline_value)}</div></div>
+        <div class="stat"><div class="label">Tracked commission</div><div class="value green">${money(s.total_commission)}</div></div>
+        <div class="stat"><div class="label">Open pipeline</div><div class="value blue">${money(s.pipeline_value)}</div></div>
         <div class="stat"><div class="label">Key accounts</div><div class="value">${s.key_account_count}</div></div>
         <div class="stat"><div class="label">At-risk</div><div class="value warn">${s.at_risk_count}</div></div>
       </div>
       <div class="grid">
         <div class="col">
-          <div class="panel"><div class="head"><span class="ic">${I.route}</span><h2>Today's route</h2><span class="count">${doneCount}/${d.today_route.length}</span></div>${routeHtml}</div>
+          <div class="panel"><div class="head"><span class="ic">${I.route}</span><h2>Today's route</h2><span class="count">${doneCount}/${d.today_route.length}</span></div><div class="progress"><span style="width:${d.today_route.length ? Math.round((doneCount / d.today_route.length) * 100) : 0}%"></span></div>${routeHtml}</div>
           <div class="panel"><div class="head"><span class="ic amber">${I.alert}</span><h2>At-risk accounts</h2><span class="count">${d.at_risk.length}</span></div>${riskHtml}</div>
           <div class="panel"><div class="head"><span class="ic">${I.star}</span><h2>Key accounts · 80/20</h2><span class="count">${ka.length}</span></div><div id="kaList">${kaTop}</div></div>
         </div>
@@ -132,15 +142,111 @@ const pages = {
   },
 
   async accounts() {
-    const render = async (tier) => {
-      document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tier === tier));
-      const data = await api('/api/accounts' + (tier ? '?tier=' + tier : ''));
+    const app = document.getElementById('app');
+    const state = { q: '', tier: '', sort: 'last_contact' };
+    const filters = [['', 'All'], ['A', 'Key (A)'], ['B', 'B'], ['C', 'C'], ['at_risk', 'At-risk']];
+    const sorts = [['last_contact', 'Recently contacted'], ['overdue', 'Most overdue'], ['commission', 'Top commission'], ['name', 'Name A–Z']];
+
+    app.innerHTML = `
+      <header class="top"><div><h1>Accounts</h1><div class="sub">Your whole book, searchable.</div></div></header>
+      <div class="toolbar">
+        <div class="search"><span class="si">${I.search}</span><input id="q" type="text" placeholder="Search accounts or city" /></div>
+        <div class="controls">
+          <div class="chips" id="chips">${filters.map(([v, l]) => `<div class="fchip ${v === state.tier ? 'active' : ''}" data-v="${v}">${l}</div>`).join('')}</div>
+          <select class="sortsel" id="sort">${sorts.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="card" id="list"></div>`;
+
+    const list = document.getElementById('list');
+    const load = async () => {
+      const qs = new URLSearchParams();
+      if (state.q) qs.set('q', state.q);
+      if (state.tier) qs.set('tier', state.tier);
+      qs.set('sort', state.sort);
+      const data = await api('/api/accounts?' + qs.toString());
       if (!data) return;
-      document.getElementById('list').innerHTML = data.accounts.length
-        ? data.accounts.map(rowHtml).join('') : `<div class="row"><div class="name">No accounts in this tier yet.</div></div>`;
+      if (!data.accounts.length) { list.innerHTML = `<div class="arow"><div class="ab"><div class="an">No accounts found.</div></div></div>`; return; }
+      list.innerHTML = data.accounts.map((a) => {
+        const touch = a.days_since_contact == null ? 'No contact logged' : (a.days_since_contact === 0 ? 'Seen today' : `${a.days_since_contact}d since contact`);
+        const tierBadge = a.tier === '—' ? '' : `<span class="badge ${a.tier}">${a.tier}</span>`;
+        return `<a class="arow" href="/account.html?id=${a.account_id}">
+          <div class="avatar">${esc(initials(a.name))}</div>
+          <div class="ab"><div class="an">${esc(a.name)}</div>
+            <div class="am"><span class="tchip">${typeLabel(a.account_type)}</span><span>${esc(a.city || '')}</span><span class="dot-sep">${touch}</span></div></div>
+          <div class="ar"><div class="av">${a.commission ? money(a.commission) : '—'}</div>${tierBadge}</div></a>`;
+      }).join('');
     };
-    document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => render(t.dataset.tier)));
-    render('');
+
+    let t;
+    document.getElementById('q').addEventListener('input', (e) => { state.q = e.target.value; clearTimeout(t); t = setTimeout(load, 180); });
+    document.getElementById('sort').addEventListener('change', (e) => { state.sort = e.target.value; load(); });
+    document.getElementById('chips').addEventListener('click', (e) => {
+      const c = e.target.closest('.fchip'); if (!c) return;
+      state.tier = c.dataset.v;
+      document.querySelectorAll('.fchip').forEach((x) => x.classList.toggle('active', x === c));
+      load();
+    });
+    load();
+  },
+
+  async account() {
+    const id = new URLSearchParams(location.search).get('id');
+    const app = document.getElementById('app');
+    const render = async () => {
+      const d = await api('/api/accounts/' + id);
+      if (!d) return;
+      const a = d.account;
+      const lastContact = a.days_since_contact == null ? '—' : (a.days_since_contact === 0 ? 'Today' : a.days_since_contact + 'd ago');
+      const lastOrder = a.days_since_order == null ? '—' : a.days_since_order + 'd ago';
+
+      const contactsHtml = d.contacts.length ? d.contacts.map((c) => `
+        <div class="contact"><div class="ci"><div class="cn">${esc(c.name)}</div><div class="ct">${esc(c.title || '')}${c.phone ? ' · ' + esc(c.phone) : ''}</div></div>
+          <div class="links">${c.phone ? `<a class="iconbtn green" href="tel:${esc(c.phone)}">${I.phone}</a>` : ''}${c.email ? `<a class="iconbtn" href="mailto:${esc(c.email)}">${I.mail}</a>` : ''}</div></div>`).join('')
+        : `<div class="contact"><div class="ci"><div class="ct">No contacts yet.</div></div></div>`;
+
+      const dealsHtml = d.deals.length ? d.deals.map((x) => {
+        const c = x.days_to_close <= 7 ? 'red' : (x.days_to_close <= 14 ? 'amber' : '');
+        return `<div class="deal"><div class="top"><span class="n">${esc(x.name)}</span><span class="v">${money(x.value)}</span></div><div class="sub">${esc(x.manufacturer || '')} · ${esc(x.stage)}</div><div class="meta"><span class="chip ${c}">closes in ${x.days_to_close}d</span></div></div>`;
+      }).join('') : `<div class="row"><div class="name" style="font-weight:400;color:var(--muted)">No open deals.</div></div>`;
+
+      const quotesHtml = d.quotes.length ? d.quotes.map((q) => `<div class="deal"><div class="top"><span class="n">${esc(q.title)}</span><span class="v">${money(q.amount)}</span></div><div class="sub">${esc(q.manufacturer || '')} · ${esc(q.status)} · ${q.days_ago}d ago</div><div class="meta"><span class="chip">${esc(q.file_label || 'quote.pdf')}</span></div></div>`).join('')
+        : `<div class="row"><div class="name" style="font-weight:400;color:var(--muted)">No quotes yet.</div></div>`;
+
+      const actIcon = (t) => t === 'call' ? I.phone : (t === 'visit' ? I.route : I.clock);
+      const actsHtml = d.activities.length ? d.activities.map((x) => `<div class="tlitem"><div class="tn ${esc(x.type)}">${actIcon(x.type)}</div><div class="tb"><div class="tt">${esc(x.body || '')}</div><div class="td">${esc(x.type)} · ${x.days_ago === 0 ? 'today' : x.days_ago + 'd ago'}</div></div></div>`).join('')
+        : `<div style="padding:2px 0 8px;color:var(--muted);font-size:14px">No activity yet. Log your first call below.</div>`;
+
+      app.innerHTML = `
+        <a class="back" href="/accounts.html">${I.back} Accounts</a>
+        <div class="profile">
+          <div class="pn">${esc(a.name)}</div>
+          <div class="pm"><span class="tchip" style="background:rgba(255,255,255,.16);color:#fff">${typeLabel(a.account_type)}</span><span>${esc(a.city || '')}${a.state ? ', ' + esc(a.state) : ''}</span>${a.tier !== '—' ? `<span class="badge ${a.tier}">${a.tier}</span>` : ''}</div>
+          <div class="pstats">
+            <div class="ps"><div class="l">Commission</div><div class="v">${a.commission ? money(a.commission) : '—'}</div></div>
+            <div class="ps"><div class="l">Last contact</div><div class="v ${a.days_since_contact >= 30 ? 'amber' : ''}">${lastContact}</div></div>
+            <div class="ps"><div class="l">Last order</div><div class="v">${lastOrder}</div></div>
+          </div>
+          <div class="qa"><button class="primary" id="logBtn">${I.plus} Log a call</button></div>
+        </div>
+        <div class="panel"><div class="head"><span class="ic">${I.users}</span><h2>Contacts</h2><span class="count">${d.contacts.length}</span></div>${contactsHtml}</div>
+        <div class="panel"><div class="head"><span class="ic blue">${I.deal}</span><h2>Open deals</h2><span class="count">${d.deals.length}</span></div>${dealsHtml}</div>
+        <div class="panel"><div class="head"><span class="ic indigo">${I.doc}</span><h2>Quotes</h2><span class="count">${d.quotes.length}</span></div>${quotesHtml}</div>
+        <div class="panel"><div class="head"><span class="ic amber">${I.clock}</span><h2>Activity</h2><span class="count">${d.activities.length}</span></div>
+          <div class="tl" id="tl">${actsHtml}</div>
+          <div class="lognote"><textarea id="noteText" placeholder="Log a call or add a note..."></textarea><button class="btn" id="saveNote" style="margin-top:10px">Save to timeline</button></div>
+        </div>`;
+
+      const save = async () => {
+        const body = document.getElementById('noteText').value.trim();
+        if (!body) return;
+        try { await api('/api/accounts/' + id + '/activity', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'call', body }) }); render(); }
+        catch (e) { alert(e.message); }
+      };
+      document.getElementById('saveNote').addEventListener('click', save);
+      document.getElementById('logBtn').addEventListener('click', () => document.getElementById('noteText').focus());
+    };
+    render();
   },
 
   async import() {

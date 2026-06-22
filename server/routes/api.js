@@ -116,13 +116,80 @@ router.get('/home', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// All accounts, ranked, optionally filtered by tier.
+// Accounts list, Zoho-style: search, filter, sort, with last-touch + value.
 router.get('/accounts', async (req, res, next) => {
   try {
-    const tiers = await tieredAccounts(req.user.org_id);
-    const filter = req.query.tier;
-    const out = filter ? tiers.filter((t) => t.tier === String(filter).toUpperCase()) : tiers;
-    res.json({ accounts: out });
+    const orgId = req.user.org_id;
+    const tiers = await tieredAccounts(orgId);
+    const tmap = new Map(tiers.map((t) => [t.account_id, t]));
+    const rows = (await query(
+      `SELECT id, name, account_type, city, last_contact_at, last_order_at FROM accounts WHERE org_id = $1`,
+      [orgId]
+    )).rows;
+    let list = rows.map((a) => {
+      const t = tmap.get(a.id);
+      return {
+        account_id: a.id, name: a.name, account_type: a.account_type, city: a.city,
+        days_since_contact: a.last_contact_at ? daysBetween(a.last_contact_at) : null,
+        days_since_order: a.last_order_at ? daysBetween(a.last_order_at) : null,
+        commission: t ? t.commission : 0, tier: t ? t.tier : '—', rank: t ? t.rank : null,
+      };
+    });
+    const q = String(req.query.q || '').toLowerCase().trim();
+    if (q) list = list.filter((a) => a.name.toLowerCase().includes(q) || String(a.city || '').toLowerCase().includes(q));
+    const tier = req.query.tier;
+    if (tier === 'at_risk') list = list.filter((a) => a.days_since_contact != null && a.days_since_contact >= 30);
+    else if (tier) list = list.filter((a) => a.tier === String(tier).toUpperCase());
+
+    const sort = req.query.sort || 'last_contact';
+    if (sort === 'commission') list.sort((a, b) => b.commission - a.commission);
+    else if (sort === 'name') list.sort((a, b) => a.name.localeCompare(b.name));
+    else if (sort === 'overdue') list.sort((a, b) => (b.days_since_contact ?? -1) - (a.days_since_contact ?? -1));
+    else list.sort((a, b) => (a.days_since_contact ?? 99999) - (b.days_since_contact ?? 99999));
+
+    res.json({ accounts: list });
+  } catch (e) { next(e); }
+});
+
+// Full account detail: contacts, deals, quotes, activity timeline.
+router.get('/accounts/:id', async (req, res, next) => {
+  try {
+    const orgId = req.user.org_id;
+    const id = Number(req.params.id);
+    const a = (await query(`SELECT * FROM accounts WHERE id = $1 AND org_id = $2`, [id, orgId])).rows[0];
+    if (!a) return res.status(404).json({ error: 'Account not found.' });
+    const tiers = await tieredAccounts(orgId);
+    const t = tiers.find((x) => x.account_id === id);
+    const contacts = (await query(`SELECT name, title, phone, email FROM contacts WHERE account_id = $1 ORDER BY id`, [id])).rows;
+    const deals = (await query(`SELECT name, manufacturer, value, stage, close_date FROM deals WHERE account_id = $1 ORDER BY close_date`, [id])).rows
+      .map((d) => ({ name: d.name, manufacturer: d.manufacturer, value: Number(d.value), stage: d.stage, days_to_close: daysUntil(d.close_date) }));
+    const quotes = (await query(`SELECT title, manufacturer, amount, status, file_label, created_at FROM quotes WHERE account_id = $1 ORDER BY created_at DESC`, [id])).rows
+      .map((q) => ({ title: q.title, manufacturer: q.manufacturer, amount: Number(q.amount), status: q.status, file_label: q.file_label, days_ago: daysBetween(q.created_at) }));
+    const acts = (await query(`SELECT type, body, created_at FROM activities WHERE account_id = $1 ORDER BY created_at DESC`, [id])).rows
+      .map((x) => ({ type: x.type, body: x.body, days_ago: daysBetween(x.created_at) }));
+    res.json({
+      account: {
+        id: a.id, name: a.name, account_type: a.account_type, city: a.city, state: a.state,
+        days_since_contact: a.last_contact_at ? daysBetween(a.last_contact_at) : null,
+        days_since_order: a.last_order_at ? daysBetween(a.last_order_at) : null,
+        commission: t ? t.commission : 0, tier: t ? t.tier : '—', rank: t ? t.rank : null,
+      },
+      contacts, deals, quotes, activities: acts,
+    });
+  } catch (e) { next(e); }
+});
+
+// Log a call / note. Updates last contact, like logging in the field.
+router.post('/accounts/:id/activity', async (req, res, next) => {
+  try {
+    const orgId = req.user.org_id;
+    const id = Number(req.params.id);
+    const { type, body } = req.body || {};
+    if (!body || !String(body).trim()) return res.status(400).json({ error: 'Note text is required.' });
+    await query(`INSERT INTO activities (org_id, account_id, user_id, type, body) VALUES ($1,$2,$3,$4,$5)`,
+      [orgId, id, req.user.id, type || 'note', String(body).trim()]);
+    await query(`UPDATE accounts SET last_contact_at = now() WHERE id = $1 AND org_id = $2`, [id, orgId]);
+    res.json({ ok: true });
   } catch (e) { next(e); }
 });
 

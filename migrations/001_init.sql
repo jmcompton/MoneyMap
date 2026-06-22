@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS accounts (
   zip               TEXT,
   assigned_user_id  INTEGER REFERENCES users(id),
   last_contact_at   TIMESTAMP,
+  last_order_at     TIMESTAMP,
   created_at        TIMESTAMP NOT NULL DEFAULT now()
 );
 
@@ -136,5 +137,29 @@ CREATE TABLE IF NOT EXISTS tasks (
   title       TEXT NOT NULL,
   due_date    DATE,
   done        BOOLEAN NOT NULL DEFAULT false,
+  created_at  TIMESTAMP NOT NULL DEFAULT now()
+);
+
+-- Quotes (formal offers; PDF lives as a label stub for now).
+CREATE TABLE IF NOT EXISTS quotes (
+  id          SERIAL PRIMARY KEY,
+  org_id      INTEGER NOT NULL REFERENCES organizations(id),
+  account_id  INTEGER REFERENCES accounts(id),
+  title       TEXT NOT NULL,
+  manufacturer TEXT,
+  amount      NUMERIC NOT NULL DEFAULT 0,
+  status      TEXT NOT NULL DEFAULT 'sent',
+  file_label  TEXT,
+  created_at  TIMESTAMP NOT NULL DEFAULT now()
+);
+
+-- Activity timeline: calls, visits, notes, emails.
+CREATE TABLE IF NOT EXISTS activities (
+  id          SERIAL PRIMARY KEY,
+  org_id      INTEGER NOT NULL REFERENCES organizations(id),
+  account_id  INTEGER REFERENCES accounts(id),
+  user_id     INTEGER REFERENCES users(id),
+  type        TEXT NOT NULL DEFAULT 'note',
+  body        TEXT,
   created_at  TIMESTAMP NOT NULL DEFAULT now()
 );

@@ -145,6 +145,54 @@ async function seed() {
     );
   }
 
+  // last order dates
+  const orderDays = { a1: 14, alpha: 60, celltech: 18, gadsden: 70, huntsville: 9, redstone: 45, ncs: 85, bham: 25, cullman: 100, decatur: 35, madison: 120 };
+  for (const [key, days] of Object.entries(orderDays)) {
+    await pool.query(`UPDATE accounts SET last_order_at = $1 WHERE id = $2`, [daysAgo(days), acct[key]]);
+  }
+
+  // contacts
+  const contacts = {
+    a1: [['Mike Dawson', 'Owner', '(256) 555-0142', 'mike@a1insulation.com'], ['Sara Pruitt', 'Office Manager', '(256) 555-0177', 'sara@a1insulation.com']],
+    gadsden: [['Tom Reedy', 'Purchasing', '(256) 555-0190', 'tom@gadsdenbuilding.com']],
+    alpha: [['Greg Hale', 'Buyer', '(256) 555-0118', 'ghale@alphalumber.com']],
+    redstone: [['Will Carter', 'Project Manager', '(256) 555-0133', 'wcarter@redstone.com']],
+    huntsville: [['Dana Fields', 'Owner', '(256) 555-0155', 'dana@hsvdrywall.com']],
+    celltech: [['Rob Nguyen', 'Distribution Mgr', '(205) 555-0199', 'rob@celltech.com']],
+  };
+  for (const [key, list] of Object.entries(contacts)) {
+    for (const [name, title, phone, email] of list) {
+      await pool.query(`INSERT INTO contacts (account_id, name, title, phone, email) VALUES ($1,$2,$3,$4,$5)`,
+        [acct[key], name, title, phone, email]);
+    }
+  }
+
+  // quotes
+  for (const q of [
+    { key: 'gadsden', title: 'Riverside Townhomes – ClosetMaid master shelving', mfr: 'Closet Maid', amt: 42000, status: 'sent', file: 'riverside-townhomes-quote.pdf' },
+    { key: 'a1', title: 'Northgate – Soudal spray foam package', mfr: 'Soudal', amt: 18500, status: 'sent', file: 'northgate-soudal-quote.pdf' },
+    { key: 'cullman', title: 'Cullman Retail – Fortress railing', mfr: 'Fortress', amt: 9500, status: 'draft', file: 'cullman-fortress-quote.pdf' },
+  ]) {
+    await pool.query(`INSERT INTO quotes (org_id, account_id, title, manufacturer, amount, status, file_label) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+      [org.id, acct[q.key], q.title, q.mfr, q.amt, q.status, q.file]);
+  }
+
+  // activity timeline
+  const activities = {
+    a1: [['call', 'Talked through the Northgate spray foam package. Wants brushed nickel, not bronze, updating the quote.', 8], ['visit', 'Dropped off Soudal 231 samples. Mike liked the cure time.', 22], ['note', 'Mike mentioned a townhome project coming in Q3.', 35]],
+    gadsden: [['note', 'Gone quiet. Need to get back in front of Tom about the Fortress 231 promo.', 67], ['call', 'Left a voicemail about the holiday order cutoff.', 74]],
+    alpha: [['visit', 'Quick check-in, busy day. Reorder likely next month.', 52]],
+    redstone: [['call', 'Fortress railing interest for the Huntsville job.', 41]],
+    huntsville: [['visit', 'Standing Friday drop-in. Picked up a ShurTape order.', 5]],
+    celltech: [['note', 'Steady two-step volume. Rob is easy to work with.', 12]],
+  };
+  for (const [key, list] of Object.entries(activities)) {
+    for (const [type, body, days] of list) {
+      await pool.query(`INSERT INTO activities (org_id, account_id, user_id, type, body, created_at) VALUES ($1,$2,$3,$4,$5,$6)`,
+        [org.id, acct[key], danId, type, body, daysAgo(days)]);
+    }
+  }
+
   console.log('seed complete. login: admin@comptonsales.com / ' + PASSWORD);
 }
 
