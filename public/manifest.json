@@ -1,0 +1,12 @@
+{
+  "name": "MoneyMap",
+  "short_name": "MoneyMap",
+  "description": "AI CRM for building-materials sales reps.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f7f9",
+  "theme_color": "#1d9e75",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

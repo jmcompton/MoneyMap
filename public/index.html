@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1d9e75" />
+  <link rel="manifest" href="/manifest.json" />
+  <title>MoneyMap</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body data-page="home">
+  <div class="app">
+    <header class="top">
+      <div>
+        <h1>Hey, <span id="hello">there</span></h1>
+        <div class="sub">Here's where your money is.</div>
+      </div>
+      <a class="logout" href="#" onclick="fetch('/api/logout',{method:'POST'}).then(()=>location.href='/login.html');return false;">Sign out</a>
+    </header>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="section-title">Your key accounts (80/20)</div>
+    <div class="card" id="keyAccounts"></div>
+
+    <div class="section-title">Coming next</div>
+    <div class="placeholder"><b>Today's route</b>Your planned stops, once the weekly planner is built.</div>
+    <div class="placeholder"><b>At-risk accounts</b>Who you're about to lose, once call logging is in.</div>
+    <div class="placeholder"><b>AI leads</b>New stops near your route, once lead-gen is wired up.</div>
+  </div>
+
+  <nav class="bottom">
+    <a href="/" class="active"><span class="ic">●</span>Home</a>
+    <a href="/accounts.html"><span class="ic">▦</span>Accounts</a>
+    <a href="/import.html"><span class="ic">↑</span>Import</a>
+    <a href="/coming-soon.html?f=Planner"><span class="ic">▤</span>Planner</a>
+  </nav>
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1d9e75" />
+  <link rel="manifest" href="/manifest.json" />
+  <title>Import · MoneyMap</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body data-page="import">
+  <div class="app">
+    <header class="top">
+      <div><h1>Import commissions</h1><div class="sub">Upload a CSV. We'll match and rank it.</div></div>
+    </header>
+    <form id="importForm" class="card" style="padding:16px">
+      <label for="file">Commission CSV</label>
+      <input id="file" type="file" accept=".csv,text/csv" />
+      <label for="manufacturer_id">Manufacturer</label>
+      <select id="manufacturer_id"></select>
+      <label for="period_label">Period</label>
+      <input id="period_label" type="text" value="June 2026" />
+      <div class="btn-row">
+        <div style="flex:1">
+          <label for="account_col">Account column</label>
+          <input id="account_col" type="text" value="Account" />
+        </div>
+        <div style="flex:1">
+          <label for="amount_col">Amount column</label>
+          <input id="amount_col" type="text" value="Commission" />
+        </div>
+      </div>
+      <button class="btn" type="submit">Import & match</button>
+    </form>
+    <div id="importNote"></div>
+    <div class="placeholder" style="margin-top:16px"><b>Tip</b>The sample file in the repo (data/sample-commission.csv) uses the column names already filled in above.</div>
+  </div>
+  <nav class="bottom">
+    <a href="/"><span class="ic">●</span>Home</a>
+    <a href="/accounts.html"><span class="ic">▦</span>Accounts</a>
+    <a href="/import.html" class="active"><span class="ic">↑</span>Import</a>
+    <a href="/coming-soon.html?f=Planner"><span class="ic">▤</span>Planner</a>
+  </nav>
+  <script src="/app.js"></script>
+</body>
+</html>
