@@ -787,6 +787,116 @@ const pages = {
     };
     load();
   },
+
+  async outreach() {
+    const app = document.getElementById('app');
+    const seg = await api('/api/outreach/segments');
+    if (!seg) return;
+    const state = { mfrId: null, recipients: [], missing: [], subject: '', body: '' };
+
+    const segById = (id) => seg.segments.find((s) => String(s.manufacturer_id) === String(id));
+    if (seg.segments.length) state.mfrId = seg.segments[0].manufacturer_id;
+
+    const copy = async (text, btn) => {
+      try { await navigator.clipboard.writeText(text); }
+      catch (_) { const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); document.execCommand('copy'); t.remove(); }
+      if (btn) { const o = btn.textContent; btn.textContent = 'Copied'; btn.classList.add('ok'); setTimeout(() => { btn.textContent = o; btn.classList.remove('ok'); }, 1400); }
+    };
+    const emailsOf = () => [...new Set(state.recipients.map((r) => r.email))];
+
+    const render = () => {
+      const emails = emailsOf();
+      const seg1 = segById(state.mfrId) || { account_count: 0, email_account_count: 0 };
+      app.innerHTML = `
+        <header class="top"><div><h1>Email blast</h1><div class="sub">Pick a line, draft the promo, blast the buyers.</div></div></header>
+
+        ${seg.segments.length ? `
+        <div class="card" style="padding:16px">
+          <label for="ob_mfr">Who buys this line</label>
+          <select id="ob_mfr">${seg.segments.map((s) => `<option value="${s.manufacturer_id}" ${String(s.manufacturer_id) === String(state.mfrId) ? 'selected' : ''}>${esc(s.name)} · ${s.account_count} account${s.account_count === 1 ? '' : 's'}</option>`).join('')}</select>
+          <label for="ob_promo" style="margin-top:12px">What are you pushing?</label>
+          <input id="ob_promo" type="text" placeholder="e.g. Fortress 231 promo, holiday order cutoff" value="" />
+          <button class="btn" id="ob_draft" type="button" style="margin-top:14px">${I.spark} Draft the email</button>
+        </div>
+
+        <div class="recip-bar">
+          <span class="ic green">${I.users}</span>
+          <div><b id="ob_count">${emails.length}</b> recipient${emails.length === 1 ? '' : 's'} on the ${esc(seg1.name || '')} list${state.missing.length ? ` · <span class="recip-missing">${state.missing.length} have no email</span>` : ''}</div>
+          <button class="chip-toggle" id="ob_toggle" type="button">View</button>
+        </div>
+        <div id="ob_reciplist" class="recip-list" hidden></div>
+
+        <div id="ob_draftwrap"></div>
+        ` : `<div class="placeholder" style="margin-top:16px"><b>No lists yet</b>Import a commission statement first. Your manufacturer lists build themselves from who actually buys each line.</div>`}`;
+
+      if (!seg.segments.length) return;
+
+      document.getElementById('ob_mfr').addEventListener('change', async (e) => { state.mfrId = e.target.value; state.subject = ''; state.body = ''; await loadRecipients(); render(); });
+      document.getElementById('ob_draft').addEventListener('click', draft);
+      document.getElementById('ob_toggle').addEventListener('click', () => {
+        const list = document.getElementById('ob_reciplist');
+        list.hidden = !list.hidden;
+        document.getElementById('ob_toggle').textContent = list.hidden ? 'View' : 'Hide';
+        if (!list.hidden) list.innerHTML = (state.recipients.map((r) => `<div class="recip-row"><span>${esc(r.account_name)}${r.contact_name ? ` · ${esc(r.contact_name)}` : ''}</span><span class="recip-email">${esc(r.email)}</span></div>`).join('') + state.missing.map((m) => `<div class="recip-row missing"><span>${esc(m.account_name)}</span><span class="recip-email">no email on file</span></div>`).join('')) || '<div class="recip-row"><span>No buyers found for this line.</span></div>';
+      });
+
+      if (state.body) renderDraft();
+    };
+
+    const renderDraft = () => {
+      const emails = emailsOf();
+      const wrap = document.getElementById('ob_draftwrap');
+      const mailto = `mailto:?bcc=${encodeURIComponent(emails.join(','))}&subject=${encodeURIComponent(state.subject)}&body=${encodeURIComponent(state.body)}`;
+      const tooBig = mailto.length > 1800;
+      wrap.innerHTML = `
+        <div class="card" style="padding:16px;margin-top:16px">
+          <label for="ob_subject">Subject</label>
+          <input id="ob_subject" type="text" value="${esc(state.subject)}" />
+          <label for="ob_body" style="margin-top:12px">Email</label>
+          <textarea id="ob_body" rows="11" class="ob-body">${esc(state.body)}</textarea>
+
+          <div class="blast-actions">
+            <button class="btn" id="ob_copyrec" type="button">${I.users} Copy ${emails.length} recipients</button>
+            <button class="btn ghost" id="ob_copybody" type="button">${I.mail} Copy email</button>
+          </div>
+          <a class="btn ghost ${tooBig ? 'disabled' : ''}" id="ob_mailto" href="${tooBig ? '#' : mailto}">${I.mail} Open in Mail (BCC)</a>
+          ${tooBig ? '<div class="blast-hint">List is big for a mail link, so use the copy buttons and paste into Gmail or Outlook.</div>' : '<div class="blast-hint">Opens your mail app with everyone BCC\'d. Just hit send.</div>'}
+        </div>`;
+
+      document.getElementById('ob_subject').addEventListener('input', (e) => { state.subject = e.target.value; });
+      document.getElementById('ob_body').addEventListener('input', (e) => { state.body = e.target.value; renderMailto(); });
+      document.getElementById('ob_copyrec').addEventListener('click', (e) => copy(emails.join(', '), e.currentTarget));
+      document.getElementById('ob_copybody').addEventListener('click', (e) => copy(state.subject + '\n\n' + state.body, e.currentTarget));
+      const mt = document.getElementById('ob_mailto');
+      if (tooBig) mt.addEventListener('click', (ev) => ev.preventDefault());
+    };
+    const renderMailto = () => {
+      const emails = emailsOf();
+      const mailto = `mailto:?bcc=${encodeURIComponent(emails.join(','))}&subject=${encodeURIComponent(state.subject)}&body=${encodeURIComponent(state.body)}`;
+      const mt = document.getElementById('ob_mailto'); if (mt && mailto.length <= 1800) mt.href = mailto;
+    };
+
+    const loadRecipients = async () => {
+      const r = await api('/api/outreach/recipients?manufacturer_id=' + state.mfrId);
+      state.recipients = r ? r.recipients : [];
+      state.missing = r ? r.missing : [];
+    };
+
+    const draft = async () => {
+      const btn = document.getElementById('ob_draft'); btn.disabled = true; btn.textContent = 'Drafting…';
+      try {
+        const promo = document.getElementById('ob_promo').value.trim();
+        const d = await api('/api/outreach/draft', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ manufacturer_id: state.mfrId, promo }) });
+        state.subject = d.subject; state.body = d.body;
+        renderDraft();
+        document.getElementById('ob_draftwrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (err) { alert(err.message); }
+      finally { btn.disabled = false; btn.innerHTML = `${I.spark} Draft the email`; }
+    };
+
+    await loadRecipients();
+    render();
+  },
 };
 
 document.addEventListener('DOMContentLoaded', () => {

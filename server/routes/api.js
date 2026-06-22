@@ -731,4 +731,108 @@ router.get('/plan/leadsearch', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// ---------- Outreach (email blast) ----------
+// A segment is "accounts that buy this line," straight from resolved commission
+// line items. No tagging needed: if they show up on the Soudal statement, they
+// belong on the Soudal list. Recipients are the contact emails on those accounts.
+router.get('/outreach/segments', async (req, res, next) => {
+  try {
+    const orgId = req.user.org_id;
+    const buyers = (await query(
+      `SELECT DISTINCT cli.manufacturer_id, cli.resolved_account_id AS account_id
+         FROM commission_line_items cli
+        WHERE cli.org_id = $1 AND cli.resolved_account_id IS NOT NULL`,
+      [orgId]
+    )).rows;
+    const mfrs = (await query(`SELECT id, name FROM manufacturers WHERE org_id = $1 ORDER BY name`, [orgId])).rows;
+    const emailAccts = new Set((await query(`SELECT DISTINCT account_id FROM contacts WHERE email IS NOT NULL`)).rows.map((r) => r.account_id));
+
+    const byMfr = new Map();
+    for (const b of buyers) {
+      if (!byMfr.has(b.manufacturer_id)) byMfr.set(b.manufacturer_id, new Set());
+      byMfr.get(b.manufacturer_id).add(b.account_id);
+    }
+    const segments = mfrs
+      .map((m) => {
+        const accts = byMfr.get(m.id) || new Set();
+        let emailCount = 0;
+        accts.forEach((id) => { if (emailAccts.has(id)) emailCount++; });
+        return { manufacturer_id: m.id, name: m.name, account_count: accts.size, email_account_count: emailCount };
+      })
+      .filter((s) => s.account_count > 0);
+    res.json({ segments });
+  } catch (e) { next(e); }
+});
+
+router.get('/outreach/recipients', async (req, res, next) => {
+  try {
+    const orgId = req.user.org_id;
+    const mfrId = Number(req.query.manufacturer_id);
+    if (!mfrId) return res.status(400).json({ error: 'manufacturer_id required' });
+    const accounts = (await query(
+      `SELECT DISTINCT a.id, a.name, a.city
+         FROM commission_line_items cli
+         JOIN accounts a ON a.id = cli.resolved_account_id
+        WHERE cli.org_id = $1 AND cli.manufacturer_id = $2 AND cli.resolved_account_id IS NOT NULL
+        ORDER BY a.name`,
+      [orgId, mfrId]
+    )).rows;
+    const buyerIds = new Set(accounts.map((a) => a.id));
+    const allContacts = (await query(`SELECT account_id, name, email FROM contacts WHERE email IS NOT NULL`)).rows
+      .filter((c) => buyerIds.has(c.account_id));
+    const byAccount = new Map();
+    for (const c of allContacts) {
+      if (!byAccount.has(c.account_id)) byAccount.set(c.account_id, []);
+      byAccount.get(c.account_id).push({ name: c.name, email: c.email });
+    }
+    const recipients = [];
+    const missing = [];
+    for (const a of accounts) {
+      const cs = byAccount.get(a.id) || [];
+      if (cs.length) cs.forEach((c) => recipients.push({ account_id: a.id, account_name: a.name, contact_name: c.name, email: c.email }));
+      else missing.push({ account_id: a.id, account_name: a.name, city: a.city });
+    }
+    res.json({ recipients, missing });
+  } catch (e) { next(e); }
+});
+
+// Draft a promo blast in the rep's voice. AI when a key is set, otherwise a
+// clean templated fallback so it always returns something usable.
+router.post('/outreach/draft', async (req, res, next) => {
+  try {
+    const orgId = req.user.org_id;
+    const mfrId = Number((req.body || {}).manufacturer_id);
+    const promo = String((req.body || {}).promo || '').trim();
+    if (!mfrId) return res.status(400).json({ error: 'manufacturer_id required' });
+    const mfr = (await query(`SELECT name FROM manufacturers WHERE id = $1 AND org_id = $2`, [mfrId, orgId])).rows[0];
+    const mfrName = mfr ? mfr.name : 'our line';
+    const repName = req.user.name || 'Your rep';
+    const subject = promo ? `${mfrName}: ${promo}` : `${mfrName} update`;
+
+    const fallbackBody = `Hey there,\n\nWanted to get this in front of you quick. ${promo ? `We've got the ${promo} running on ${mfrName} right now` : `Quick update on ${mfrName}`}, and it's a good one to jump on before it's gone.\n\nIf you want me to put together an order or get you the details, just reply here or give me a call.\n\nThanks,\n${repName}`;
+
+    const key = process.env.ANTHROPIC_API_KEY;
+    if (!key) return res.json({ subject, body: fallbackBody, ai: false });
+    try {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 500,
+          messages: [{ role: 'user', content: `Write a short promo email from a building-materials manufacturer's rep to their dealer and distributor customers. Manufacturer: ${mfrName}. Promo/topic: ${promo || 'general check-in on the line'}. Sign as ${repName}.\n\nVoice: casual, direct, plain spoken, sounds like a real person wrote it fast. No corporate fluff, no buzzwords, no em dashes, no preamble. 3 short paragraphs max. End with a simple call to reply or call. This goes BCC to many customers, so keep it general (no specific customer name).\n\nReturn ONLY JSON: {"subject":"...","body":"..."}. No code fences.` }],
+        }),
+      });
+      const data = await r.json();
+      const txt = (data.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('').trim();
+      const s = txt.indexOf('{'); const e = txt.lastIndexOf('}');
+      if (s >= 0 && e >= 0) {
+        const obj = JSON.parse(txt.slice(s, e + 1));
+        return res.json({ subject: obj.subject || subject, body: obj.body || fallbackBody, ai: true });
+      }
+    } catch (_) { /* fall through */ }
+    res.json({ subject, body: fallbackBody, ai: false });
+  } catch (e) { next(e); }
+});
+
 module.exports = router;

@@ -472,3 +472,26 @@ body { background: radial-gradient(1200px 500px at 50% -200px, #e9f5ef 0%, var(-
 .prow .pr-name { flex: 1; min-width: 0; height: 38px; border: 1px solid var(--line); border-radius: 9px; padding: 0 10px; font-size: 14px; background: var(--surface); color: var(--ink); }
 .prow .pr-amt { width: 96px; height: 38px; border: 1px solid var(--line); border-radius: 9px; padding: 0 10px; font-size: 14px; background: var(--surface); color: var(--ink); text-align: right; }
 .prow .pr-rem { width: 34px; height: 34px; border: none; background: none; color: var(--muted); display: grid; place-items: center; flex: none; }
+
+/* ---------- Outreach (email blast) ---------- */
+a.btn { display: block; text-align: center; text-decoration: none; box-sizing: border-box; padding: 13px; border-radius: 12px; background: var(--green); color: #fff; font-size: 16px; font-weight: 650; margin-top: 18px; }
+.btn svg { vertical-align: -3px; margin-right: 6px; }
+.btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+.btn.ghost svg { color: var(--green-deep); }
+.btn.ok { background: var(--green-deep); color: #fff; }
+.btn.disabled { opacity: .5; pointer-events: none; }
+.recip-bar { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-top: 14px; font-size: 13.5px; color: var(--ink-2); }
+.recip-bar .ic { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: var(--green-soft); color: var(--green-deep); flex: none; }
+.recip-bar b { color: var(--ink); }
+.recip-missing { color: var(--amber); }
+.chip-toggle { margin-left: auto; border: 1px solid var(--line); background: var(--surface-2); color: var(--ink-2); font-size: 12.5px; font-weight: 650; border-radius: 8px; padding: 6px 12px; flex: none; }
+.recip-list { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; margin-top: 8px; overflow: hidden; }
+.recip-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 13px; }
+.recip-row:first-child { border-top: none; }
+.recip-row .recip-email { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.recip-row.missing { color: var(--muted); }
+.recip-row.missing .recip-email { color: var(--amber); }
+.ob-body { width: 100%; box-sizing: border-box; border: 1px solid var(--line); border-radius: 11px; padding: 12px; font-size: 14px; line-height: 1.5; color: var(--ink); font-family: inherit; resize: vertical; background: var(--surface); }
+.blast-actions { display: flex; gap: 10px; margin-top: 16px; }
+.blast-actions .btn { margin-top: 0; flex: 1; font-size: 14px; padding: 12px 10px; }
+.blast-hint { color: var(--muted); font-size: 12.5px; margin-top: 8px; text-align: center; }
