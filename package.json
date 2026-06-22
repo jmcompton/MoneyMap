@@ -9,6 +9,7 @@
   },
   "scripts": {
     "start": "node scripts/migrate.js && node server/index.js",
+    "dev": "node scripts/dev.js",
     "migrate": "node scripts/migrate.js",
     "seed": "node scripts/seed.js",
     "test": "node test/schema.test.js"
