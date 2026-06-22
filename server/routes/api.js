@@ -5,17 +5,26 @@ const multer = require('multer');
 const { parse } = require('csv-parse/sync');
 const { query, getPool } = require('../../db');
 const { normalizeName, computeTiers } = require('../../lib/helpers');
+const { computeRecoveries } = require('../../lib/reconcile');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 const router = express.Router();
 
 // --- shared: compute tiered accounts for an org from resolved commission ---
 async function tieredAccounts(orgId) {
+  // "Current" commission = each manufacturer's most recent statement, summed.
   const { rows } = await query(
     `SELECT a.id AS account_id, a.name AS name,
             COALESCE(SUM(cli.amount), 0) AS commission
        FROM commission_line_items cli
+       JOIN commission_imports ci ON ci.id = cli.import_id
        JOIN accounts a ON a.id = cli.resolved_account_id
+       JOIN (
+         SELECT manufacturer_id, MAX(period_start) AS mx
+           FROM commission_imports
+          WHERE org_id = $1 AND period_start IS NOT NULL
+          GROUP BY manufacturer_id
+       ) latest ON latest.manufacturer_id = ci.manufacturer_id AND ci.period_start = latest.mx
       WHERE cli.org_id = $1 AND cli.match_status = 'matched'
       GROUP BY a.id, a.name`,
     [orgId]
@@ -35,6 +44,7 @@ router.get('/manufacturers', async (req, res, next) => {
 
 const daysBetween = (d) => Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
 const daysUntil = (d) => Math.ceil((new Date(d).getTime() - Date.now()) / 86400000);
+const round2cents = (n) => Math.round(n * 100) / 100;
 
 // The money map: the full homepage in one payload.
 router.get('/home', async (req, res, next) => {
@@ -89,6 +99,18 @@ router.get('/home', async (req, res, next) => {
       [orgId]
     )).rows.map((t) => ({ title: t.title, days_to_due: daysUntil(t.due_date) }));
 
+    // found money headline (open + claimed gaps)
+    let foundTotal = 0; let foundCount = 0;
+    try {
+      const recItems = await computeRecoveries(orgId);
+      const statuses = await recoveryStatusMap(orgId);
+      for (const it of recItems) {
+        const s = statuses.get(it.key);
+        const st = s ? s.status : 'open';
+        if (st === 'open' || st === 'claimed') { foundTotal += it.gap; foundCount += 1; }
+      }
+    } catch (_) { /* non-fatal */ }
+
     const first = req.user.name.split(' ')[0];
     const riskKey = atRisk.filter((a) => a.tier === 'A').length;
     const closingDeals = dealRows.filter((d) => d.days_to_close <= 14);
@@ -105,6 +127,8 @@ router.get('/home', async (req, res, next) => {
         key_account_count: tiers.filter((t) => t.tier === 'A').length,
         at_risk_count: atRisk.length,
         pipeline_value: pipeline,
+        found_total: round2cents(foundTotal),
+        found_count: foundCount,
       },
       today_route: route,
       at_risk: atRisk,
@@ -227,8 +251,8 @@ router.post('/imports', upload.single('file'), async (req, res, next) => {
     const imp = (
       await query(
         `INSERT INTO commission_imports
-           (org_id, manufacturer_id, uploaded_by, period_label, source_filename, row_count, status)
-         VALUES ($1,$2,$3,$4,$5,$6,'processed') RETURNING id`,
+           (org_id, manufacturer_id, uploaded_by, period_label, period_start, source_filename, row_count, status)
+         VALUES ($1,$2,$3,$4,CURRENT_DATE,$5,$6,'processed') RETURNING id`,
         [orgId, mfrId, req.user.id, period_label, req.file.originalname || 'upload.csv', records.length]
       )
     ).rows[0];
@@ -382,4 +406,63 @@ router.post('/ai/polish', async (req, res, next) => {
     res.json({ polished: String((req.body || {}).text || '').trim(), ai: false });
   }
 });
+// Found money: discrepancies on the latest statements, with recovery status.
+const OPEN_STATUSES = ['open', 'claimed'];
+async function recoveryStatusMap(orgId) {
+  const { rows } = await query(`SELECT account_id, manufacturer_id, period_label, type, status, note FROM recoveries WHERE org_id = $1`, [orgId]);
+  const map = new Map();
+  for (const r of rows) map.set(`${r.account_id}:${r.manufacturer_id}:${r.period_label}:${r.type}`, r);
+  return map;
+}
+
+router.get('/reconcile', async (req, res, next) => {
+  try {
+    const orgId = req.user.org_id;
+    const items = await computeRecoveries(orgId);
+    const statuses = await recoveryStatusMap(orgId);
+    const merged = items.map((it) => {
+      const s = statuses.get(it.key);
+      return { ...it, status: s ? s.status : 'open', note: s ? s.note : null };
+    });
+    const sum = (pred) => merged.filter(pred).reduce((s, x) => s + x.gap, 0);
+    res.json({
+      summary: {
+        found_total: round2cents(sum((x) => OPEN_STATUSES.includes(x.status))),
+        open_count: merged.filter((x) => OPEN_STATUSES.includes(x.status)).length,
+        recovered_total: round2cents(sum((x) => x.status === 'recovered')),
+        recovered_count: merged.filter((x) => x.status === 'recovered').length,
+        dismissed_count: merged.filter((x) => x.status === 'dismissed').length,
+        flagged_count: merged.length,
+      },
+      items: merged,
+    });
+  } catch (e) { next(e); }
+});
+
+router.post('/reconcile/resolve', async (req, res, next) => {
+  try {
+    const orgId = req.user.org_id;
+    const { account_id, manufacturer_id, period_label, type, gap, status, note } = req.body || {};
+    const allowed = ['open', 'claimed', 'recovered', 'dismissed'];
+    if (!account_id || !manufacturer_id || !period_label || !type || !allowed.includes(status)) {
+      return res.status(400).json({ error: 'Missing or invalid recovery fields.' });
+    }
+    const existing = (await query(
+      `SELECT id FROM recoveries WHERE org_id=$1 AND account_id=$2 AND manufacturer_id=$3 AND period_label=$4 AND type=$5`,
+      [orgId, account_id, manufacturer_id, period_label, type]
+    )).rows[0];
+    if (existing) {
+      await query(`UPDATE recoveries SET status=$1, note=$2, gap=$3, updated_at=now() WHERE id=$4`,
+        [status, note || null, gap || 0, existing.id]);
+    } else {
+      await query(
+        `INSERT INTO recoveries (org_id, account_id, manufacturer_id, period_label, type, gap, status, note)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+        [orgId, account_id, manufacturer_id, period_label, type, gap || 0, status, note || null]
+      );
+    }
+    res.json({ ok: true });
+  } catch (e) { next(e); }
+});
+
 module.exports = router;

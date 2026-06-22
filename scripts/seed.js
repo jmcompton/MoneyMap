@@ -13,7 +13,7 @@ async function seed() {
   const pool = getPool();
 
   for (const t of [
-    'tasks', 'route_stops', 'leads', 'deals',
+    'recoveries', 'tasks', 'route_stops', 'leads', 'deals',
     'commission_line_items', 'commission_imports', 'account_aliases',
     'contacts', 'accounts', 'manufacturers', 'users', 'organizations',
   ]) {
@@ -78,22 +78,57 @@ async function seed() {
     );
   }
 
-  const imp = (await pool.query(
-    `INSERT INTO commission_imports (org_id, manufacturer_id, uploaded_by, period_label, source_filename, row_count, status)
-     VALUES ($1,$2,$3,'May 2026','seed-may-2026.csv',11,'processed') RETURNING id`,
-    [org.id, soudal, users['admin@comptonsales.com']]
-  )).rows[0];
-  const resolved = [
-    ['a1', 4200], ['alpha', 3100], ['celltech', 2750], ['gadsden', 1900], ['huntsville', 1500],
-    ['redstone', 1200], ['ncs', 980], ['bham', 640], ['cullman', 510], ['decatur', 300], ['madison', 150],
+  // Multi-period commission history so reconciliation has something to compare.
+  const periods = [
+    { label: 'Feb 2026', start: '2026-02-01' },
+    { label: 'Mar 2026', start: '2026-03-01' },
+    { label: 'Apr 2026', start: '2026-04-01' },
+    { label: 'May 2026', start: '2026-05-01' },
   ];
-  for (const [key, amount] of resolved) {
-    await pool.query(
-      `INSERT INTO commission_line_items
-        (import_id, org_id, manufacturer_id, raw_account_name, amount, period_label, resolved_account_id, match_status)
-       VALUES ($1,$2,$3,$4,$5,'May 2026',$6,'matched')`,
-      [imp.id, org.id, soudal, accountDefs.find((a) => a.key === key).name, amount, acct[key]]
-    );
+  const insertPeriod = async (mfrId, label, start, series, idx, filename) => {
+    const rows = Object.entries(series).filter(([, arr]) => arr[idx] != null && arr[idx] > 0);
+    const imp = (await pool.query(
+      `INSERT INTO commission_imports (org_id, manufacturer_id, uploaded_by, period_label, period_start, source_filename, row_count, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'processed') RETURNING id`,
+      [org.id, mfrId, users['admin@comptonsales.com'], label, start, filename, rows.length]
+    )).rows[0];
+    for (const [key, arr] of rows) {
+      await pool.query(
+        `INSERT INTO commission_line_items (import_id, org_id, manufacturer_id, raw_account_name, amount, period_label, resolved_account_id, match_status)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,'matched')`,
+        [imp.id, org.id, mfrId, accountDefs.find((a) => a.key === key).name, arr[idx], label, acct[key]]
+      );
+    }
+  };
+  const slug = (l) => l.toLowerCase().replace(/\s+/g, '-');
+
+  // Soudal: full history. Celltech goes missing in May; Gadsden gets underpaid.
+  const soudalSeries = {
+    a1: [4000, 4100, 4300, 4200],
+    alpha: [3000, 3200, 3100, 3100],
+    celltech: [2700, 2800, 2750, 0],
+    gadsden: [1900, 1950, 1850, 600],
+    huntsville: [1500, 1450, 1550, 1500],
+    redstone: [1200, 1100, 1250, 1200],
+    ncs: [980, 1000, 950, 980],
+    bham: [640, 600, 660, 640],
+    cullman: [510, 500, 520, 510],
+    decatur: [300, 320, 310, 300],
+    madison: [150, 140, 160, 150],
+  };
+  for (let i = 0; i < periods.length; i++) {
+    await insertPeriod(soudal, periods[i].label, periods[i].start, soudalSeries, i, `soudal-${slug(periods[i].label)}.csv`);
+  }
+
+  // ShurTape: only the last two periods. Huntsville goes missing in May.
+  const shur = mfrs['ShurTape'];
+  const shurSeries = {
+    a1: [null, null, 800, 800],
+    huntsville: [null, null, 600, 0],
+    gadsden: [null, null, 400, 420],
+  };
+  for (let i = 2; i < periods.length; i++) {
+    await insertPeriod(shur, periods[i].label, periods[i].start, shurSeries, i, `shurtape-${slug(periods[i].label)}.csv`);
   }
 
   for (const d of [

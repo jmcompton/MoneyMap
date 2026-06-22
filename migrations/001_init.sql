@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS commission_imports (
   manufacturer_id  INTEGER NOT NULL REFERENCES manufacturers(id),
   uploaded_by      INTEGER REFERENCES users(id),
   period_label     TEXT NOT NULL,
+  period_start     DATE,
   source_filename  TEXT,
   row_count        INTEGER NOT NULL DEFAULT 0,
   status           TEXT NOT NULL DEFAULT 'processed',
@@ -162,4 +163,18 @@ CREATE TABLE IF NOT EXISTS activities (
   type        TEXT NOT NULL DEFAULT 'note',
   body        TEXT,
   created_at  TIMESTAMP NOT NULL DEFAULT now()
+);
+
+-- Recovery workflow: the rep's action on a found-money flag.
+CREATE TABLE IF NOT EXISTS recoveries (
+  id               SERIAL PRIMARY KEY,
+  org_id           INTEGER NOT NULL REFERENCES organizations(id),
+  account_id       INTEGER REFERENCES accounts(id),
+  manufacturer_id  INTEGER REFERENCES manufacturers(id),
+  period_label     TEXT,
+  type             TEXT,
+  gap              NUMERIC DEFAULT 0,
+  status           TEXT NOT NULL DEFAULT 'open',
+  note             TEXT,
+  updated_at       TIMESTAMP NOT NULL DEFAULT now()
 );

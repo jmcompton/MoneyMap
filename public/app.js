@@ -34,6 +34,7 @@ const I = {
   users: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/></svg>',
   clock: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
   mic: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 17v4M8 21h8"/></svg>',
+  recover: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 6.8v10.4"/><path d="M14.6 9.1c-.5-.8-1.5-1.3-2.6-1.3-1.5 0-2.6.8-2.6 1.9 0 1 .9 1.6 2.6 1.9 1.7.3 2.6.9 2.6 1.9 0 1.1-1.1 1.9-2.6 1.9-1.1 0-2.1-.5-2.6-1.3"/></svg>',
 };
 
 function rowHtml(a) {
@@ -201,6 +202,10 @@ const pages = {
         <a class="logout" href="#" onclick="fetch('/api/logout',{method:'POST'}).then(()=>location.href='/login.html');return false;">Sign out</a>
       </header>
       <div class="brief"><span class="spark">${I.spark}</span><div class="txt">${esc(d.brief)}</div></div>
+      ${s.found_total > 0 ? `<a class="foundcard" href="/reconcile.html">
+        <div class="fc-ic">${I.recover}</div>
+        <div class="fc-body"><div class="fc-label">Found money</div><div class="fc-amt">${money(s.found_total)}</div><div class="fc-sub">across ${s.found_count} account${s.found_count === 1 ? '' : 's'} you may be owed · tap to review</div></div>
+        <div class="fc-arrow">→</div></a>` : ''}
       <div class="stats">
         <div class="stat"><div class="label">Tracked commission</div><div class="value green">${money(s.total_commission)}</div></div>
         <div class="stat"><div class="label">Open pipeline</div><div class="value blue">${money(s.pipeline_value)}</div></div>
@@ -339,6 +344,89 @@ const pages = {
       document.getElementById('micFab').addEventListener('click', () => voiceRecorder(id, render));
     };
     render();
+  },
+
+  async reconcile() {
+    const app = document.getElementById('app');
+    let filter = 'open';
+    const tabs = [['open', 'To recover'], ['recovered', 'Recovered'], ['dismissed', 'Dismissed'], ['all', 'All']];
+
+    const sparkline = (history) => {
+      const max = Math.max(1, ...history.map((h) => h.amount));
+      return `<div class="spark-bars">${history.map((h, i) => {
+        const last = i === history.length - 1;
+        const ht = Math.max(4, Math.round((h.amount / max) * 34));
+        return `<div class="sb"><div class="sbar ${last && h.amount === 0 ? 'zero' : (last ? 'cur' : '')}" style="height:${ht}px" title="${esc(h.label)}: ${money(h.amount)}"></div><div class="sl">${esc(h.label.split(' ')[0])}</div></div>`;
+      }).join('')}</div>`;
+    };
+
+    const load = async () => {
+      const d = await api('/api/reconcile');
+      if (!d) return;
+      const s = d.summary;
+      const inFilter = (it) => filter === 'all' ? true
+        : filter === 'open' ? (it.status === 'open' || it.status === 'claimed')
+        : it.status === filter;
+      const visible = d.items.filter(inFilter);
+
+      const cards = visible.length ? visible.map((it) => {
+        const typeBadge = it.type === 'missing' ? `<span class="chip red">Missing from statement</span>` : `<span class="chip amber">Underpaid</span>`;
+        let actions = '';
+        if (it.status === 'open') actions = `<button class="rb claim">Mark claimed</button><button class="rb done">Recovered</button><button class="rb ghost">Dismiss</button>`;
+        else if (it.status === 'claimed') actions = `<span class="statepill claimed">Claim sent</span><button class="rb done">Recovered</button><button class="rb ghost">Undo</button>`;
+        else if (it.status === 'recovered') actions = `<span class="statepill recovered">Recovered ✓</span><button class="rb ghost">Undo</button>`;
+        else actions = `<span class="statepill dismissed">Dismissed</span><button class="rb ghost">Undo</button>`;
+        const claim = `${it.period_label} commission — ${it.account_name} shows ${money(it.current)} but averaged ${money(it.baseline)} over prior statements. Please review a possible ${money(it.gap)} discrepancy.`;
+        return `<div class="rcard" data-key="${esc(it.key)}">
+          <div class="rtop"><div><div class="rname">${esc(it.account_name)}</div><div class="rsub">${esc(it.manufacturer)} · ${esc(it.period_label)}</div></div><div class="rgap">+${money(it.gap)}</div></div>
+          <div class="rmeta">${typeBadge}<span class="rwas">was averaging ${money(it.baseline)}, paid ${money(it.current)}</span></div>
+          ${sparkline(it.history)}
+          <div class="ractions">${actions}<button class="rb link copyclaim">Copy claim note</button></div>
+          <textarea class="claimnote" hidden>${esc(claim)}</textarea>
+        </div>`;
+      }).join('') : `<div class="rcard"><div class="rsub" style="text-align:center;padding:14px">Nothing here. ${filter === 'open' ? 'No open discrepancies, your statements look clean.' : ''}</div></div>`;
+
+      app.innerHTML = `
+        <header class="top"><div><h1>Found money</h1><div class="sub">Commission you may be owed, caught by comparing every statement.</div></div></header>
+        <div class="foundhero">
+          <div class="fh-label">${I.recover} You may be owed</div>
+          <div class="fh-amt">${money(s.found_total)}</div>
+          <div class="fh-sub">${s.open_count} open discrepanc${s.open_count === 1 ? 'y' : 'ies'} across your latest statements${s.recovered_total > 0 ? ` · <b>${money(s.recovered_total)}</b> recovered` : ''}</div>
+        </div>
+        <div class="chips" id="rtabs" style="margin-bottom:14px">${tabs.map(([v, l]) => `<div class="fchip ${v === filter ? 'active' : ''}" data-v="${v}">${l}</div>`).join('')}</div>
+        <div id="rlist">${cards}</div>`;
+
+      document.getElementById('rtabs').addEventListener('click', (e) => {
+        const c = e.target.closest('.fchip'); if (!c) return;
+        filter = c.dataset.v; load();
+      });
+
+      const resolve = async (it, status) => {
+        try {
+          await api('/api/reconcile/resolve', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ account_id: it.account_id, manufacturer_id: it.manufacturer_id, period_label: it.period_label, type: it.type, gap: it.gap, status }) });
+          load();
+        } catch (e) { alert(e.message); }
+      };
+      document.querySelectorAll('.rcard').forEach((card) => {
+        const it = d.items.find((x) => x.key === card.dataset.key);
+        if (!it) return;
+        const btn = (sel) => card.querySelector(sel);
+        if (btn('.claim')) btn('.claim').addEventListener('click', () => resolve(it, 'claimed'));
+        if (btn('.done')) btn('.done').addEventListener('click', () => resolve(it, 'recovered'));
+        if (btn('.ghost')) btn('.ghost').addEventListener('click', () => resolve(it, it.status === 'open' ? 'dismissed' : 'open'));
+        if (btn('.copyclaim')) btn('.copyclaim').addEventListener('click', () => {
+          const ta = card.querySelector('.claimnote');
+          ta.hidden = false; ta.select();
+          try { document.execCommand('copy'); } catch (_) {}
+          if (navigator.clipboard) navigator.clipboard.writeText(ta.value).catch(() => {});
+          ta.hidden = true;
+          btn('.copyclaim').textContent = 'Copied';
+          setTimeout(() => { if (btn('.copyclaim')) btn('.copyclaim').textContent = 'Copy claim note'; }, 1500);
+        });
+      });
+    };
+    load();
   },
 
   async import() {
