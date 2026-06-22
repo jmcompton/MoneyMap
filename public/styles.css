@@ -295,3 +295,49 @@ body { background: radial-gradient(1200px 500px at 50% -200px, #e9f5ef 0%, var(-
 .statepill.recovered { background: var(--green-soft); color: var(--green-deep); }
 .statepill.dismissed { background: var(--gray-soft); color: var(--muted); }
 .claimnote { position: absolute; left: -9999px; }
+
+/* ---------- weekly planner ---------- */
+.weeknav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.weeknav .wlabel { font-weight: 650; font-size: 15px; }
+.wbtn { width: 38px; height: 38px; border-radius: 11px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.daypick { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 14px; -webkit-overflow-scrolling: touch; }
+.dchip { position: relative; flex: 1; min-width: 56px; border: 1px solid var(--line); background: var(--surface); border-radius: 14px; padding: 10px 6px 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.dchip .dw { font-size: 11px; color: var(--muted); font-weight: 600; }
+.dchip .dd { font-size: 17px; font-weight: 700; }
+.dchip.working { border-color: #bfe6d4; }
+.dchip.active { background: var(--ink); border-color: var(--ink); }
+.dchip.active .dw, .dchip.active .dd { color: #fff; }
+.dchip .ddot { position: absolute; bottom: 6px; width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+.dchip .dtoday { position: absolute; bottom: 6px; width: 14px; height: 3px; border-radius: 2px; background: var(--green); }
+.dchip.active .ddot, .dchip.active .dtoday { background: #fff; }
+.dayhead { font-size: 17px; font-weight: 700; margin: 4px 2px 14px; display: flex; align-items: center; gap: 10px; }
+
+.switchrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 4px; }
+.switch { width: 50px; height: 30px; border-radius: 999px; border: none; background: var(--line); position: relative; cursor: pointer; flex: none; }
+.switch span { position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; transition: left .15s ease; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.switch.on { background: var(--green); }
+.switch.on span { left: 23px; }
+.tworow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.autofill { margin-left: auto; border: none; background: var(--indigo-soft); color: var(--indigo); font-weight: 650; font-size: 13px; padding: 7px 12px; border-radius: 10px; cursor: pointer; }
+
+.scard { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--line); }
+.scard .pinfo { flex: 1; min-width: 0; }
+.addbtn { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--green); background: var(--green-soft); color: var(--green-deep); font-weight: 650; font-size: 13px; padding: 7px 12px; border-radius: 10px; cursor: pointer; white-space: nowrap; }
+
+.pstop { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-top: 1px solid var(--line); background: var(--surface); }
+.pstop.dragging { opacity: .5; }
+.pstop .grip { color: var(--muted); cursor: grab; flex: none; }
+.pstop .ptime { width: 96px; flex: none; padding: 8px; border: 1px solid var(--line); border-radius: 9px; font-size: 14px; }
+.pstop .pinfo { flex: 1; min-width: 0; }
+.pstop .pn { font-weight: 600; font-size: 14.5px; }
+.pstop .pc { color: var(--muted); font-size: 12.5px; }
+.pmove { display: flex; gap: 2px; flex: none; }
+.pbtn { width: 30px; height: 30px; border: none; background: var(--gray-soft); color: var(--ink-2); border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.pbtn.rem { color: var(--red); background: var(--red-soft); }
+.pbtn:disabled { opacity: .35; }
+.endpoint { display: flex; align-items: center; gap: 9px; padding: 11px 16px; font-size: 13px; font-weight: 600; color: var(--ink-2); background: var(--surface-2); }
+.endpoint .epdot { width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--green); }
+.endpoint.end .epdot { background: var(--green); }
+.planhint { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; padding: 12px 4px; }
+.planhint svg { color: var(--green); }
+.planhint b { color: var(--ink); }

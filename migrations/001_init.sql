@@ -125,7 +125,7 @@ CREATE TABLE IF NOT EXISTS route_stops (
   arrival_time  TEXT,
   position      INTEGER NOT NULL DEFAULT 0,
   status        TEXT NOT NULL DEFAULT 'planned',
-  stop_date     DATE NOT NULL DEFAULT CURRENT_DATE,
+  stop_date     TEXT NOT NULL,
   created_at    TIMESTAMP NOT NULL DEFAULT now()
 );
 
@@ -177,4 +177,17 @@ CREATE TABLE IF NOT EXISTS recoveries (
   status           TEXT NOT NULL DEFAULT 'open',
   note             TEXT,
   updated_at       TIMESTAMP NOT NULL DEFAULT now()
+);
+
+-- Weekly planner: per-day settings (whether you're working, where you're anchored).
+CREATE TABLE IF NOT EXISTS plan_days (
+  id           SERIAL PRIMARY KEY,
+  org_id       INTEGER NOT NULL REFERENCES organizations(id),
+  user_id      INTEGER REFERENCES users(id),
+  plan_date    TEXT NOT NULL,
+  working      BOOLEAN NOT NULL DEFAULT false,
+  anchor_city  TEXT,
+  start_point  TEXT,
+  end_point    TEXT,
+  updated_at   TIMESTAMP NOT NULL DEFAULT now()
 );

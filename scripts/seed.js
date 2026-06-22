@@ -13,7 +13,7 @@ async function seed() {
   const pool = getPool();
 
   for (const t of [
-    'recoveries', 'tasks', 'route_stops', 'leads', 'deals',
+    'recoveries', 'plan_days', 'tasks', 'route_stops', 'leads', 'deals',
     'commission_line_items', 'commission_imports', 'account_aliases',
     'contacts', 'accounts', 'manufacturers', 'users', 'organizations',
   ]) {
@@ -160,12 +160,13 @@ async function seed() {
     { account: 'redstone', label: 'Redstone Contractors', city: 'Huntsville', time: '11:00 AM', status: 'planned' },
     { account: 'huntsville', label: 'Huntsville Drywall', city: 'Huntsville', time: '1:30 PM', status: 'planned' },
   ];
+  const todayYmd = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
   for (let i = 0; i < stops.length; i++) {
     const s = stops[i];
     await pool.query(
-      `INSERT INTO route_stops (org_id, user_id, account_id, label, city, arrival_time, position, status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-      [org.id, danId, acct[s.account], s.label, s.city, s.time, i + 1, s.status]
+      `INSERT INTO route_stops (org_id, user_id, account_id, label, city, arrival_time, position, status, stop_date)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      [org.id, danId, acct[s.account], s.label, s.city, s.time, i + 1, s.status, todayYmd]
     );
   }
 
@@ -227,6 +228,22 @@ async function seed() {
         [org.id, acct[key], danId, type, body, daysAgo(days)]);
     }
   }
+
+  // Weekly planner seed: today is a real planned day; tomorrow is set up but
+  // empty so the "suggest stops" flow has something to show.
+  const ymdLocal = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const today = new Date();
+  const tomorrow = new Date(Date.now() + 86400000);
+  await pool.query(
+    `INSERT INTO plan_days (org_id, user_id, plan_date, working, anchor_city, start_point, end_point)
+     VALUES ($1,$2,$3,true,'Huntsville','Home — Birmingham, AL','Home — Birmingham, AL')`,
+    [org.id, danId, ymdLocal(today)]
+  );
+  await pool.query(
+    `INSERT INTO plan_days (org_id, user_id, plan_date, working, anchor_city, start_point, end_point)
+     VALUES ($1,$2,$3,true,'Cullman','Home — Birmingham, AL','Home — Birmingham, AL')`,
+    [org.id, danId, ymdLocal(tomorrow)]
+  );
 
   console.log('seed complete. login: admin@comptonsales.com / ' + PASSWORD);
 }

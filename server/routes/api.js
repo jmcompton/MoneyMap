@@ -74,8 +74,8 @@ router.get('/home', async (req, res, next) => {
       .slice(0, 4);
 
     const route = (await query(
-      `SELECT label, city, arrival_time, status FROM route_stops WHERE org_id = $1 ORDER BY position`,
-      [orgId]
+      `SELECT label, city, arrival_time, status FROM route_stops WHERE org_id = $1 AND stop_date = $2 ORDER BY position`,
+      [orgId, ymd(new Date())]
     )).rows;
 
     const leads = (await query(
@@ -462,6 +462,166 @@ router.post('/reconcile/resolve', async (req, res, next) => {
       );
     }
     res.json({ ok: true });
+  } catch (e) { next(e); }
+});
+
+// ---------- Weekly planner ----------
+const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const asDateStr = (v) => (v instanceof Date ? ymd(v) : String(v).slice(0, 10));
+function weekMondays(offset) {
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  const dow = (now.getDay() + 6) % 7; // 0 = Monday
+  const monday = new Date(now); monday.setDate(now.getDate() - dow + offset * 7);
+  const days = [];
+  for (let i = 0; i < 6; i++) { const d = new Date(monday); d.setDate(monday.getDate() + i); days.push(d); }
+  return days;
+}
+
+router.get('/plan', async (req, res, next) => {
+  try {
+    const orgId = req.user.org_id;
+    const offset = parseInt(req.query.offset || '0', 10) || 0;
+    const days = weekMondays(offset);
+    const first = ymd(days[0]); const last = ymd(days[days.length - 1]);
+    const todayStr = ymd(new Date());
+
+    const dayRows = (await query(`SELECT plan_date, working, anchor_city, start_point, end_point FROM plan_days WHERE org_id = $1 AND plan_date BETWEEN $2 AND $3`, [orgId, first, last])).rows;
+    const dayMap = new Map(dayRows.map((r) => [asDateStr(r.plan_date), r]));
+    const stopRows = (await query(`SELECT id, account_id, label, city, arrival_time, position, status, stop_date FROM route_stops WHERE org_id = $1 AND stop_date BETWEEN $2 AND $3 ORDER BY position`, [orgId, first, last])).rows;
+    const stopsByDate = {};
+    for (const s of stopRows) { const k = asDateStr(s.stop_date); (stopsByDate[k] = stopsByDate[k] || []).push({ id: s.id, account_id: s.account_id, label: s.label, city: s.city, arrival_time: s.arrival_time, position: s.position, status: s.status }); }
+
+    const out = days.map((d) => {
+      const ds = ymd(d);
+      const settings = dayMap.get(ds) || {};
+      return {
+        date: ds,
+        weekday: d.toLocaleDateString('en-US', { weekday: 'short' }),
+        label: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        is_today: ds === todayStr,
+        working: !!settings.working,
+        anchor_city: settings.anchor_city || '',
+        start_point: settings.start_point || '',
+        end_point: settings.end_point || '',
+        stops: stopsByDate[ds] || [],
+      };
+    });
+    const cities = (await query(`SELECT DISTINCT city FROM accounts WHERE org_id = $1 AND city IS NOT NULL ORDER BY city`, [orgId])).rows.map((r) => r.city);
+    res.json({ offset, week_label: `${days[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${days[5].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`, days: out, cities });
+  } catch (e) { next(e); }
+});
+
+router.post('/plan/day', async (req, res, next) => {
+  try {
+    const orgId = req.user.org_id;
+    const { plan_date, working, anchor_city, start_point, end_point } = req.body || {};
+    if (!plan_date) return res.status(400).json({ error: 'plan_date required' });
+    const existing = (await query(`SELECT id FROM plan_days WHERE org_id=$1 AND plan_date=$2`, [orgId, plan_date])).rows[0];
+    if (existing) {
+      await query(`UPDATE plan_days SET working=$1, anchor_city=$2, start_point=$3, end_point=$4, updated_at=now() WHERE id=$5`,
+        [working === undefined ? true : !!working, anchor_city || null, start_point || null, end_point || null, existing.id]);
+    } else {
+      await query(`INSERT INTO plan_days (org_id, user_id, plan_date, working, anchor_city, start_point, end_point) VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+        [orgId, req.user.id, plan_date, working === undefined ? true : !!working, anchor_city || null, start_point || null, end_point || null]);
+    }
+    res.json({ ok: true });
+  } catch (e) { next(e); }
+});
+
+router.post('/plan/stop', async (req, res, next) => {
+  try {
+    const orgId = req.user.org_id;
+    const { plan_date, account_id, label, city, arrival_time } = req.body || {};
+    if (!plan_date || !label) return res.status(400).json({ error: 'plan_date and label required' });
+    const mx = (await query(`SELECT COALESCE(MAX(position),0) AS m FROM route_stops WHERE org_id=$1 AND stop_date=$2`, [orgId, plan_date])).rows[0].m;
+    await query(`INSERT INTO route_stops (org_id, user_id, account_id, label, city, arrival_time, position, status, stop_date) VALUES ($1,$2,$3,$4,$5,$6,$7,'planned',$8)`,
+      [orgId, req.user.id, account_id || null, label, city || null, arrival_time || null, Number(mx) + 1, plan_date]);
+    res.json({ ok: true });
+  } catch (e) { next(e); }
+});
+
+router.post('/plan/stop/update', async (req, res, next) => {
+  try {
+    const { id, arrival_time } = req.body || {};
+    if (!id) return res.status(400).json({ error: 'id required' });
+    await query(`UPDATE route_stops SET arrival_time=$1 WHERE id=$2 AND org_id=$3`, [arrival_time || null, id, req.user.org_id]);
+    res.json({ ok: true });
+  } catch (e) { next(e); }
+});
+
+router.post('/plan/stop/delete', async (req, res, next) => {
+  try {
+    const { id } = req.body || {};
+    if (!id) return res.status(400).json({ error: 'id required' });
+    await query(`DELETE FROM route_stops WHERE id=$1 AND org_id=$2`, [id, req.user.org_id]);
+    res.json({ ok: true });
+  } catch (e) { next(e); }
+});
+
+router.post('/plan/reorder', async (req, res, next) => {
+  try {
+    const orgId = req.user.org_id;
+    const ids = (req.body || {}).ordered_ids || [];
+    for (let i = 0; i < ids.length; i++) {
+      await query(`UPDATE route_stops SET position=$1 WHERE id=$2 AND org_id=$3`, [i + 1, ids[i], orgId]);
+    }
+    res.json({ ok: true });
+  } catch (e) { next(e); }
+});
+
+// AI proposes: candidate stops near the anchor city (at-risk + key accounts + leads).
+router.get('/plan/suggest', async (req, res, next) => {
+  try {
+    const orgId = req.user.org_id;
+    const city = String(req.query.city || '').trim();
+    const planDate = String(req.query.plan_date || '').trim();
+    if (!city) return res.json({ candidates: [] });
+    const tiers = await tieredAccounts(orgId);
+    const tmap = new Map(tiers.map((t) => [t.account_id, t]));
+    const already = new Set((await query(`SELECT account_id FROM route_stops WHERE org_id=$1 AND stop_date=$2 AND account_id IS NOT NULL`, [orgId, planDate])).rows.map((r) => r.account_id));
+
+    const accts = (await query(`SELECT id, name, city, last_contact_at FROM accounts WHERE org_id=$1 AND LOWER(city)=LOWER($2)`, [orgId, city])).rows;
+    const acctCands = accts.filter((a) => !already.has(a.id)).map((a) => {
+      const t = tmap.get(a.id);
+      const tier = t ? t.tier : 'C';
+      const commission = t ? t.commission : 0;
+      const days = a.last_contact_at ? daysBetween(a.last_contact_at) : null;
+      const tierW = tier === 'A' ? 3000 : tier === 'B' ? 2000 : 1000;
+      const score = tierW + (days || 0) + commission / 100;
+      let reason;
+      if (days != null && days >= 30) reason = `${tier === 'A' ? 'Key account' : 'Account'} · ${days}d quiet`;
+      else reason = `${tier === 'A' ? 'Key account' : tier + ' account'} here`;
+      return { type: 'account', account_id: a.id, label: a.name, city: a.city, reason, commission, score };
+    });
+
+    const leads = (await query(`SELECT name, city, reason, est_value, distance_mi FROM leads WHERE org_id=$1 AND LOWER(city)=LOWER($2)`, [orgId, city])).rows
+      .map((l) => ({ type: 'lead', label: l.name, city: l.city, reason: `AI lead · ~${'$' + Number(l.est_value).toLocaleString('en-US')}/yr`, score: Number(l.est_value) / 200 }));
+
+    const candidates = [...acctCands, ...leads].sort((a, b) => b.score - a.score).slice(0, 8);
+    res.json({ candidates });
+  } catch (e) { next(e); }
+});
+
+// AI proposes a whole day: add the top candidates as stops in one tap.
+router.post('/plan/autofill', async (req, res, next) => {
+  try {
+    const orgId = req.user.org_id;
+    const { plan_date, city } = req.body || {};
+    if (!plan_date || !city) return res.status(400).json({ error: 'plan_date and city required' });
+    const tiers = await tieredAccounts(orgId);
+    const tmap = new Map(tiers.map((t) => [t.account_id, t]));
+    const already = new Set((await query(`SELECT account_id FROM route_stops WHERE org_id=$1 AND stop_date=$2 AND account_id IS NOT NULL`, [orgId, plan_date])).rows.map((r) => r.account_id));
+    const accts = (await query(`SELECT id, name, city, last_contact_at FROM accounts WHERE org_id=$1 AND LOWER(city)=LOWER($2)`, [orgId, city])).rows
+      .filter((a) => !already.has(a.id))
+      .map((a) => { const t = tmap.get(a.id); const tierW = t && t.tier === 'A' ? 3000 : t && t.tier === 'B' ? 2000 : 1000; const days = a.last_contact_at ? daysBetween(a.last_contact_at) : 0; return { ...a, score: tierW + days }; })
+      .sort((a, b) => b.score - a.score).slice(0, 4);
+    let mx = Number((await query(`SELECT COALESCE(MAX(position),0) AS m FROM route_stops WHERE org_id=$1 AND stop_date=$2`, [orgId, plan_date])).rows[0].m);
+    for (const a of accts) {
+      mx += 1;
+      await query(`INSERT INTO route_stops (org_id, user_id, account_id, label, city, position, status, stop_date) VALUES ($1,$2,$3,$4,$5,$6,'planned',$7)`,
+        [orgId, req.user.id, a.id, a.name, a.city, mx, plan_date]);
+    }
+    res.json({ ok: true, added: accts.length });
   } catch (e) { next(e); }
 });
 
