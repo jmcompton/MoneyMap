@@ -432,3 +432,28 @@ body { background: radial-gradient(1200px 500px at 50% -200px, #e9f5ef 0%, var(-
 @media (min-width: 720px) {
   .wcol { flex-basis: 230px; max-width: 230px; }
 }
+
+/* ---------- Planner two-pane: board left, accounts rail right ---------- */
+.planner-wrap { display: flex; gap: 14px; align-items: flex-start; position: relative; }
+.planner-main { flex: 1 1 auto; min-width: 0; }
+.planner-rail { flex: 0 0 244px; position: sticky; top: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; max-height: calc(100vh - 92px); }
+.planner-rail .rail-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.planner-rail .rail-head h2 { font-size: 14px; margin: 0; font-weight: 650; color: var(--ink); }
+.planner-rail .rail-head .ic { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: var(--amber-soft); color: var(--amber); }
+.planner-rail .rail-head .count { margin-left: auto; color: var(--muted); font-size: 12px; font-weight: 600; }
+.rail-close { display: none; border: none; background: none; color: var(--muted); padding: 4px; }
+.rail-hint { font-size: 11.5px; color: var(--muted); margin: 0 0 10px; }
+.planner-rail .rail { display: flex; flex-direction: column; gap: 9px; overflow-y: auto; padding-right: 2px; }
+.planner-rail .rcard { flex: none; width: 100%; }
+.rail-tab { display: none; }
+.rail-scrim { display: none; }
+
+@media (max-width: 760px) {
+  .planner-rail { position: fixed; top: 0; right: 0; height: 100dvh; width: 80%; max-width: 300px; border-radius: 0; z-index: 60; transform: translateX(102%); transition: transform .22s ease; max-height: none; padding: 16px 14px; }
+  .planner-rail.open { transform: translateX(0); }
+  .rail-close { display: inline-flex; margin-left: 4px; }
+  .rail-tab { display: inline-flex; align-items: center; gap: 6px; position: fixed; right: 0; top: 132px; z-index: 55; background: var(--green); color: #fff; border: none; padding: 9px 11px 9px 12px; border-radius: 11px 0 0 11px; font-size: 12.5px; font-weight: 650; box-shadow: var(--shadow); }
+  .rail-tab svg { width: 17px; height: 17px; }
+  .rail-scrim { display: block; position: fixed; inset: 0; background: rgba(13,23,38,.42); z-index: 55; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .rail-scrim.show { opacity: 1; pointer-events: auto; }
+}

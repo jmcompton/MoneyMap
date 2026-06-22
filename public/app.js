@@ -365,8 +365,8 @@ const pages = {
       const d = await api('/api/plan?offset=' + state.offset);
       if (!d) return;
       const workingDays = d.days.filter((x) => x.working);
-      if (!state.leadDay || !d.days.find((x) => x.date === state.leadDay && x.working)) {
-        const today = d.days.find((x) => x.is_today && x.working);
+      if (!state.leadDay || !d.days.find((x) => x.date === state.leadDay)) {
+        const today = d.days.find((x) => x.is_today);
         state.leadDay = (today || workingDays[0] || d.days[0]).date;
       }
 
@@ -406,26 +406,34 @@ const pages = {
 
       const board = d.days.map(col).join('');
       const cityOpts = d.cities.map((c) => `<option value="${esc(c)}"></option>`).join('');
-      const leadDayChips = workingDays.map((x) => `<button class="ldchip ${x.date === state.leadDay ? 'active' : ''}" data-date="${x.date}">${x.weekday}</button>`).join('');
+      const leadDayChips = d.days.map((x) => `<button class="ldchip ${x.date === state.leadDay ? 'active' : ''} ${x.working ? '' : 'off'}" data-date="${x.date}">${x.weekday}</button>`).join('');
 
       app.innerHTML = `
-        <header class="top"><div><h1>Planner</h1><div class="sub">Your whole week. Drag accounts in, let the route fill itself.</div></div></header>
-        <div class="weeknav"><button class="wbtn" id="prevW">${I.back}</button><div class="wlabel">${esc(d.week_label)}</div><button class="wbtn" id="nextW" style="transform:rotate(180deg)">${I.back}</button></div>
+        <header class="top"><div><h1>Planner</h1><div class="sub">Your whole week. Drag accounts from the right into a day.</div></div></header>
         <datalist id="cities">${cityOpts}</datalist>
 
-        <div class="weekboard">${board}</div>
-        <div class="boardhint">${I.spark} Each day's stops become <b>Today's Route</b> on your home screen.</div>
+        <div class="planner-wrap">
+          <div class="planner-main">
+            <div class="weeknav"><button class="wbtn" id="prevW">${I.back}</button><div class="wlabel">${esc(d.week_label)}</div><button class="wbtn" id="nextW" style="transform:rotate(180deg)">${I.back}</button></div>
+            <div class="weekboard">${board}</div>
+            <div class="boardhint">${I.spark} Each day's stops become <b>Today's Route</b> on your home screen.</div>
 
-        <div class="railwrap">
-          <div class="rail-head"><span class="ic amber">${I.alert}</span><h2>Least-touched accounts</h2><span class="count" id="railCount">…</span></div>
-          <div class="rail" id="rail"><div class="rail-load">Loading…</div></div>
-        </div>
+            <div class="panel leadsearch">
+              <div class="head"><span class="ic indigo">${I.spark}</span><h2>Leads along your route</h2></div>
+              <div class="ls-sub">Pick any day. We surface leads near your morning stop early, and near your end zone for the trip home.</div>
+              <div class="lddays">${leadDayChips}</div>
+              <div id="leadResults"><div class="rail-load">Loading…</div></div>
+            </div>
+          </div>
 
-        <div class="panel leadsearch">
-          <div class="head"><span class="ic indigo">${I.spark}</span><h2>Leads along your route</h2></div>
-          <div class="ls-sub">Pick a day. We surface leads near your morning stop early, and near your end zone for the trip home.</div>
-          <div class="lddays">${leadDayChips || '<span style="color:var(--muted);font-size:13px;padding:4px 2px">Turn on a working day to search.</span>'}</div>
-          <div id="leadResults"><div class="rail-load">Loading…</div></div>
+          <aside class="planner-rail" id="railPanel">
+            <div class="rail-head"><span class="ic amber">${I.alert}</span><h2>Least-touched</h2><span class="count" id="railCount">…</span><button class="rail-close" id="railClose">${I.x}</button></div>
+            <div class="rail-hint">Drag a card into a day, or tap "Add to…"</div>
+            <div class="rail" id="rail"><div class="rail-load">Loading…</div></div>
+          </aside>
+
+          <button class="rail-tab" id="railTab">${I.accounts}<span>Accounts</span></button>
+          <div class="rail-scrim" id="railScrim"></div>
         </div>`;
 
       // ---- week nav ----
@@ -502,6 +510,8 @@ const pages = {
         c.addEventListener('drop', async (e) => {
           c.classList.remove('dropping');
           if (!drag || drag.reorder) return;
+          const day = dayOf(c.dataset.date);
+          if (!day || !day.working) return;
           e.preventDefault();
           await post('/api/plan/stop', { plan_date: c.dataset.date, account_id: drag.account_id || null, label: drag.label, city: drag.city || null });
           drag = null; render();
@@ -534,6 +544,15 @@ const pages = {
         await post('/api/plan/stop', { plan_date: b.dataset.date, account_id: a.account_id, label: a.name, city: a.city });
         render();
       }));
+
+      // ---- mobile: slide the accounts rail in from the right ----
+      const railPanel = document.getElementById('railPanel');
+      const railScrim = document.getElementById('railScrim');
+      const openRail = () => { railPanel.classList.add('open'); railScrim.classList.add('show'); };
+      const closeRail = () => { railPanel.classList.remove('open'); railScrim.classList.remove('show'); };
+      document.getElementById('railTab').addEventListener('click', openRail);
+      document.getElementById('railClose').addEventListener('click', closeRail);
+      railScrim.addEventListener('click', closeRail);
 
       // ---- route-aware lead search ----
       document.querySelectorAll('.ldchip').forEach((b) => b.addEventListener('click', () => { state.leadDay = b.dataset.date; render(); }));
