@@ -667,10 +667,33 @@ const pages = {
   async import() {
     const data = await api('/api/manufacturers');
     if (!data) return;
-    document.getElementById('manufacturer_id').innerHTML = data.manufacturers.map((m) => `<option value="${m.id}">${esc(m.name)}</option>`).join('');
+    const mfrOpts = data.manufacturers.map((m) => `<option value="${m.id}">${esc(m.name)}</option>`).join('');
+    document.getElementById('manufacturer_id').innerHTML = mfrOpts;
+    document.getElementById('pdf_manufacturer_id').innerHTML = mfrOpts;
+    const note = document.getElementById('importNote');
+    const preview = document.getElementById('pdfPreview');
+
+    // CSV / PDF toggle
+    document.querySelectorAll('.segbtn').forEach((b) => b.addEventListener('click', () => {
+      document.querySelectorAll('.segbtn').forEach((x) => x.classList.toggle('active', x === b));
+      const src = b.dataset.src;
+      document.querySelector('.card.src.csv').hidden = src !== 'csv';
+      document.querySelector('.card.src.pdf').hidden = src !== 'pdf';
+      note.textContent = ''; note.className = ''; preview.innerHTML = '';
+    }));
+
+    const afterCommit = (r) => {
+      note.className = 'notice ok';
+      note.innerHTML = `Imported ${r.total} rows. ${r.matched} auto-matched, ${r.unmatched} to review.`;
+      const href = r.unmatched > 0 ? `/unmatched.html?import_id=${r.import_id}` : '/';
+      const label = r.unmatched > 0 ? `Review ${r.unmatched} unmatched` : 'See your money map';
+      note.appendChild(el(`<a class="btn" style="display:block;text-align:center;text-decoration:none;margin-top:12px" href="${href}">${label}</a>`));
+    };
+
+    // ---- CSV ----
     document.getElementById('importForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const note = document.getElementById('importNote'); note.textContent = '';
+      note.textContent = ''; note.className = '';
       const file = document.getElementById('file').files[0];
       if (!file) { note.className = 'notice err'; note.textContent = 'Choose a CSV file.'; return; }
       const fd = new FormData();
@@ -679,14 +702,61 @@ const pages = {
       fd.append('period_label', document.getElementById('period_label').value);
       fd.append('account_col', document.getElementById('account_col').value);
       fd.append('amount_col', document.getElementById('amount_col').value);
+      try { afterCommit(await api('/api/imports', { method: 'POST', body: fd })); }
+      catch (err) { note.className = 'notice err'; note.textContent = err.message; }
+    });
+
+    // ---- PDF: read -> preview/edit -> commit ----
+    const renderPreview = (res) => {
+      const rowHtml = (r, i) => `<div class="prow" data-i="${i}">
+        <input class="pr-name" value="${esc(r.raw_name)}" placeholder="Account name" />
+        <input class="pr-amt" value="${esc(r.amount)}" inputmode="decimal" placeholder="0.00" />
+        <button class="pr-rem" data-i="${i}" type="button">${I.x}</button></div>`;
+      preview.innerHTML = `
+        <div class="card" style="padding:16px;margin-top:16px">
+          <div class="prev-head">
+            <div><b>${res.rows.length} rows found</b><span class="prev-method">${res.method === 'ai' ? 'read by AI' : 'pattern match'}</span></div>
+            <button class="link-btn" id="prAdd" type="button">${I.plus} Add row</button>
+          </div>
+          <div class="prev-sub">Check the names and amounts, fix anything off, then import.</div>
+          <div id="prRows">${res.rows.map(rowHtml).join('')}</div>
+          <button class="btn" id="prCommit" type="button" style="margin-top:14px">Import ${res.rows.length} rows &amp; match</button>
+        </div>`;
+
+      const rowsEl = document.getElementById('prRows');
+      rowsEl.querySelectorAll('.pr-rem').forEach((b) => b.addEventListener('click', () => b.closest('.prow').remove()));
+      document.getElementById('prAdd').addEventListener('click', () => {
+        rowsEl.appendChild(el(rowHtml({ raw_name: '', amount: '' }, Date.now())));
+        rowsEl.lastChild.querySelector('.pr-rem').addEventListener('click', (e) => e.target.closest('.prow').remove());
+      });
+      document.getElementById('prCommit').addEventListener('click', async () => {
+        const rows = [...rowsEl.querySelectorAll('.prow')].map((row) => ({
+          raw_name: row.querySelector('.pr-name').value.trim(),
+          amount: Number(String(row.querySelector('.pr-amt').value).replace(/[^0-9.\-]/g, '')) || 0,
+        })).filter((r) => r.raw_name);
+        if (!rows.length) { note.className = 'notice err'; note.textContent = 'Nothing to import.'; return; }
+        try {
+          const r = await api('/api/imports/commit', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ manufacturer_id: document.getElementById('pdf_manufacturer_id').value, period_label: document.getElementById('pdf_period_label').value, filename: res.filename, rows }),
+          });
+          preview.innerHTML = ''; afterCommit(r);
+        } catch (err) { note.className = 'notice err'; note.textContent = err.message; }
+      });
+    };
+
+    document.getElementById('pdfRead').addEventListener('click', async () => {
+      note.textContent = ''; note.className = ''; preview.innerHTML = '';
+      const file = document.getElementById('pdfFile').files[0];
+      if (!file) { note.className = 'notice err'; note.textContent = 'Choose a PDF file.'; return; }
+      const btn = document.getElementById('pdfRead'); btn.disabled = true; btn.textContent = 'Reading…';
       try {
-        const r = await api('/api/imports', { method: 'POST', body: fd });
-        note.className = 'notice ok';
-        note.innerHTML = `Imported ${r.total} rows. ${r.matched} auto-matched, ${r.unmatched} to review.`;
-        const href = r.unmatched > 0 ? `/unmatched.html?import_id=${r.import_id}` : '/';
-        const label = r.unmatched > 0 ? `Review ${r.unmatched} unmatched` : 'See your money map';
-        note.appendChild(el(`<a class="btn" style="display:block;text-align:center;text-decoration:none;margin-top:12px" href="${href}">${label}</a>`));
+        const fd = new FormData(); fd.append('file', file);
+        const res = await api('/api/imports/pdf/preview', { method: 'POST', body: fd });
+        if (!res.rows.length) { note.className = 'notice err'; note.textContent = 'No commission rows found in that PDF. You can add rows by hand below.'; renderPreview({ rows: [], method: res.method, filename: res.filename }); }
+        else renderPreview(res);
       } catch (err) { note.className = 'notice err'; note.textContent = err.message; }
+      finally { btn.disabled = false; btn.textContent = 'Read PDF'; }
     });
   },
 

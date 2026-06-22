@@ -6,6 +6,7 @@ const { parse } = require('csv-parse/sync');
 const { query, getPool } = require('../../db');
 const { normalizeName, computeTiers } = require('../../lib/helpers');
 const { computeRecoveries } = require('../../lib/reconcile');
+const { parsePdfCommission } = require('../../lib/pdf');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 const router = express.Router();
@@ -218,6 +219,43 @@ router.post('/accounts/:id/activity', async (req, res, next) => {
 });
 
 // Import a commission CSV. Columns are mapped by the caller (account_col, amount_col).
+// Shared commit path for any source (CSV or PDF). Writes the import + line
+// items, auto-resolves each row against the manufacturer's remembered aliases,
+// and returns the matched/unmatched summary. This is the single place the
+// alias moat is applied, so every source benefits from it.
+async function commitCommissionRows(orgId, userId, mfrId, periodLabel, filename, rows) {
+  const imp = (
+    await query(
+      `INSERT INTO commission_imports
+         (org_id, manufacturer_id, uploaded_by, period_label, period_start, source_filename, row_count, status)
+       VALUES ($1,$2,$3,$4,CURRENT_DATE,$5,$6,'processed') RETURNING id`,
+      [orgId, mfrId, userId, periodLabel, filename, rows.length]
+    )
+  ).rows[0];
+
+  const aliasRows = (
+    await query(`SELECT raw_name, account_id FROM account_aliases WHERE org_id = $1 AND manufacturer_id = $2`, [orgId, mfrId])
+  ).rows;
+  const aliasMap = new Map(aliasRows.map((r) => [r.raw_name, r.account_id]));
+
+  let matched = 0; let unmatched = 0;
+  for (const row of rows) {
+    const rawName = String(row.raw_name || '').trim();
+    const amount = Number(String(row.amount || '0').toString().replace(/[^0-9.\-]/g, '')) || 0;
+    if (!rawName) continue;
+    const key = normalizeName(rawName);
+    const resolvedId = aliasMap.get(key) || null;
+    if (resolvedId) matched++; else unmatched++;
+    await query(
+      `INSERT INTO commission_line_items
+         (import_id, org_id, manufacturer_id, raw_account_name, amount, period_label, resolved_account_id, match_status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+      [imp.id, orgId, mfrId, rawName, amount, periodLabel, resolvedId, resolvedId ? 'matched' : 'unmatched']
+    );
+  }
+  return { import_id: imp.id, total: rows.length, matched, unmatched };
+}
+
 router.post('/imports', upload.single('file'), async (req, res, next) => {
   try {
     const { manufacturer_id, period_label, account_col, amount_col } = req.body;
@@ -230,60 +268,54 @@ router.post('/imports', upload.single('file'), async (req, res, next) => {
 
     let records;
     try {
-      records = parse(req.file.buffer.toString('utf8'), {
-        columns: true,
-        skip_empty_lines: true,
-        trim: true,
-      });
+      records = parse(req.file.buffer.toString('utf8'), { columns: true, skip_empty_lines: true, trim: true });
     } catch (e) {
       return res.status(400).json({ error: 'Could not parse CSV: ' + e.message });
     }
     if (!records.length) return res.status(400).json({ error: 'CSV had no rows.' });
     if (!(accCol in records[0]) || !(amtCol in records[0])) {
-      return res.status(400).json({
-        error: `Columns not found. Available: ${Object.keys(records[0]).join(', ')}`,
-      });
+      return res.status(400).json({ error: `Columns not found. Available: ${Object.keys(records[0]).join(', ')}` });
     }
 
-    const orgId = req.user.org_id;
-    const mfrId = Number(manufacturer_id);
+    const rows = records
+      .map((r) => ({ raw_name: String(r[accCol] || '').trim(), amount: Number(String(r[amtCol] || '0').replace(/[^0-9.\-]/g, '')) || 0 }))
+      .filter((r) => r.raw_name);
+    const out = await commitCommissionRows(req.user.org_id, req.user.id, Number(manufacturer_id), period_label, req.file.originalname || 'upload.csv', rows);
+    res.json(out);
+  } catch (e) { next(e); }
+});
 
-    const imp = (
-      await query(
-        `INSERT INTO commission_imports
-           (org_id, manufacturer_id, uploaded_by, period_label, period_start, source_filename, row_count, status)
-         VALUES ($1,$2,$3,$4,CURRENT_DATE,$5,$6,'processed') RETURNING id`,
-        [orgId, mfrId, req.user.id, period_label, req.file.originalname || 'upload.csv', records.length]
-      )
-    ).rows[0];
-
-    // Preload aliases for this manufacturer for fast matching.
-    const aliasRows = (
-      await query(
-        `SELECT raw_name, account_id FROM account_aliases WHERE org_id = $1 AND manufacturer_id = $2`,
-        [orgId, mfrId]
-      )
-    ).rows;
-    const aliasMap = new Map(aliasRows.map((r) => [r.raw_name, r.account_id]));
-
-    let matched = 0;
-    let unmatched = 0;
-    for (const row of records) {
-      const rawName = String(row[accCol] || '').trim();
-      const amount = Number(String(row[amtCol] || '0').replace(/[^0-9.\-]/g, '')) || 0;
-      if (!rawName) continue;
-      const key = normalizeName(rawName);
-      const resolvedId = aliasMap.get(key) || null;
-      if (resolvedId) matched++; else unmatched++;
-      await query(
-        `INSERT INTO commission_line_items
-           (import_id, org_id, manufacturer_id, raw_account_name, amount, period_label, resolved_account_id, match_status)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-        [imp.id, orgId, mfrId, rawName, amount, period_label, resolvedId, resolvedId ? 'matched' : 'unmatched']
-      );
+// PDF preview: extract + parse rows, but DON'T write anything. The rep reviews
+// and edits the rows, then commits. PDF parsing is fuzzy, so a human checkpoint
+// is the right call (and matches the "format varies per manufacturer" reality).
+router.post('/imports/pdf/preview', upload.single('file'), async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });
+    if (!/pdf$/i.test(req.file.originalname || '') && req.file.mimetype !== 'application/pdf') {
+      return res.status(400).json({ error: 'Please upload a PDF.' });
     }
+    let parsed;
+    try {
+      parsed = await parsePdfCommission(req.file.buffer);
+    } catch (e) {
+      return res.status(400).json({ error: 'Could not read this PDF: ' + e.message });
+    }
+    res.json({ rows: parsed.rows, method: parsed.method, text_sample: parsed.text_sample, filename: req.file.originalname || 'statement.pdf' });
+  } catch (e) { next(e); }
+});
 
-    res.json({ import_id: imp.id, total: records.length, matched, unmatched });
+// Commit reviewed rows from any source (used by the PDF flow after preview).
+router.post('/imports/commit', async (req, res, next) => {
+  try {
+    const { manufacturer_id, period_label, filename, rows } = req.body || {};
+    if (!manufacturer_id || !period_label) return res.status(400).json({ error: 'manufacturer_id and period_label are required.' });
+    if (!Array.isArray(rows) || !rows.length) return res.status(400).json({ error: 'No rows to import.' });
+    const clean = rows
+      .map((r) => ({ raw_name: String(r.raw_name || r.account_name || '').trim(), amount: Number(r.amount) || 0 }))
+      .filter((r) => r.raw_name);
+    if (!clean.length) return res.status(400).json({ error: 'No valid rows to import.' });
+    const out = await commitCommissionRows(req.user.org_id, req.user.id, Number(manufacturer_id), period_label, filename || 'statement.pdf', clean);
+    res.json(out);
   } catch (e) { next(e); }
 });
 

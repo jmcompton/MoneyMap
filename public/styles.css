@@ -457,3 +457,18 @@ body { background: radial-gradient(1200px 500px at 50% -200px, #e9f5ef 0%, var(-
   .rail-scrim { display: block; position: fixed; inset: 0; background: rgba(13,23,38,.42); z-index: 55; opacity: 0; pointer-events: none; transition: opacity .2s; }
   .rail-scrim.show { opacity: 1; pointer-events: auto; }
 }
+
+/* ---------- Import: CSV/PDF toggle + PDF preview ---------- */
+.seg { display: flex; gap: 6px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 11px; padding: 4px; margin-bottom: 14px; }
+.seg .segbtn { flex: 1; height: 38px; border: none; background: none; border-radius: 8px; font-size: 14px; font-weight: 650; color: var(--muted); }
+.seg .segbtn.active { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
+.prev-head { display: flex; align-items: center; justify-content: space-between; }
+.prev-head b { font-size: 15px; color: var(--ink); }
+.prev-method { font-size: 11px; font-weight: 600; color: var(--indigo); background: var(--indigo-soft); border-radius: 999px; padding: 2px 8px; margin-left: 8px; }
+.prev-sub { color: var(--muted); font-size: 12.5px; margin: 4px 0 12px; }
+.link-btn { display: inline-flex; align-items: center; gap: 5px; border: none; background: none; color: var(--green-deep); font-size: 13px; font-weight: 650; }
+.link-btn svg { width: 15px; height: 15px; }
+.prow { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.prow .pr-name { flex: 1; min-width: 0; height: 38px; border: 1px solid var(--line); border-radius: 9px; padding: 0 10px; font-size: 14px; background: var(--surface); color: var(--ink); }
+.prow .pr-amt { width: 96px; height: 38px; border: 1px solid var(--line); border-radius: 9px; padding: 0 10px; font-size: 14px; background: var(--surface); color: var(--ink); text-align: right; }
+.prow .pr-rem { width: 34px; height: 34px; border: none; background: none; color: var(--muted); display: grid; place-items: center; flex: none; }

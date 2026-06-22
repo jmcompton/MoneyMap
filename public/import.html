@@ -11,9 +11,15 @@
 <body data-page="import">
   <div class="app">
     <header class="top">
-      <div><h1>Import commissions</h1><div class="sub">Upload a CSV. We'll match and rank it.</div></div>
+      <div><h1>Import commissions</h1><div class="sub">Upload a CSV or a PDF statement. We match and rank it.</div></div>
     </header>
-    <form id="importForm" class="card" style="padding:16px">
+
+    <div class="seg">
+      <button class="segbtn active" data-src="csv" type="button">CSV</button>
+      <button class="segbtn" data-src="pdf" type="button">PDF</button>
+    </div>
+
+    <form id="importForm" class="card src csv" style="padding:16px">
       <label for="file">Commission CSV</label>
       <input id="file" type="file" accept=".csv,text/csv" />
       <label for="manufacturer_id">Manufacturer</label>
@@ -30,10 +36,23 @@
           <input id="amount_col" type="text" value="Commission" />
         </div>
       </div>
-      <button class="btn" type="submit">Import & match</button>
+      <button class="btn" type="submit">Import &amp; match</button>
+      <div class="placeholder" style="margin-top:14px"><b>Tip</b>The sample CSV (data/sample-commission.csv) uses the column names above.</div>
     </form>
+
+    <div class="card src pdf" hidden style="padding:16px">
+      <label for="pdfFile">Commission PDF</label>
+      <input id="pdfFile" type="file" accept="application/pdf,.pdf" />
+      <label for="pdf_manufacturer_id">Manufacturer</label>
+      <select id="pdf_manufacturer_id"></select>
+      <label for="pdf_period_label">Period</label>
+      <input id="pdf_period_label" type="text" value="June 2026" />
+      <button class="btn" id="pdfRead" type="button">Read PDF</button>
+      <div class="placeholder" style="margin-top:14px"><b>Tip</b>Try the sample (data/sample-commission.pdf). PDFs vary per manufacturer, so check the rows before importing.</div>
+    </div>
+
+    <div id="pdfPreview"></div>
     <div id="importNote"></div>
-    <div class="placeholder" style="margin-top:16px"><b>Tip</b>The sample file in the repo (data/sample-commission.csv) uses the column names already filled in above.</div>
   </div>
   <nav class="bottom">
     <a href="/"><span class="ic" data-i="home"></span>Home</a>

@@ -12,7 +12,9 @@ AI CRM for building-materials sales reps. This is the **foundation**: the spine 
 
 **Built and working:** multi-tenant data model, the `account_aliases` moat table, email/password auth, commission **CSV** import, unmatched-name resolution that *remembers* mappings, the 80/20 engine, the mobile homepage, an accounts list with tier filter, seed data, and a sample CSV.
 
-**Stubbed (nav link + "coming soon"):** weekly planner, deals, quotes, email blast, AI leads, map view, notifications, cost calculator, new-hire onboarding. **PDF import is the deliberate next step** — CSV first because PDF formats vary per manufacturer.
+**Commission import** takes CSV or **PDF**. PDF text is extracted with pdfjs, parsed into account+amount rows (AI pass when `ANTHROPIC_API_KEY` is set, otherwise a heuristic line parser), and shown for review before commit. Both paths run through the same alias auto-match.
+
+**Stubbed (nav link + "coming soon"):** deals, quotes, email blast, AI leads, map view, notifications, cost calculator, new-hire onboarding.
 
 ---
 
