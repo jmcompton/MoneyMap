@@ -13,12 +13,19 @@ function buildRealPool() {
   if (!connectionString) {
     throw new Error('DATABASE_URL is not set. On Railway, add a PostgreSQL plugin and it is provided automatically.');
   }
-  const ssl =
-    process.env.PGSSL === 'disable'
-      ? false
-      : connectionString.includes('localhost')
-        ? false
-        : { rejectUnauthorized: false };
+  // SSL rules that work across Railway environments without manual config:
+  //  - localhost / 127.0.0.1            -> no SSL (local dev)
+  //  - *.railway.internal (the app)     -> no SSL (private network)
+  //  - public proxy host (seeding/CLI)  -> SSL, accept Railway's cert
+  let ssl = { rejectUnauthorized: false };
+  try {
+    const host = new URL(connectionString).hostname;
+    if (host === 'localhost' || host === '127.0.0.1' || host.endsWith('.railway.internal')) {
+      ssl = false;
+    }
+  } catch (_) { /* fall back to ssl on */ }
+  if (process.env.PGSSL === 'disable') ssl = false;
+  if (process.env.PGSSL === 'require') ssl = { rejectUnauthorized: false };
   return new Pool({ connectionString, ssl });
 }
 
