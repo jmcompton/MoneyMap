@@ -33,18 +33,84 @@ router.get('/manufacturers', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-// Money map: key (Tier A) accounts + summary numbers.
+const daysBetween = (d) => Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
+const daysUntil = (d) => Math.ceil((new Date(d).getTime() - Date.now()) / 86400000);
+
+// The money map: the full homepage in one payload.
 router.get('/home', async (req, res, next) => {
   try {
-    const tiers = await tieredAccounts(req.user.org_id);
-    const total = tiers.reduce((s, r) => s + r.commission, 0);
+    const orgId = req.user.org_id;
+    const tiers = await tieredAccounts(orgId);
+    const tierById = new Map(tiers.map((t) => [t.account_id, t]));
+    const totalCommission = tiers.reduce((s, r) => s + r.commission, 0);
+
+    // At-risk: accounts gone quiet, weighted toward key (Tier A) accounts.
+    const accRows = (await query(
+      `SELECT id, name, city, last_contact_at FROM accounts WHERE org_id = $1 AND last_contact_at IS NOT NULL`,
+      [orgId]
+    )).rows;
+    const atRisk = accRows
+      .map((a) => {
+        const t = tierById.get(a.id);
+        return {
+          account_id: a.id, name: a.name, city: a.city,
+          days_since: daysBetween(a.last_contact_at),
+          commission: t ? t.commission : 0,
+          tier: t ? t.tier : 'C',
+        };
+      })
+      .filter((a) => a.days_since >= 30)
+      .sort((x, y) => (x.tier === 'A' ? 0 : 1) - (y.tier === 'A' ? 0 : 1) || y.commission - x.commission || y.days_since - x.days_since)
+      .slice(0, 4);
+
+    const route = (await query(
+      `SELECT label, city, arrival_time, status FROM route_stops WHERE org_id = $1 ORDER BY position`,
+      [orgId]
+    )).rows;
+
+    const leads = (await query(
+      `SELECT name, city, reason, est_value, distance_mi FROM leads WHERE org_id = $1 ORDER BY est_value DESC`,
+      [orgId]
+    )).rows.map((l) => ({ ...l, est_value: Number(l.est_value), distance_mi: Number(l.distance_mi) }));
+
+    const dealRows = (await query(
+      `SELECT d.name, d.manufacturer, d.value, d.stage, d.close_date, a.name AS account_name
+         FROM deals d LEFT JOIN accounts a ON a.id = d.account_id
+        WHERE d.org_id = $1 ORDER BY d.close_date ASC`,
+      [orgId]
+    )).rows.map((d) => ({
+      name: d.name, manufacturer: d.manufacturer, account_name: d.account_name,
+      value: Number(d.value), stage: d.stage, days_to_close: daysUntil(d.close_date),
+    }));
+    const pipeline = dealRows.reduce((s, d) => s + d.value, 0);
+
+    const tasks = (await query(
+      `SELECT title, due_date FROM tasks WHERE org_id = $1 AND done = false ORDER BY due_date ASC`,
+      [orgId]
+    )).rows.map((t) => ({ title: t.title, days_to_due: daysUntil(t.due_date) }));
+
+    const first = req.user.name.split(' ')[0];
+    const riskKey = atRisk.filter((a) => a.tier === 'A').length;
+    const closingDeals = dealRows.filter((d) => d.days_to_close <= 14);
+    const closingValue = closingDeals.reduce((s, d) => s + d.value, 0);
+    const brief = `${first}, you have ${route.filter((r) => r.status !== 'done').length} stops left today. `
+      + `${riskKey} key account${riskKey === 1 ? '' : 's'} ${riskKey === 1 ? 'has' : 'have'} gone quiet, and `
+      + `${closingDeals.length} deal${closingDeals.length === 1 ? '' : 's'} worth ${'$' + closingValue.toLocaleString('en-US')} ${closingDeals.length === 1 ? 'is' : 'are'} closing within two weeks.`;
+
     res.json({
       user: req.user,
+      brief,
       summary: {
-        total_commission: Math.round(total * 100) / 100,
-        account_count: tiers.length,
+        total_commission: Math.round(totalCommission * 100) / 100,
         key_account_count: tiers.filter((t) => t.tier === 'A').length,
+        at_risk_count: atRisk.length,
+        pipeline_value: pipeline,
       },
+      today_route: route,
+      at_risk: atRisk,
+      leads,
+      deals: dealRows,
+      tasks,
       key_accounts: tiers.filter((t) => t.tier === 'A'),
     });
   } catch (e) { next(e); }

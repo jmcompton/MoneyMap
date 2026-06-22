@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS accounts (
   state             TEXT,
   zip               TEXT,
   assigned_user_id  INTEGER REFERENCES users(id),
+  last_contact_at   TIMESTAMP,
   created_at        TIMESTAMP NOT NULL DEFAULT now()
 );
 
@@ -83,4 +84,57 @@ CREATE TABLE IF NOT EXISTS commission_line_items (
   resolved_account_id  INTEGER REFERENCES accounts(id),
   match_status         TEXT NOT NULL DEFAULT 'unmatched',
   created_at           TIMESTAMP NOT NULL DEFAULT now()
+);
+
+-- Pipeline: deals the rep is working, with value and close date.
+CREATE TABLE IF NOT EXISTS deals (
+  id          SERIAL PRIMARY KEY,
+  org_id      INTEGER NOT NULL REFERENCES organizations(id),
+  account_id  INTEGER REFERENCES accounts(id),
+  name        TEXT NOT NULL,
+  manufacturer TEXT,
+  value       NUMERIC NOT NULL DEFAULT 0,
+  stage       TEXT NOT NULL DEFAULT 'open',
+  close_date  DATE,
+  created_at  TIMESTAMP NOT NULL DEFAULT now()
+);
+
+-- AI-surfaced leads near the rep's route.
+CREATE TABLE IF NOT EXISTS leads (
+  id           SERIAL PRIMARY KEY,
+  org_id       INTEGER NOT NULL REFERENCES organizations(id),
+  name         TEXT NOT NULL,
+  city         TEXT,
+  reason       TEXT,
+  est_value    NUMERIC DEFAULT 0,
+  distance_mi  NUMERIC,
+  created_at   TIMESTAMP NOT NULL DEFAULT now()
+);
+
+-- Today's planned stops (the route). The full planner comes later; this is
+-- the homepage surface it feeds.
+CREATE TABLE IF NOT EXISTS route_stops (
+  id            SERIAL PRIMARY KEY,
+  org_id        INTEGER NOT NULL REFERENCES organizations(id),
+  user_id       INTEGER REFERENCES users(id),
+  account_id    INTEGER REFERENCES accounts(id),
+  label         TEXT NOT NULL,
+  city          TEXT,
+  arrival_time  TEXT,
+  position      INTEGER NOT NULL DEFAULT 0,
+  status        TEXT NOT NULL DEFAULT 'planned',
+  stop_date     DATE NOT NULL DEFAULT CURRENT_DATE,
+  created_at    TIMESTAMP NOT NULL DEFAULT now()
+);
+
+-- Follow-ups / tasks.
+CREATE TABLE IF NOT EXISTS tasks (
+  id          SERIAL PRIMARY KEY,
+  org_id      INTEGER NOT NULL REFERENCES organizations(id),
+  user_id     INTEGER REFERENCES users(id),
+  account_id  INTEGER REFERENCES accounts(id),
+  title       TEXT NOT NULL,
+  due_date    DATE,
+  done        BOOLEAN NOT NULL DEFAULT false,
+  created_at  TIMESTAMP NOT NULL DEFAULT now()
 );
