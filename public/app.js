@@ -368,37 +368,32 @@ const pages = {
         state.leadDay = (today || workingDays[0] || d.days[0]).date;
       }
 
-      // ---- Week board: every day, side by side, scroll across ----
+      // ---- Week board: Mon-Fri in an even grid, Sat on a toggle ----
       const col = (day) => {
+        const sat = day.weekday === 'Sat' ? 'sat' : '';
         const head = `<div class="wc-head ${day.is_today ? 'today' : ''}">
-          <div><div class="wc-dow">${day.weekday}</div><div class="wc-date">${esc(day.label)}</div></div>
+          <div><div class="wc-dow">${day.weekday}${day.is_today ? ' <span class="wc-today">today</span>' : ''}</div><div class="wc-date">${esc(day.label)}</div></div>
           <button class="wc-toggle ${day.working ? 'on' : ''}" data-date="${day.date}" title="Working / day off"><span></span></button>
         </div>`;
         if (!day.working) {
-          return `<div class="wcol off" data-date="${day.date}">${head}<div class="wc-off">Day off</div></div>`;
+          return `<div class="wcol off ${sat}" data-date="${day.date}">${head}<div class="wc-off">Day off</div></div>`;
         }
-        const stops = day.stops.map((s, i) => {
+        const stops = day.stops.map((s) => {
           const personal = s.kind === 'personal';
           return `<div class="wstop ${personal ? 'personal' : ''} ${s.status === 'done' ? 'done' : ''}" draggable="${personal ? 'false' : 'true'}" data-id="${s.id}" data-date="${day.date}">
-            <div class="ws-top">
-              <span class="ws-ic">${personal ? I.pin : (s.account_id ? I.route : I.spark)}</span>
-              <input type="time" class="ws-time" value="${to24(s.arrival_time)}" data-id="${s.id}" />
-              <div class="ws-move"><button class="ws-up" data-id="${s.id}" data-date="${day.date}" ${i === 0 ? 'disabled' : ''}>${I.up}</button><button class="ws-dn" data-id="${s.id}" data-date="${day.date}" ${i === day.stops.length - 1 ? 'disabled' : ''}>${I.down}</button></div>
-              <button class="ws-rem" data-id="${s.id}">${I.x}</button>
-            </div>
-            <div class="ws-name">${esc(s.label)}</div>
-            ${(s.address || s.city) ? `<div class="ws-sub">${esc(s.address || s.city)}</div>` : ''}
+            <span class="ws-ic">${personal ? I.pin : (s.account_id ? I.route : I.spark)}</span>
+            <input type="time" class="ws-time" value="${to24(s.arrival_time)}" data-id="${s.id}" aria-label="arrival time" />
+            <div class="ws-main"><div class="ws-name">${esc(s.label)}</div>${(s.address || s.city) ? `<div class="ws-city">${esc(s.address || s.city)}</div>` : ''}</div>
+            <button class="ws-rem" data-id="${s.id}" title="Remove">${I.x}</button>
           </div>`;
         }).join('');
-        return `<div class="wcol" data-date="${day.date}">
+        return `<div class="wcol ${sat}" data-date="${day.date}">
           ${head}
           <input class="wc-anchor" list="cities" data-date="${day.date}" placeholder="Anchor city" value="${esc(day.anchor_city)}" />
-          <div class="wc-pill start" data-edit="start" data-date="${day.date}"><span>${I.home}</span>${day.start_point ? esc(day.start_point) : 'Set start'}</div>
-          <div class="wc-drop">
-            ${stops || '<div class="wc-empty">Drag accounts here, or add a lead below.</div>'}
-          </div>
-          <button class="wc-add personal" data-date="${day.date}">${I.plus} Personal time</button>
-          <div class="wc-pill end" data-edit="end" data-date="${day.date}"><span>${I.flag}</span>${day.end_point ? esc(day.end_point) : 'Set end zone'}</div>
+          <div class="wc-strip start" data-edit="start" data-date="${day.date}">${I.home}<span>${day.start_point ? esc(day.start_point) : 'Set start'}</span></div>
+          <div class="wc-drop">${stops || '<div class="wc-empty">Drag here or tap Add</div>'}</div>
+          <button class="wc-add" data-date="${day.date}">${I.plus} Add</button>
+          <div class="wc-strip end" data-edit="end" data-date="${day.date}">${I.flag}<span>${day.end_point ? esc(day.end_point) : 'Set end'}</span></div>
         </div>`;
       };
 
@@ -412,8 +407,8 @@ const pages = {
 
         <div class="planner-wrap">
           <div class="planner-main">
-            <div class="weeknav"><button class="wbtn" id="prevW">${I.back}</button><div class="wlabel">${esc(d.week_label)}</div><button class="wbtn" id="nextW" style="transform:rotate(180deg)">${I.back}</button></div>
-            <div class="weekboard">${board}</div>
+            <div class="weeknav"><button class="wbtn" id="prevW">${I.back}</button><div class="wlabel">${esc(d.week_label)}</div><button class="wbtn" id="nextW" style="transform:rotate(180deg)">${I.back}</button><button class="satToggle" id="satToggle">${state.showSat ? 'Hide Saturday' : '+ Saturday'}</button></div>
+            <div class="weekboard ${state.showSat ? 'show-sat' : ''}">${board}</div>
             <div class="boardhint">${I.spark} Each day's stops become <b>Today's Route</b> on your home screen.</div>
 
             <div class="panel leadsearch">
@@ -437,9 +432,61 @@ const pages = {
       // ---- week nav ----
       document.getElementById('prevW').addEventListener('click', () => { state.offset -= 1; state.leadDay = null; render(); });
       document.getElementById('nextW').addEventListener('click', () => { state.offset += 1; state.leadDay = null; render(); });
+      document.getElementById('satToggle').addEventListener('click', () => { state.showSat = !state.showSat; render(); });
 
       const dayOf = (date) => d.days.find((x) => x.date === date);
       const saveDay = (date, patch) => { const day = dayOf(date); return post('/api/plan/day', { plan_date: date, working: patch.working ?? day.working, anchor_city: patch.anchor_city ?? day.anchor_city, start_point: patch.start_point ?? day.start_point, end_point: patch.end_point ?? day.end_point }); };
+
+      // ---- one "Add" menu per day: account / lead / personal / home-end ----
+      const openAddModal = (date) => {
+        const day = dayOf(date);
+        const dow = fullDay[day.weekday] || day.weekday;
+        const wrap = el(`<div class="pm-scrim"><div class="pm-modal">
+          <div class="pm-head"><div><b>Add to ${dow}</b><span>${esc(day.label)}</span></div><button class="pm-x" title="Close">${I.x}</button></div>
+          <div class="pm-seg"><button data-t="account" class="on">Account</button><button data-t="lead">Lead</button><button data-t="personal">Personal</button><button data-t="home">Home / end</button></div>
+          <div class="pm-body" id="pmBody"></div>
+        </div></div>`);
+        document.body.appendChild(wrap);
+        const close = () => wrap.remove();
+        wrap.addEventListener('click', (e) => { if (e.target === wrap) close(); });
+        wrap.querySelector('.pm-x').addEventListener('click', close);
+        const body = wrap.querySelector('#pmBody');
+        const seg = wrap.querySelectorAll('.pm-seg button');
+        const addStop = async (payload) => { await post('/api/plan/stop', Object.assign({ plan_date: date }, payload)); close(); render(); };
+
+        const tabs = {
+          account: async () => {
+            body.innerHTML = `<input class="pm-search" placeholder="Search accounts…" /><div class="pm-list" id="pmList">Loading…</div>`;
+            if (!state.accounts) { const a = await api('/api/accounts?sort=overdue'); state.accounts = a ? a.accounts : []; }
+            const list = body.querySelector('#pmList');
+            const draw = (q) => {
+              const items = state.accounts.filter((a) => !q || a.name.toLowerCase().includes(q) || (a.city || '').toLowerCase().includes(q)).slice(0, 40);
+              list.innerHTML = items.length ? items.map((a, i) => `<button class="pm-item" data-i="${i}"><div><div class="pm-n">${esc(a.name)}</div><div class="pm-m">${esc(a.city || '')}${a.days_since_contact != null ? ` · ${a.days_since_contact}d quiet` : ''}</div></div><span class="pm-add">${I.plus}</span></button>`).join('') : '<div class="pm-empty">No matches</div>';
+              list.querySelectorAll('.pm-item').forEach((btn) => btn.addEventListener('click', () => { const a = items[+btn.dataset.i]; addStop({ account_id: a.account_id, label: a.name, city: a.city }); }));
+            };
+            draw('');
+            body.querySelector('.pm-search').addEventListener('input', (e) => draw(e.target.value.trim().toLowerCase()));
+          },
+          lead: async () => {
+            body.innerHTML = `<div class="pm-list">Finding leads on this route…</div>`;
+            const ls = await api('/api/plan/leadsearch?plan_date=' + date);
+            if (!ls || !ls.ready) { body.innerHTML = `<div class="pm-empty">Set this day's anchor city or a first stop, then leads will show up here.</div>`; return; }
+            const grp = (title, leads) => (leads && leads.length) ? `<div class="pm-grp">${title}</div>` + leads.map((l) => `<button class="pm-item lead" data-name="${esc(l.name)}" data-city="${esc(l.city)}"><div><div class="pm-n">${esc(l.name)}</div><div class="pm-m">${esc(l.city)} · ${l.miles} mi · ~$${Number(l.est_value).toLocaleString('en-US')}/yr</div></div><span class="pm-add">${I.plus}</span></button>`).join('') : '';
+            body.innerHTML = (grp(`Near ${esc(ls.morning_city || 'your first stop')}`, ls.morning) + grp(`On your way home · ${esc(ls.endpoint_city || 'home')}`, ls.home)) || '<div class="pm-empty">No leads on this route yet.</div>';
+            body.querySelectorAll('.pm-item.lead').forEach((btn) => btn.addEventListener('click', () => addStop({ label: btn.dataset.name, city: btn.dataset.city, kind: 'lead' })));
+          },
+          personal: () => {
+            body.innerHTML = `<div class="pm-form"><label>What is it?</label><input id="pmLabel" placeholder="e.g. Pick up the girls, Lunch" /><label>Time</label><input id="pmTime" type="time" /><label>Address (optional)</label><input id="pmAddr" placeholder="so the route plans around it" /><button class="btn" id="pmSave" style="margin-top:14px">Add personal time</button></div>`;
+            body.querySelector('#pmSave').addEventListener('click', () => { const label = body.querySelector('#pmLabel').value.trim(); if (!label) return; const t = to12(body.querySelector('#pmTime').value); const addr = body.querySelector('#pmAddr').value.trim(); addStop({ label, kind: 'personal', city: addr || null, address: addr || null, arrival_time: t || null }); });
+          },
+          home: () => {
+            body.innerHTML = `<div class="pm-form"><label>Start the day (home)</label><input id="pmStart" value="${esc(day.start_point || 'Home — Birmingham, AL')}" /><label>End the day (your end zone)</label><input id="pmEnd" value="${esc(day.end_point || 'Home — Birmingham, AL')}" /><button class="btn" id="pmSaveHE" style="margin-top:14px">Save</button></div>`;
+            body.querySelector('#pmSaveHE').addEventListener('click', async () => { await saveDay(date, { start_point: body.querySelector('#pmStart').value, end_point: body.querySelector('#pmEnd').value }); close(); render(); });
+          },
+        };
+        seg.forEach((s) => s.addEventListener('click', () => { seg.forEach((x) => x.classList.toggle('on', x === s)); tabs[s.dataset.t](); }));
+        tabs.account();
+      };
 
       // ---- working toggles ----
       document.querySelectorAll('.wc-toggle').forEach((b) => b.addEventListener('click', async () => {
@@ -463,25 +510,12 @@ const pages = {
         render();
       }));
 
-      // ---- personal time ----
-      document.querySelectorAll('.wc-add.personal').forEach((b) => b.addEventListener('click', async () => {
-        const labelv = prompt('Personal block (e.g. Pick up the girls, Lunch)'); if (!labelv) return;
-        const timev = prompt('Time? (e.g. 3:30 PM) — leave blank to skip', '');
-        const addr = prompt('Address? (so the route plans around it) — optional', '');
-        await post('/api/plan/stop', { plan_date: b.dataset.date, label: labelv, kind: 'personal', city: addr || null, address: addr || null, arrival_time: timev || null });
-        render();
-      }));
+      // ---- one Add menu per day ----
+      document.querySelectorAll('.wc-add').forEach((b) => b.addEventListener('click', () => openAddModal(b.dataset.date)));
 
-      // ---- stop controls: time, remove, up/down ----
+      // ---- stop controls: time + remove (reorder via drag) ----
       document.querySelectorAll('.ws-time').forEach((inp) => inp.addEventListener('change', () => post('/api/plan/stop/update', { id: +inp.dataset.id, arrival_time: to12(inp.value) })));
       document.querySelectorAll('.ws-rem').forEach((b) => b.addEventListener('click', async () => { await post('/api/plan/stop/delete', { id: +b.dataset.id }); render(); }));
-      const moveWithin = async (date, id, dir) => {
-        const day = dayOf(date); const ids = day.stops.map((s) => s.id); const i = ids.indexOf(id);
-        const j = i + dir; if (j < 0 || j >= ids.length) return;
-        [ids[i], ids[j]] = [ids[j], ids[i]]; await post('/api/plan/reorder', { ordered_ids: ids }); render();
-      };
-      document.querySelectorAll('.ws-up').forEach((b) => b.addEventListener('click', () => moveWithin(b.dataset.date, +b.dataset.id, -1)));
-      document.querySelectorAll('.ws-dn').forEach((b) => b.addEventListener('click', () => moveWithin(b.dataset.date, +b.dataset.id, +1)));
 
       // ---- drag a stop to reorder within its day (desktop) ----
       document.querySelectorAll('.wstop[draggable="true"]').forEach((row) => {
