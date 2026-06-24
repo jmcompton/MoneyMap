@@ -208,15 +208,13 @@ const pages = {
         <a class="logout" href="#" onclick="fetch('/api/logout',{method:'POST'}).then(()=>location.href='/login.html');return false;">Sign out</a>
       </header>
       <div class="brief"><span class="spark">${I.spark}</span><div class="txt">${esc(d.brief)}</div></div>
-      ${s.found_total > 0 ? `<a class="foundcard" href="/reconcile.html">
-        <div class="fc-ic">${I.recover}</div>
-        <div class="fc-body"><div class="fc-label">Found money</div><div class="fc-amt">${money(s.found_total)}</div><div class="fc-sub">across ${s.found_count} account${s.found_count === 1 ? '' : 's'} you may be owed · tap to review</div></div>
-        <div class="fc-arrow">→</div></a>` : ''}
       <div class="stats">
-        <div class="stat"><div class="label">Tracked commission</div><div class="value green">${money(s.total_commission)}</div></div>
-        <div class="stat"><div class="label">Open pipeline</div><div class="value blue">${money(s.pipeline_value)}</div></div>
-        <div class="stat"><div class="label">Key accounts</div><div class="value">${s.key_account_count}</div></div>
-        <div class="stat"><div class="label">At-risk</div><div class="value warn">${s.at_risk_count}</div></div>
+        ${s.found_total > 0
+          ? `<a class="stat hero" href="/reconcile.html"><div class="label">Found money</div><div class="value">${money(s.found_total)}</div><div class="d">across ${s.found_count} account${s.found_count === 1 ? '' : 's'} you may be owed →</div></a>`
+          : `<div class="stat"><div class="label">Found money</div><div class="value">$0</div><div class="d">all reconciled</div></div>`}
+        <div class="stat"><div class="label">Tracked commission</div><div class="value">${money(s.total_commission)}</div><div class="d">this period</div></div>
+        <div class="stat"><div class="label">At-risk accounts</div><div class="value warn">${s.at_risk_count}</div><div class="d">going quiet</div></div>
+        <div class="stat"><div class="label">Open pipeline</div><div class="value green">${money(s.pipeline_value)}</div><div class="d">${s.key_account_count} key accounts</div></div>
       </div>
       <div class="grid">
         <div class="col">
@@ -899,8 +897,54 @@ const pages = {
   },
 };
 
+function mountChrome() {
+  const app = document.querySelector('.app');
+  const page = document.body.dataset.page;
+  if (!app || page === 'login') return;
+
+  const nav = [
+    { group: 'Daily', items: [
+      { href: '/', icon: 'home', label: 'Dashboard', keys: ['home'] },
+      { href: '/planner.html', icon: 'planner', label: 'Planner', keys: ['planner'] },
+      { href: '/accounts.html', icon: 'accounts', label: 'Accounts', keys: ['accounts', 'account'] },
+    ] },
+    { group: 'Money', items: [
+      { href: '/reconcile.html', icon: 'recover', label: 'Found money', keys: ['reconcile'] },
+      { href: '/import.html', icon: 'import', label: 'Import', keys: ['import', 'unmatched'] },
+      { href: '/outreach.html', icon: 'mail', label: 'Email blast', keys: ['outreach'] },
+    ] },
+  ];
+  const navHtml = nav.map((g) => `<div class="navlabel">${g.group}</div><nav>` +
+    g.items.map((it) => `<a href="${it.href}" class="${it.keys.includes(page) ? 'on' : ''}">${I[it.icon] || ''} ${it.label}</a>`).join('') + `</nav>`).join('');
+
+  const side = el(`<aside class="side">
+    <div class="brand"><div class="logo">M</div><b>MoneyMap</b></div>
+    ${navHtml}
+    <div class="spacer"></div>
+    <div class="user"><div class="ava">DC</div><div><b>Daniel Compton</b><span>Compton Sales</span></div><button class="out" title="Sign out" id="signout">${I.back}</button></div>
+  </aside>`);
+
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const topbar = el(`<div class="topbar-app">
+    <div class="search">${I.search} Search accounts, deals, leads…</div>
+    <div class="right"><span class="date">${today}</span><div class="tb-ic">${I.alert}</div></div>
+  </div>`);
+
+  const shell = el('<div class="shell"></div>');
+  const main = el('<div class="main"></div>');
+  app.parentNode.insertBefore(shell, app);
+  shell.appendChild(side);
+  shell.appendChild(main);
+  main.appendChild(topbar);
+  main.appendChild(app);
+
+  const out = side.querySelector('#signout');
+  if (out) out.addEventListener('click', async () => { try { await fetch('/api/logout', { method: 'POST' }); } catch (_) {} location.href = '/login.html'; });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('nav.bottom .ic[data-i]').forEach((s) => { s.innerHTML = I[s.dataset.i] || ''; });
+  mountChrome();
   const page = document.body.dataset.page;
   if (pages[page]) pages[page]().catch((e) => { console.error(e); const a = document.getElementById('app'); if (a) a.innerHTML = '<div style="padding:24px;color:#d92d20">Error: ' + esc(e.message) + '</div>'; });
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
