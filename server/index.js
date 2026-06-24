@@ -33,7 +33,7 @@ app.get('/api/me', auth.me);
 app.use('/api', auth.requireAuth, api);
 
 // Guard the app pages: bounce to login if there's no session.
-const PROTECTED = ['/', '/index.html', '/accounts.html', '/account.html', '/import.html', '/unmatched.html', '/reconcile.html', '/planner.html', '/outreach.html', '/coming-soon.html'];
+const PROTECTED = ['/', '/index.html', '/accounts.html', '/account.html', '/import.html', '/unmatched.html', '/reconcile.html', '/planner.html', '/outreach.html', '/competitor.html', '/coming-soon.html'];
 app.get(PROTECTED, (req, res, next) => {
   if (!req.session.user) return res.redirect('/login.html');
   next();

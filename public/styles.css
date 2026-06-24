@@ -611,3 +611,11 @@ a.btn { display: block; text-align: center; text-decoration: none; box-sizing: b
   .wcol { flex: 0 0 84%; max-width: 84%; }
   .wcol.sat { display: flex; }
 }
+
+/* ===== Competitor analysis (line picker) ===== */
+.cl-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.cl-chip { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); font-size: 13.5px; font-weight: 600; border-radius: 10px; padding: 9px 13px; cursor: pointer; }
+.cl-chip:hover { border-color: var(--green); }
+.cl-chip.active { background: var(--green); border-color: var(--green); color: #fff; }
+.cl-chip .cl-count { font-size: 11.5px; font-weight: 700; background: rgba(0,0,0,.12); padding: 1px 7px; border-radius: 999px; }
+.cl-chip.active .cl-count { background: rgba(255,255,255,.25); }

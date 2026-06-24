@@ -820,6 +820,46 @@ const pages = {
     load();
   },
 
+  async competitor() {
+    const app = document.getElementById('app');
+    const data = await api('/api/competitor/lines');
+    if (!data) return;
+    const lines = data.lines.filter((l) => l.gap_count > 0);
+    const state = { mfrId: lines.length ? lines[0].manufacturer_id : null };
+
+    const render = async () => {
+      const chips = lines.map((l) => `<button class="cl-chip ${String(l.manufacturer_id) === String(state.mfrId) ? 'active' : ''}" data-id="${l.manufacturer_id}">${esc(l.name)}<span class="cl-count">${l.gap_count}</span></button>`).join('');
+
+      let body = '';
+      if (!lines.length) {
+        body = `<div class="placeholder"><b>No gaps to show yet</b>Import commission statements for more than one manufacturer. Then we can spot accounts buying one line but not another.</div>`;
+      } else {
+        const g = await api('/api/competitor/gaps?manufacturer_id=' + state.mfrId);
+        const m = g ? g.manufacturer : { name: '' };
+        const gaps = g ? g.gaps : [];
+        const rows = gaps.map((x, i) => `<div class="row">
+          <div class="rank">${i + 1}</div>
+          <div class="name">${esc(x.name)}<small>${esc(x.city || '')} · buys ${x.lines.map(esc).join(', ')}</small></div>
+          <span class="chip ${x.days_quiet != null && x.days_quiet >= 60 ? 'amber' : ''}">${x.days_quiet != null ? x.days_quiet + 'd quiet' : 'no contact yet'}</span>
+          <div class="money">${money(x.total)}</div>
+        </div>`).join('');
+        body = `<div class="panel">
+          <div class="head"><span class="ic amber">${I.alert}</span><h2>Not buying ${esc(m.name)}</h2><span class="count">${gaps.length}</span></div>
+          <div class="ls-sub" style="padding:0 16px 8px">These accounts already buy other lines from you but carry no ${esc(m.name)}. Ranked by what they spend with you, biggest first.</div>
+          ${rows || '<div class="rail-load">No gaps for this line. Everyone who buys from you already carries it.</div>'}
+        </div>`;
+      }
+
+      app.innerHTML = `
+        <header class="top"><div><h1>Competitor analysis</h1><div class="sub">Accounts buying your other lines but not this one. Your cross-sell hit list.</div></div></header>
+        ${lines.length ? `<div class="cl-picker">${chips}</div>` : ''}
+        ${body}`;
+
+      document.querySelectorAll('.cl-chip').forEach((b) => b.addEventListener('click', () => { state.mfrId = b.dataset.id; render(); }));
+    };
+    render();
+  },
+
   async outreach() {
     const app = document.getElementById('app');
     const seg = await api('/api/outreach/segments');
@@ -946,6 +986,7 @@ function mountChrome() {
       { href: '/reconcile.html', icon: 'recover', label: 'Found money', keys: ['reconcile'] },
       { href: '/import.html', icon: 'import', label: 'Import', keys: ['import', 'unmatched'] },
       { href: '/outreach.html', icon: 'mail', label: 'Email blast', keys: ['outreach'] },
+      { href: '/competitor.html', icon: 'alert', label: 'Competitor analysis', keys: ['competitor'] },
     ] },
   ];
   const navHtml = nav.map((g) => `<div class="navlabel">${g.group}</div><nav>` +

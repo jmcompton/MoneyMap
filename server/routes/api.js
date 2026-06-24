@@ -835,4 +835,77 @@ router.post('/outreach/draft', async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+// ---------- Competitor analysis (Layer 1: conquest gaps) ----------
+// We can't see what an account buys from a competitor. But we CAN see what they
+// buy through us. So invert it: an account that buys other lines from you but
+// ZERO of a given manufacturer is a proven customer you're not selling that
+// line to yet. That's a free cross-sell hit list per line, no new data needed.
+async function buildConquest(orgId) {
+  const items = (await query(
+    `SELECT resolved_account_id AS account_id, manufacturer_id, amount
+       FROM commission_line_items
+      WHERE org_id = $1 AND resolved_account_id IS NOT NULL`,
+    [orgId]
+  )).rows;
+  const accounts = (await query(`SELECT id, name, city, last_contact_at FROM accounts WHERE org_id = $1`, [orgId])).rows;
+  const mfrs = (await query(`SELECT id, name FROM manufacturers WHERE org_id = $1 ORDER BY name`, [orgId])).rows;
+  const mfrName = new Map(mfrs.map((m) => [m.id, m.name]));
+  const acctInfo = new Map(accounts.map((a) => [a.id, a]));
+
+  // per account: which manufacturers they buy, and total $ with us
+  const bought = new Map(); // account_id -> Set(manufacturer_id)
+  const total = new Map();  // account_id -> total amount
+  for (const it of items) {
+    if (!bought.has(it.account_id)) bought.set(it.account_id, new Set());
+    bought.get(it.account_id).add(it.manufacturer_id);
+    total.set(it.account_id, (total.get(it.account_id) || 0) + Number(it.amount || 0));
+  }
+
+  const daysQuiet = (ts) => { if (!ts) return null; return Math.floor((Date.now() - new Date(ts).getTime()) / 86400000); };
+
+  // for each manufacturer, the accounts who buy something but not it
+  const byMfr = new Map(); // manufacturer_id -> [gap rows]
+  for (const m of mfrs) byMfr.set(m.id, []);
+  for (const [acctId, set] of bought.entries()) {
+    const info = acctInfo.get(acctId);
+    if (!info) continue;
+    const lines = [...set].map((id) => mfrName.get(id)).filter(Boolean).sort();
+    for (const m of mfrs) {
+      if (set.has(m.id)) continue; // they already buy this line
+      byMfr.get(m.id).push({
+        account_id: acctId,
+        name: info.name,
+        city: info.city,
+        total: total.get(acctId) || 0,
+        lines,
+        days_quiet: daysQuiet(info.last_contact_at),
+      });
+    }
+  }
+  for (const arr of byMfr.values()) arr.sort((a, b) => b.total - a.total);
+  return { mfrs, byMfr };
+}
+
+router.get('/competitor/lines', async (req, res, next) => {
+  try {
+    const { mfrs, byMfr } = await buildConquest(req.user.org_id);
+    const lines = mfrs.map((m) => {
+      const gaps = byMfr.get(m.id) || [];
+      return { manufacturer_id: m.id, name: m.name, gap_count: gaps.length, gap_value: gaps.reduce((s, g) => s + g.total, 0) };
+    });
+    res.json({ lines });
+  } catch (e) { next(e); }
+});
+
+router.get('/competitor/gaps', async (req, res, next) => {
+  try {
+    const mfrId = Number(req.query.manufacturer_id);
+    if (!mfrId) return res.status(400).json({ error: 'manufacturer_id required' });
+    const { mfrs, byMfr } = await buildConquest(req.user.org_id);
+    const m = mfrs.find((x) => x.id === mfrId);
+    if (!m) return res.status(404).json({ error: 'manufacturer not found' });
+    res.json({ manufacturer: { id: m.id, name: m.name }, gaps: byMfr.get(mfrId) || [] });
+  } catch (e) { next(e); }
+});
+
 module.exports = router;
