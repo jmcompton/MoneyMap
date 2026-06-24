@@ -233,7 +233,7 @@ body { background: radial-gradient(1200px 500px at 50% -200px, #e9f5ef 0%, var(-
 .fab { position: fixed; right: 18px; bottom: 86px; width: 62px; height: 62px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #fff; z-index: 60; }
 .fab.mic { background: linear-gradient(135deg, #f0d27a, #b8860b); box-shadow: 0 10px 26px rgba(184,134,11,.5); }
 .fab.mic:active { transform: scale(.95); }
-@media (min-width: 1080px) { .fab { right: calc(50% - 524px); } }
+@media (min-width: 900px) { .fab { right: 28px; bottom: 28px; } }
 .sheet-backdrop { position: fixed; inset: 0; background: rgba(8,12,20,.55); z-index: 120; display: flex; align-items: flex-end; }
 .sheet { background: #fff; width: 100%; max-width: 520px; margin: 0 auto; border-radius: 22px 22px 0 0; padding: 20px 18px calc(20px + env(safe-area-inset-bottom)); box-shadow: 0 -10px 40px rgba(0,0,0,.2); }
 @media (min-width: 560px) { .sheet-backdrop { align-items: center; } .sheet { border-radius: 22px; } }
