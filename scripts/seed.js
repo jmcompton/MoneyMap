@@ -60,13 +60,14 @@ async function seed() {
     { key: 'cullman', name: 'Cullman Lumber', type: 'dealer', city: 'Cullman', last: 95 },
     { key: 'decatur', name: 'Decatur Supply', type: 'dealer', city: 'Decatur', last: 30 },
     { key: 'madison', name: 'Madison Roofing', type: 'contractor', city: 'Madison', last: 110 },
+    { key: 'coosa', name: 'Coosa Valley Building Supply', type: 'one_step', city: 'Gadsden', last: 74, whale: true, target: 144000 },
   ];
   const acct = {};
   for (const a of accountDefs) {
     const row = (await pool.query(
-      `INSERT INTO accounts (org_id, name, account_type, city, state, assigned_user_id, last_contact_at)
-       VALUES ($1,$2,$3,$4,'AL',$5,$6) RETURNING id`,
-      [org.id, a.name, a.type, a.city, danId, daysAgo(a.last)]
+      `INSERT INTO accounts (org_id, name, account_type, city, state, assigned_user_id, last_contact_at, is_target, target_value)
+       VALUES ($1,$2,$3,$4,'AL',$5,$6,$7,$8) RETURNING id`,
+      [org.id, a.name, a.type, a.city, danId, daysAgo(a.last), !!a.whale, a.target || 0]
     )).rows[0];
     acct[a.key] = row.id;
   }

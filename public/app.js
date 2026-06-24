@@ -216,6 +216,18 @@ const pages = {
         <div class="stat"><div class="label">At-risk accounts</div><div class="value warn">${s.at_risk_count}</div><div class="d">going quiet</div></div>
         <div class="stat"><div class="label">Open pipeline</div><div class="value green">${money(s.pipeline_value)}</div><div class="d">${s.key_account_count} key accounts</div></div>
       </div>
+      ${d.white_whale ? `<a class="whale" href="/account.html?id=${d.white_whale.account_id}">
+        <div class="whale-i">${I.star}</div>
+        <div class="whale-body">
+          <div class="whale-label">White whale</div>
+          <div class="whale-name">${esc(d.white_whale.name)}</div>
+          <div class="whale-sub">Your biggest account that isn't yours yet${d.white_whale.city ? ' · ' + esc(d.white_whale.city) : ''}</div>
+        </div>
+        <div class="whale-stat">
+          ${d.white_whale.target_value ? `<div class="whale-val">${money(d.white_whale.target_value)}<small>/yr potential</small></div>` : ''}
+          ${d.white_whale.days_since != null ? `<span class="chip ${d.white_whale.days_since >= 60 ? 'red' : 'amber'}">${d.white_whale.days_since}d quiet</span>` : '<span class="chip">no contact yet</span>'}
+        </div>
+      </a>` : ''}
       <div class="grid">
         <div class="col">
           <div class="panel"><div class="head"><span class="ic">${I.route}</span><h2>Today's route</h2><span class="count">${doneCount}/${d.today_route.length}</span></div><div class="progress"><span style="width:${d.today_route.length ? Math.round((doneCount / d.today_route.length) * 100) : 0}%"></span></div>${routeHtml}</div>
@@ -326,7 +338,7 @@ const pages = {
             <div class="ps"><div class="l">Last contact</div><div class="v ${a.days_since_contact >= 30 ? 'amber' : ''}">${lastContact}</div></div>
             <div class="ps"><div class="l">Last order</div><div class="v">${lastOrder}</div></div>
           </div>
-          <div class="qa"><button class="primary" id="logBtn">${I.plus} Log a call</button></div>
+          <div class="qa"><button class="primary" id="logBtn">${I.plus} Log a call</button><button class="ghost" id="whaleBtn">${I.star} ${a.is_target ? 'White whale ✓' : 'Mark white whale'}</button></div>
         </div>
         <div class="panel"><div class="head"><span class="ic">${I.users}</span><h2>Contacts</h2><span class="count">${d.contacts.length}</span></div>${contactsHtml}</div>
         <div class="panel"><div class="head"><span class="ic blue">${I.deal}</span><h2>Open deals</h2><span class="count">${d.deals.length}</span></div>${dealsHtml}</div>
@@ -346,6 +358,18 @@ const pages = {
       document.getElementById('saveNote').addEventListener('click', save);
       document.getElementById('logBtn').addEventListener('click', () => voiceRecorder(id, render));
       document.getElementById('micFab').addEventListener('click', () => voiceRecorder(id, render));
+      document.getElementById('whaleBtn').addEventListener('click', async () => {
+        if (a.is_target) {
+          try { await api('/api/accounts/' + id + '/target', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_target: false }) }); render(); }
+          catch (e) { alert(e.message); }
+          return;
+        }
+        const raw = prompt('Roughly how much is this account worth to you per year if you land it? (just a number, optional)', a.target_value || '');
+        if (raw === null) return;
+        const target_value = Number(String(raw).replace(/[^0-9.]/g, '')) || 0;
+        try { await api('/api/accounts/' + id + '/target', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_target: true, target_value }) }); render(); }
+        catch (e) { alert(e.message); }
+      });
     };
     render();
   },

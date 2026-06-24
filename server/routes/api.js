@@ -112,6 +112,20 @@ router.get('/home', async (req, res, next) => {
       }
     } catch (_) { /* non-fatal */ }
 
+    // The white whale: the flagged target with the most potential. Not in the
+    // commission data (you don't sell them yet), so it lives off the flag.
+    const whaleRow = (await query(
+      `SELECT id, name, city, target_value, last_contact_at FROM accounts
+        WHERE org_id = $1 AND is_target = true
+        ORDER BY target_value DESC NULLS LAST LIMIT 1`,
+      [orgId]
+    )).rows[0];
+    const whiteWhale = whaleRow ? {
+      account_id: whaleRow.id, name: whaleRow.name, city: whaleRow.city,
+      target_value: Number(whaleRow.target_value) || 0,
+      days_since: whaleRow.last_contact_at ? daysBetween(whaleRow.last_contact_at) : null,
+    } : null;
+
     const first = req.user.name.split(' ')[0];
     const riskKey = atRisk.filter((a) => a.tier === 'A').length;
     const closingDeals = dealRows.filter((d) => d.days_to_close <= 14);
@@ -132,6 +146,7 @@ router.get('/home', async (req, res, next) => {
         found_count: foundCount,
       },
       today_route: route,
+      white_whale: whiteWhale,
       at_risk: atRisk,
       leads,
       deals: dealRows,
@@ -198,9 +213,26 @@ router.get('/accounts/:id', async (req, res, next) => {
         days_since_contact: a.last_contact_at ? daysBetween(a.last_contact_at) : null,
         days_since_order: a.last_order_at ? daysBetween(a.last_order_at) : null,
         commission: t ? t.commission : 0, tier: t ? t.tier : '—', rank: t ? t.rank : null,
+        is_target: !!a.is_target, target_value: Number(a.target_value) || 0,
       },
       contacts, deals, quotes, activities: acts,
     });
+  } catch (e) { next(e); }
+});
+
+// Flag or unflag an account as the white whale (the big target you're chasing).
+router.post('/accounts/:id/target', async (req, res, next) => {
+  try {
+    const orgId = req.user.org_id;
+    const id = Number(req.params.id);
+    const isTarget = !!(req.body && req.body.is_target);
+    const targetValue = Number(req.body && req.body.target_value) || 0;
+    const r = await query(
+      `UPDATE accounts SET is_target = $1, target_value = $2 WHERE id = $3 AND org_id = $4`,
+      [isTarget, isTarget ? targetValue : 0, id, orgId]
+    );
+    if (!r.rowCount) return res.status(404).json({ error: 'Account not found.' });
+    res.json({ ok: true, is_target: isTarget, target_value: isTarget ? targetValue : 0 });
   } catch (e) { next(e); }
 });
 

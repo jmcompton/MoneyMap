@@ -619,3 +619,21 @@ a.btn { display: block; text-align: center; text-decoration: none; box-sizing: b
 .cl-chip.active { background: var(--green); border-color: var(--green); color: #fff; }
 .cl-chip .cl-count { font-size: 11.5px; font-weight: 700; background: rgba(0,0,0,.12); padding: 1px 7px; border-radius: 999px; }
 .cl-chip.active .cl-count { background: rgba(255,255,255,.25); }
+
+/* ===== White whale (homepage hero target) ===== */
+.whale { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; padding: 16px 18px;
+  border-radius: var(--radius); text-decoration: none; color: #fff;
+  background: linear-gradient(120deg, #1e2a44 0%, #2b3d63 100%); border: 1px solid #2b3d63;
+  box-shadow: var(--shadow); }
+.whale:hover { filter: brightness(1.06); }
+.whale-i { width: 42px; height: 42px; flex: none; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.14); color: #ffd36b; }
+.whale-i svg { width: 22px; height: 22px; }
+.whale-body { flex: 1; min-width: 0; }
+.whale-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #ffd36b; }
+.whale-name { font-size: 18px; font-weight: 650; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.whale-sub { font-size: 12.5px; color: rgba(255,255,255,.72); margin-top: 2px; }
+.whale-stat { flex: none; text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.whale-val { font-size: 16px; font-weight: 700; color: #fff; }
+.whale-val small { display: block; font-size: 10.5px; font-weight: 500; color: rgba(255,255,255,.6); }
+@media (max-width: 560px) { .whale-sub { white-space: normal; } .whale-name { white-space: normal; } }
