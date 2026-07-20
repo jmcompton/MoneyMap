@@ -107,7 +107,7 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 .b-medium{background:var(--amber-lt);color:var(--amber)}
 .b-low{background:#f1f5f9;color:var(--text3)}
 .rec-layout{display:flex;flex:1;min-height:0}
-.rec-left{width:200px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);overflow-y:auto;padding:8px 0}
+.rec-left{display:none}
 .rl-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;padding:4px 16px 6px}
 .rl-item{padding:8px 16px;font-size:12.5px;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .1s}
 .rl-item:hover{background:var(--blue-lt);color:var(--accent)}
@@ -120,14 +120,15 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 .rec-name{font-size:17px;font-weight:700;color:var(--navy);margin-bottom:2px}
 .rec-cat{font-size:12.5px;color:var(--blue)}
 .rec-btns{display:flex;gap:6px;align-items:center;flex-shrink:0}
-.rec-tabs{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:2px;align-items:center}
+.rec-tabs{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px;display:none;gap:2px;align-items:center}
 .rt{padding:10px 14px;font-size:12.5px;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:all .12s}
 .rt:hover{color:var(--blue)}
 .rt.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
-.rec-quick{background:#fafbfc;border-bottom:1px solid var(--border);padding:12px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.rec-quick{background:#fafbfc;border-bottom:1px solid var(--border);padding:12px 20px;display:none;grid-template-columns:repeat(4,1fr);gap:16px}
 .rq-label{font-size:11px;color:var(--text3)}
 .rq-val{font-size:12.5px;color:var(--text);font-weight:500}
 .rec-body{padding:16px 20px}
+#rec-tab-overview{display:flex;flex-direction:column}
 .rec-sec{background:var(--white);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden}
 .rec-sec-hdr{padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#fafbfc}
 .rec-sec-title{font-size:12.5px;font-weight:700;color:var(--navy)}
@@ -2001,6 +2002,7 @@ window.addEventListener('load', function() {
           <div class="rec-btns">
             <button class="btn btn-primary btn-sm" onclick="logCallForRecord()">Log Call</button>
             <button class="btn btn-secondary btn-sm" onclick="writeOutreachForRecord()">Outreach</button>
+            <button class="btn btn-secondary btn-sm" onclick="openAiOverlay()">AI</button>
             <button class="btn btn-secondary btn-sm" onclick="openEditContact(currentRecord)">✏️ Edit</button>
             <button class="btn btn-secondary btn-sm" onclick="recGoBack()">✕ Close</button>
           </div>
@@ -2027,14 +2029,14 @@ window.addEventListener('load', function() {
         </div>
         <div class="rec-body">
           <div id="rec-tab-overview">
-            <div class="rec-sec">
+            <div class="rec-sec" style="order:4">
               <div class="rec-sec-hdr"><span class="rec-sec-title">Contact Information</span><span style="font-size:11.5px;color:var(--blue);cursor:pointer">Edit</span></div>
               <div class="rec-sec-body" id="rec-fields"></div>
             </div>
-            <div class="rec-sec"><div class="rec-sec-hdr"><span class="rec-sec-title">People</span></div>
+            <div class="rec-sec" style="order:1"><div class="rec-sec-hdr"><span class="rec-sec-title">People</span></div>
               <div style="padding:16px">
   <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-    <div style="font-size:12px;font-weight:700;color:var(--navy)">Contacts at this Account</div>
+    <div></div>
     <div style="display:flex;align-items:center;gap:10px">
       <div style="font-size:11px;color:var(--text3)" id="rec-contacts-summary"></div>
       <button id="rec-add-contact-btn" onclick="toggleAddContactForm()" style="padding:6px 12px;background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;min-height:36px;white-space:nowrap">+ Add Contact</button>
@@ -2063,15 +2065,15 @@ window.addEventListener('load', function() {
   <div id="rec-contacts-list"><div style="font-size:12px;color:var(--text3);text-align:center;padding:20px">Loading...</div></div>
 </div>
             </div>
-            <div class="rec-sec"><div class="rec-sec-hdr"><span class="rec-sec-title">Notes</span></div>
-              <div style="padding:16px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:var(--navy)">Notes</div><button onclick="saveNote()" style="padding:6px 14px;background:var(--blue);color:#fff;border:none;border-radius:40px;font-size:11px;font-weight:700;cursor:pointer">+ Add Note</button></div><textarea id="note-input" placeholder="Write a note..." style="width:100%;height:80px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12px;font-family:inherit;resize:vertical;margin-bottom:12px;box-sizing:border-box"></textarea><div id="notes-list"></div></div>
+            <div class="rec-sec" style="order:2"><div class="rec-sec-hdr"><span class="rec-sec-title">Notes</span></div>
+              <div style="padding:16px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div></div><button onclick="saveNote()" style="padding:6px 14px;background:var(--blue);color:#fff;border:none;border-radius:40px;font-size:11px;font-weight:700;cursor:pointer">+ Add Note</button></div><textarea id="note-input" placeholder="Write a note..." style="width:100%;height:80px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12px;font-family:inherit;resize:vertical;margin-bottom:12px;box-sizing:border-box"></textarea><div id="notes-list"></div></div>
             </div>
-            <div class="rec-sec">
+            <div class="rec-sec" style="order:5">
               <div class="rec-sec-hdr"><span class="rec-sec-title">Products & Territory</span><span style="font-size:11.5px;color:var(--blue);cursor:pointer">Edit</span></div>
               <div class="rec-sec-body" id="rec-prod-fields"></div>
             </div>
             <!-- Lines this account buys — built from confirmed commission data -->
-            <div class="rec-sec" id="rec-lines-section">
+            <div class="rec-sec" id="rec-lines-section" style="order:3">
               <div class="rec-sec-hdr"><span class="rec-sec-title">Lines</span><span id="rec-lines-summary" style="font-size:11px;color:var(--text3)"></span></div>
               <div class="rec-sec-body" id="rec-lines-body"></div>
             </div>
@@ -2104,23 +2106,29 @@ window.addEventListener('load', function() {
                 </div>
               </div>
             </div>
-          </div>
-          <div id="rec-tab-calls" style="display:none">
-            <div class="rec-sec">
+            <div class="rec-sec" style="order:9">
               <div class="rec-sec-hdr"><span class="rec-sec-title" id="rec-timeline-title">Activity Timeline</span><button class="btn btn-primary btn-sm" onclick="logCallForRecord()">+ Log Activity</button></div>
               <div class="rec-sec-body" id="rec-timeline"></div>
             </div>
           </div>
+          <div id="rec-tab-calls" style="display:none"></div>
           <div id="rec-tab-outreach" style="display:none"><div id="rec-outreach-body"></div></div>
 <div id="rec-tab-notes" style="display:none"></div>
 <div id="rec-tab-deals" style="display:none"><div style="padding:16px"><div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:12px">Deals</div><div id="rec-deals-list"><div style="font-size:12px;color:var(--text3);text-align:center;padding:20px">No deals linked yet</div></div></div></div>
 <div id="rec-tab-quotes" style="display:none"><div style="padding:16px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div style="font-size:12px;font-weight:700;color:var(--navy)">Quotes</div><div style="font-size:11px;color:var(--text3)" id="rec-quotes-summary"></div></div><div id="rec-quotes-list"><div style="font-size:12px;color:var(--text3);text-align:center;padding:20px">Loading quotes...</div></div></div></div>
 <div id="rec-tab-contacts" style="display:none"></div>
-          <div id="rec-tab-ai" style="display:none">
-            <div class="ai-panel">
-              <div class="ai-phdr"><span class="ai-badge">AI</span><span class="ai-ptitle">Contact Intelligence</span></div>
-              <button class="ai-send" onclick="runRecordAI()">Get AI Strategy for this Contact →</button>
-              <div class="ai-resp" id="rec-ai-resp"></div>
+          <div id="rec-tab-ai" style="display:none"></div>
+          <div id="ai-overlay" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.5);align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto" onclick="if(event.target===this)closeAiOverlay()">
+            <div style="background:#fff;border-radius:12px;max-width:640px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.25);overflow:hidden">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)">
+                <span style="font-weight:700;color:var(--navy)">AI Intel</span>
+                <button onclick="closeAiOverlay()" style="background:none;border:none;font-size:20px;line-height:1;color:var(--text3);cursor:pointer">&times;</button>
+              </div>
+              <div class="ai-panel" style="padding:16px 18px">
+                <div class="ai-phdr"><span class="ai-badge">AI</span><span class="ai-ptitle">Contact Intelligence</span></div>
+                <button class="ai-send" onclick="runRecordAI()">Get AI Strategy for this Contact →</button>
+                <div class="ai-resp" id="rec-ai-resp"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -5760,6 +5768,8 @@ function todayAddNearby(accountId, btn) {
     .catch(function(){ showToast('Could not add lead'); loadToday(); });
 }
 
+function openAiOverlay(){ var o=document.getElementById('ai-overlay'); if(o) o.style.display='flex'; }
+function closeAiOverlay(){ var o=document.getElementById('ai-overlay'); if(o) o.style.display='none'; }
 function setRecTab(tab, el) {
   ['overview','calls','outreach','ai','notes','deals','quotes','contacts'].forEach(function(t) {
     var e = document.getElementById('rec-tab-' + t);
