@@ -5156,7 +5156,11 @@ function submitAccountContact() {
     });
 }
 
-// Lines this account buys — built from confirmed commission data (account_lines).
+// Manufacturer lines this account carries. Editable: rows come from account_lines
+// (some enriched with commission totals from imports), and a rep can add or remove
+// which lines the account buys. A line belongs to the account, not to a contact.
+function _alEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
 function loadAccountLines(accountId) {
   var section = document.getElementById('rec-lines-section');
   var body = document.getElementById('rec-lines-body');
@@ -5167,28 +5171,70 @@ function loadAccountLines(accountId) {
   fetch('/api/lines/account/' + accountId)
     .then(function(r){ return r.ok ? r.json() : []; })
     .then(function(lines){
-      if (!Array.isArray(lines) || !lines.length) {
-        body.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:14px 16px">No commission lines linked to this account yet.</div>';
-        return;
-      }
+      lines = Array.isArray(lines) ? lines : [];
       var money = function(n){ return '$' + (Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); };
       var totSales = lines.reduce(function(s,l){ return s + (Number(l.total_sales)||0); }, 0);
-      var totComm  = lines.reduce(function(s,l){ return s + (Number(l.total_commission)||0); }, 0);
-      if (summary) summary.textContent = lines.length + ' line' + (lines.length!==1?'s':'') + ' · ' + money(totSales);
-      body.innerHTML = '<div style="padding:6px 16px 14px">' + lines.map(function(l){
-        return '<div class="frow" style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)">' +
-            '<div style="min-width:0"><div style="font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (l.name||'—') + '</div>' +
-            '<div style="font-size:11px;color:var(--text3)">' + (l.line_count||0) + ' line' + ((l.line_count||0)!==1?'s':'') + ' · ' + money(l.total_commission) + ' commission</div></div>' +
-            '<div style="font-weight:700;color:var(--navy);white-space:nowrap">' + money(l.total_sales) + '</div>' +
+      if (summary) summary.textContent = lines.length ? (lines.length + ' line' + (lines.length!==1?'s':'') + (totSales? ' · ' + money(totSales) : '')) : '';
+      var rows = lines.length ? lines.map(function(l){
+        var hasSales = (Number(l.total_sales) > 0) || (Number(l.total_commission) > 0);
+        var sub = hasSales
+          ? ((l.line_count||0) + ' line' + ((l.line_count||0)!==1?'s':'') + ' · ' + money(l.total_commission) + ' commission')
+          : 'Carried';
+        return '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)">' +
+            '<div style="min-width:0"><div style="font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + _alEsc(l.name||'—') + '</div>' +
+            '<div style="font-size:11px;color:var(--text3)">' + sub + '</div></div>' +
+            '<div style="display:flex;align-items:center;gap:10px;white-space:nowrap">' +
+              (hasSales ? '<span style="font-weight:700;color:var(--navy)">' + money(l.total_sales) + '</span>' : '') +
+              '<button title="Remove line" onclick="removeAccountLine(' + accountId + ',' + l.line_id + ')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:17px;line-height:1;padding:2px 5px">&times;</button>' +
+            '</div>' +
           '</div>';
-      }).join('') +
-        '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 0;font-size:12px;font-weight:700;color:var(--navy)">' +
-          '<span>Total · ' + money(totComm) + ' commission</span><span>' + money(totSales) + '</span></div>' +
+      }).join('') : '<div style="font-size:12px;color:var(--text3);padding:4px 0 10px">No lines yet. Add the manufacturers this account carries.</div>';
+
+      body.innerHTML = '<div style="padding:6px 16px 14px">' + rows +
+        '<div style="display:flex;gap:8px;margin-top:12px">' +
+          '<input id="al-add-input" list="al-catalog" placeholder="Add a manufacturer (e.g. Quality)" ' +
+             'onkeydown="if(event.key===\'Enter\'){event.preventDefault();addAccountLine(' + accountId + ');}" ' +
+             'style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px" />' +
+          '<datalist id="al-catalog"></datalist>' +
+          '<button class="btn btn-sm" onclick="addAccountLine(' + accountId + ')" style="font-size:12px;padding:8px 14px">Add</button>' +
+        '</div>' +
       '</div>';
+      loadLineCatalog();
     })
     .catch(function(){
       body.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:14px 16px">Lines unavailable.</div>';
     });
+}
+
+// Populate the manufacturer autocomplete from the firm's line catalog.
+function loadLineCatalog() {
+  var dl = document.getElementById('al-catalog');
+  if (!dl) return;
+  fetch('/api/lines/catalog').then(function(r){ return r.ok ? r.json() : []; }).then(function(cat){
+    if (!Array.isArray(cat)) return;
+    dl.innerHTML = cat.map(function(c){ return '<option value="' + _alEsc(c.name||'') + '"></option>'; }).join('');
+  }).catch(function(){});
+}
+
+function addAccountLine(accountId) {
+  var input = document.getElementById('al-add-input');
+  if (!input) return;
+  var name = (input.value||'').trim();
+  if (!name) { input.focus(); return; }
+  input.disabled = true;
+  fetch('/api/lines/account/' + accountId, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name: name })
+  }).then(function(r){ return r.json(); }).then(function(res){
+    if (res && res.error) { alert(res.error); input.disabled = false; return; }
+    loadAccountLines(accountId);
+  }).catch(function(){ input.disabled = false; });
+}
+
+function removeAccountLine(accountId, lineId) {
+  fetch('/api/lines/account/' + accountId + '/line/' + lineId, { method:'DELETE' })
+    .then(function(r){ return r.json(); })
+    .then(function(){ loadAccountLines(accountId); })
+    .catch(function(){});
 }
 
 // Cross-sell opportunities for one account — peer co-occurrence over confirmed

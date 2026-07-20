@@ -160,7 +160,7 @@ app.use('/api/zoho',  requireAuth, zohoRoutes);
 app.use('/api/voice', requireAuth, voiceRoutes);
 app.use('/api/time',  requireAuth, timeRoutes);
 app.use('/api/commissions', requireAuthAPI, requireManagerAPI, commissionsRoutes);
-app.use('/api/lines', requireAuthAPI, requireManagerAPI, linesRoutes);
+app.use('/api/lines', requireAuthAPI, linesRoutes);
 app.use('/api/manufacturers', requireAuthAPI, manufacturersRoutes);
 app.use('/api/admin/demo-data', requireAuthAPI, requireManagerAPI, demoDataRoutes);
 app.use('/api/commission-pdf', requireAuthAPI, commissionPdfRoutes);
