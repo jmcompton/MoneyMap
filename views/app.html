@@ -6,12 +6,12 @@
 <meta name="theme-color" content="#0f1923"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="RepRoute"/>
+<meta name="apple-mobile-web-app-title" content="OutsideSelling"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <link rel="manifest" href="/manifest.json"/>
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg"/>
-<title>RepRoute CRM</title>
+<title>OutsideSelling</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <style>
 :root{--sw:220px;--navy:#0f1923;--accent:#1d6aff;--accent2:#0d4fd4;--blue:#1d6aff;--blue-lt:#e8f0ff;--white:#ffffff;--bg:#f7f8fa;--surface:#ffffff;--border:#e2e5ea;--border2:#d0d4db;--text:#0f1923;--text2:#4a5568;--text3:#8a95a3;--green:#0a7c52;--green-lt:#edf7f3;--amber:#92600a;--amber-lt:#fef6e4;--red:#c0392b;--red-lt:#fdf0ef;--purple:#5b21b6;--purple-lt:#ede9fe;--r:6px;--r2:8px;--shadow:0 1px 2px rgba(15,25,35,.06),0 1px 3px rgba(15,25,35,.04);--shadow-md:0 2px 4px rgba(15,25,35,.06),0 4px 12px rgba(15,25,35,.06)}
@@ -1491,7 +1491,7 @@ function installPWA() {
   if (!deferredPrompt) {
     // iOS doesn't support beforeinstallprompt - show iOS instructions
     if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-      alert('To install RepRoute on your iPhone:\n\n1. Tap the Share button at the bottom of Safari\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" in the top right');
+      alert('To install OutsideSelling on your iPhone:\n\n1. Tap the Share button at the bottom of Safari\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" in the top right');
       return;
     }
     return;
@@ -1548,7 +1548,7 @@ window.addEventListener('load', function() {
 <aside class="sidebar">
   <div class="sb-brand">
     <div class="sb-logo"><svg viewBox="0 0 17 17" fill="none"><circle cx="8.5" cy="8.5" r="3" fill="white"/><path d="M8.5 1v3M8.5 13v3M1 8.5h3M13 8.5h3" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg></div>
-    <div><div class="sb-name">RepRoute</div><div class="sb-sub">Compton Group LLC</div></div>
+    <div><div class="sb-name">OutsideSelling</div><div class="sb-sub">Field Sales CRM</div></div>
   </div>
   <div class="sb-search-wrap"><div class="sb-search"><svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;flex-shrink:0;opacity:.3"><circle cx="7" cy="7" r="4"/><path d="M10.5 10.5l2.5 2.5"/></svg><input id="sb-search-input" placeholder="Search accounts..." type="search" name="acct_search_sb" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" oninput="globalSearch(this.value)" onkeydown="if(event.key==='Escape')this.value=''" /></div></div>
   <div class="sb-section" data-roles="intern manager">
@@ -1570,12 +1570,12 @@ window.addEventListener('load', function() {
     <div style="padding:8px 10px;background:rgba(255,255,255,.05);border-radius:5px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between">
       <div>
         <div style="font-size:9px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;font-weight:600">Territory</div>
-        <div style="font-size:12px;font-weight:500;color:#fff" id="sb-territory-label">Atlanta Metro</div>
+        <div style="font-size:12px;font-weight:500;color:#fff" id="sb-territory-label">My Territory</div>
       </div>
       <button onclick="openTerritoryModal()" style="font-size:10px;padding:3px 8px;background:transparent;border:1px solid var(--border);border-radius:4px;color:rgba(255,255,255,.5);cursor:pointer;font-family:inherit">Change</button>
     </div>
     <div class="sb-user"><div class="sb-av" id="s-av">JM</div><div><div class="sb-uname" id="s-name">Loading...</div><div class="sb-urole" id="s-role">Rep</div></div></div>
-    <button onclick="wipeMyData()" style="width:calc(100% - 16px);margin:0 8px 6px;padding:7px;background:transparent;border:1px solid #ef444455;border-radius:5px;color:#ef4444;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Clear My Demo Data</button>
+    
     <button class="sb-out" onclick="signOut()">Sign Out</button>
   </div>
 </aside>
@@ -1599,7 +1599,7 @@ window.addEventListener('load', function() {
     </div>
     <button class="btn btn-secondary btn-sm" onclick="openModal('add-prospect')">+ New Account</button>
     <button class="btn btn-primary btn-sm" onclick="go('leads')">AI Find Leads</button>
-    <span style="font-size:11px;color:var(--text3);background:var(--bg);border:1px solid var(--border);padding:4px 10px;border-radius:12px">📍 Atlanta Metro</span>
+    <span style="font-size:11px;color:var(--text3);background:var(--bg);border:1px solid var(--border);padding:4px 10px;border-radius:12px">📍 My Territory</span>
   </div>
 
   <div class="mod-tabs" id="mod-tabs" style="display:none">
@@ -3709,7 +3709,7 @@ window.addEventListener('load', function() {
   <div class="mb">
     <h2>Add Team Member</h2>
     <div class="g2"><div class="fg"><label>Full Name *</label><input type="text" id="ar-name" /></div><div class="fg"><label>Email *</label><input type="email" id="ar-email" /></div></div>
-    <div class="g2"><div class="fg"><label>Territory</label><input type="text" id="ar-territory" placeholder="Atlanta Metro" /></div><div class="fg"><label>Temp Password</label><input type="password" id="ar-pw" placeholder="Set a password" /></div></div>
+    <div class="g2"><div class="fg"><label>Territory</label><input type="text" id="ar-territory" placeholder="e.g. North Texas" /></div><div class="fg"><label>Temp Password</label><input type="password" id="ar-pw" placeholder="Set a password" /></div></div>
     <div class="mfoot"><button class="btn btn-secondary" onclick="closeModal('add-rep')">Cancel</button><button class="btn btn-primary" onclick="addRep()">Add Rep</button></div>
   </div>
 </div>
@@ -4978,7 +4978,7 @@ function viewRecord(id) {
       document.getElementById('rec-fields').innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0">' +
         fields.map(function(f) { return '<div class="frow"><div class="flabel">' + f[0] + '</div><div class="fval' + (f[1]==='—'?' empty':'') + '">' + f[1] + '</div></div>'; }).join('') + '</div>';
       var pf = [
-        ['Products',p.products||'—'],['Territory','Atlanta Metro, GA'],
+        ['Products',p.products||'—'],['Territory',p.territory||'—'],
         ['Priority',p.priority||'Medium'],['Source',p.source||'Manual']
       ];
       document.getElementById('rec-prod-fields').innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0">' +
@@ -6275,7 +6275,7 @@ function runRecordAI() {
   var resp = document.getElementById('rec-ai-resp');
   resp.className = 'ai-resp vis';
   resp.innerHTML = '<div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
-  var prompt = "I'm a manufacturer's rep at Compton Group LLC in Atlanta. Give me a specific sales strategy for " + currentRecord.company + ", a " + currentRecord.category + " in " + (currentRecord.city||'Atlanta') + ". Products: " + (currentRecord.products||'TBD') + ". Status: " + currentRecord.status + ". Priority: " + currentRecord.priority + ". Notes: " + (currentRecord.notes||'none') + ". Give 3 talking points, 2 objection handlers, and a suggested next action.";
+  var prompt = "I'm a manufacturer's rep. Give me a specific sales strategy for " + currentRecord.company + ", a " + currentRecord.category + " in " + (currentRecord.city||'the area') + ". Products: " + (currentRecord.products||'TBD') + ". Status: " + currentRecord.status + ". Priority: " + currentRecord.priority + ". Notes: " + (currentRecord.notes||'none') + ". Give 3 talking points, 2 objection handlers, and a suggested next action.";
   fetch('/api/ai/command', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({prompt:prompt}) })
     .then(function(r) { return r.json(); })
     .then(function(d) { resp.innerHTML = (d.response||d.error||'').replace(/\n/g,'<br/>'); });
@@ -6427,7 +6427,7 @@ function pickAiCandidate(i) {
 
 function findLeads() {
   var product = document.getElementById('lead-cat').value;
-  var territory = document.getElementById('lead-territory').value || 'Atlanta Metro, Georgia';
+  var territory = document.getElementById('lead-territory').value || '';
   var contactType = (document.getElementById('lead-contact-type') || {}).value || 'installers';
   var workType = (document.getElementById('lead-work-type') || {}).value || 'new_construction';
   currentContactType = contactType;
@@ -7472,7 +7472,7 @@ function loadManager() {
       var reps = results[0]; var activity = results[1];
       document.getElementById('manager-reps').innerHTML = reps.length ? reps.map(function(r) {
         var initials = r.name.split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
-        return '<div class="rep-card"><div class="rep-top"><div class="rep-av">' + initials + '</div><div><div class="rep-name">' + r.name + '</div><div class="rep-meta">📍 ' + (r.territory||'Atlanta Metro') + ' · ' + r.email + '</div></div><button class="btn btn-secondary btn-sm" style="margin-left:auto" onclick="go(\'onboarding\')">Onboarding</button></div><div class="rep-stats"><div class="rs"><div class="rs-val">' + r.prospect_count + '</div><div class="rs-lbl">Contacts</div></div><div class="rs"><div class="rs-val">' + r.hot_count + '</div><div class="rs-lbl"> Hot</div></div><div class="rs"><div class="rs-val">' + r.call_count + '</div><div class="rs-lbl">Calls</div></div><div class="rs"><div class="rs-val">' + r.calls_this_week + '</div><div class="rs-lbl">This Week</div></div></div></div>';
+        return '<div class="rep-card"><div class="rep-top"><div class="rep-av">' + initials + '</div><div><div class="rep-name">' + r.name + '</div><div class="rep-meta">📍 ' + (r.territory||'—') + ' · ' + r.email + '</div></div><button class="btn btn-secondary btn-sm" style="margin-left:auto" onclick="go(\'onboarding\')">Onboarding</button></div><div class="rep-stats"><div class="rs"><div class="rs-val">' + r.prospect_count + '</div><div class="rs-lbl">Contacts</div></div><div class="rs"><div class="rs-val">' + r.hot_count + '</div><div class="rs-lbl"> Hot</div></div><div class="rs"><div class="rs-val">' + r.call_count + '</div><div class="rs-lbl">Calls</div></div><div class="rs"><div class="rs-val">' + r.calls_this_week + '</div><div class="rs-lbl">This Week</div></div></div></div>';
       }).join('') : '<div style="text-align:center;padding:24px;color:var(--text3)">No reps added yet.</div>';
       document.getElementById('manager-activity').innerHTML = activity.length ? activity.map(function(a) {
         return '<tr><td style="font-weight:600">' + a.rep_name + '</td><td>' + a.company + '</td><td>' + (a.outcome||'—') + '</td><td style="color:var(--text3)">' + (a.call_date||'—') + '</td></tr>';
@@ -11558,7 +11558,7 @@ fetch('/api/notifications/evaluate', { method: 'POST' }).then(function(r){ retur
     <svg viewBox="0 0 20 20" width="20" height="20"><path d="M3 4h14v2H3zM3 9h10v2H3zM3 14h7v2H3z" fill="#fff"/></svg>
   </div>
   <div style="flex:1;min-width:0">
-    <div style="font-size:13px;font-weight:700;margin-bottom:2px">Install RepRoute</div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:2px">Install OutsideSelling</div>
     <div style="font-size:11.5px;opacity:.7">Get the app on your home screen</div>
   </div>
   <button onclick="installPWA()" style="background:#1d6aff;color:#fff;border:none;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">Install</button>
@@ -11706,7 +11706,7 @@ fetch('/api/notifications/evaluate', { method: 'POST' }).then(function(r){ retur
     <div style="font-size:11px;font-weight:700;color:#8a95a3;text-transform:uppercase;letter-spacing:.06em;margin:20px 0 10px">App Info</div>
     <div style="background:#fff;border:1px solid #e2e5ea;border-radius:8px;padding:14px">
       <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0"><span style="color:#8a95a3">Version</span><span style="color:#0f1923;font-weight:500">1.0</span></div>
-      <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0"><span style="color:#8a95a3">App</span><span style="color:#0f1923;font-weight:500">RepRoute</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0"><span style="color:#8a95a3">App</span><span style="color:#0f1923;font-weight:500">OutsideSelling</span></div>
     </div>
   </div>
 </div>

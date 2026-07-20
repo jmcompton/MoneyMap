@@ -313,7 +313,7 @@ router.post('/leads', async (req, res) => {
     const excludeStr = exclude.length > 0 ? `\nDo NOT include these companies: ${exclude.slice(0,20).join(', ')}` : '';
     const installerContext = (ct === 'installers' || ct === 'builders')
       ? `\nINSTALLER INTELLIGENCE:\n- ${contactQualifier}\n- ${avoidQualifier}\n- ${workQualifier}\n- ${intel.notes || ''}` : '';
-    return `You are a B2B sales researcher for Compton Group LLC, a building products manufacturer's rep in the Southeast US.
+    return `You are a B2B sales researcher for a building products manufacturer's rep firm.
 
 IMPORTANT DISTINCTION: A "distributor" or "dealer" SELLS products to others. A "contractor" or "installer" INSTALLS products on jobsites. Always tag each lead correctly.
 ${installerContext}
@@ -537,7 +537,7 @@ router.post('/command', async (req, res) => {
   }
 
   // ── Build full system prompt ─────────────────────────────────────────
-  const systemPrompt = `You are the AI sales assistant embedded inside RepRoute CRM for Compton Group LLC, a manufacturer's rep covering the Southeast.
+  const systemPrompt = `You are the AI sales assistant embedded inside a CRM for a manufacturer's rep firm.
 
 PRODUCT LINE:
 - Soudal BOSS Sealants & Adhesives → Target: roofing distributors, siding distributors, lumber yards, one-step distributors (NOT direct contractors yet)
@@ -626,7 +626,7 @@ router.post('/morning-briefing', async (req, res) => {
       pool.query("SELECT c.next_step, c.next_step_date, p.company, p.phone FROM calls c JOIN prospects p ON c.prospect_id=p.id WHERE c.user_id=$1 AND c.next_step_date <= CURRENT_DATE AND c.next_step IS NOT NULL ORDER BY c.next_step_date ASC LIMIT 5", [uid])
     ]);
 
-    const prompt = `You are a sales coach for ${user.name}, a manufacturer's rep at Compton Group LLC in the Southeast.
+    const prompt = `You are a sales coach for ${user.name}, a manufacturer's rep.
 
 Their CRM data:
 - Prospects: ${prospects.rows.map(p => p.company + ' (' + p.pipeline_stage + ', ' + p.priority + ' priority)').join('; ') || 'none yet'}
@@ -739,7 +739,7 @@ router.post('/daily-leads', async (req, res) => {
     { type: 'Lumber Yard', products: ['Alum-A-Pole', 'BOSS Products', 'ShurTape'] }
   ];
 
-  const prompt = `You are a sales intelligence tool for Compton Group LLC, a manufacturer's rep firm selling three product lines:
+  const prompt = `You are a sales intelligence tool for a manufacturer's rep firm selling these product lines:
 - BOSS Products (roofing sealants and adhesives)
 - ShurTape (flashing tape and deck tape)
 - Alum-A-Pole (painting and scaffolding poles)

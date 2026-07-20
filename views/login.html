@@ -4,7 +4,7 @@
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
   <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>RepRoute — Sign In</title>
+<title>OutsideSelling — Sign In</title>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Segoe UI',system-ui,sans-serif;background:linear-gradient(135deg,#0B1F3A 0%,#122847 60%,#1A3A5C 100%);min-height:100vh;display:flex;align-items:center;justify-content:center}
@@ -38,7 +38,7 @@
         <path d="M7 7L10.5 10.5M17.5 17.5L21 21M21 7L17.5 10.5M10.5 17.5L7 21" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round"/>
       </svg>
     </div>
-    <h1>RepRoute</h1>
+    <h1>OutsideSelling</h1>
     <p class="sub">Field Sales Intelligence</p>
   </div>
   <div class="tabs">
@@ -65,7 +65,7 @@
           <option value="manager">Manager</option>
         </select>
       </div>
-      <div class="fg"><label>Territory</label><input type="text" id="su-territory" placeholder="Atlanta Metro" /></div>
+      <div class="fg"><label>Territory</label><input type="text" id="su-territory" placeholder="e.g. North Texas" /></div>
     </div>
     <button class="btn" onclick="signUp()">Create Account →</button>
     <div class="err" id="su-err"></div>
@@ -90,7 +90,7 @@ async function signUp(){
   const email=document.getElementById('su-email').value;
   const password=document.getElementById('su-pw').value;
   const role=document.getElementById('su-role').value;
-  const territory=document.getElementById('su-territory').value||'Atlanta Metro';
+  const territory=document.getElementById('su-territory').value||'';
   const r=await fetch('/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,password,role,territory})});
   const d=await r.json();
   if(d.error){document.getElementById('su-err').textContent=d.error;document.getElementById('su-err').style.display='block';}

@@ -21,7 +21,7 @@ router.post('/generate', async (req, res) => {
   const products = focus_products || 'Soudal Sealants & Adhesives, ShurTape Flashing & Deck Tape, Alum-A-Pole Pump Jack Scaffolding';
   const territory = rep_territory || 'Southeast';
 
-  const prompt = `You are a sales training manager for Compton Group LLC, a building products manufacturer rep in the Southeast US.
+  const prompt = `You are a sales training manager for a building products manufacturer's rep firm.
 
 Create a 30-day onboarding plan for ${rep_name}, a new sales rep covering ${territory}.
 Products to sell: ${products}
