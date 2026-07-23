@@ -23,6 +23,7 @@ const adminRoutes = require('./routes/admin');
 const demoDataRoutes = require('./routes/demo-data');
 const commissionPdfRoutes = require('./routes/commission-pdf');
 const reconnectRoutes = require('./routes/reconnect');
+const foundMoneyRoutes = require('./routes/foundmoney');
 const placesRoutes = require('./routes/places');
 const morningRoutes = require('./routes/morning');
 const { router: notificationsRoutes, evaluateForUser } = require('./routes/notifications');
@@ -165,6 +166,7 @@ app.use('/api/manufacturers', requireAuthAPI, manufacturersRoutes);
 app.use('/api/admin/demo-data', requireAuthAPI, requireManagerAPI, demoDataRoutes);
 app.use('/api/commission-pdf', requireAuthAPI, commissionPdfRoutes);
 app.use('/api/reconnect', requireAuthAPI, reconnectRoutes);
+app.use('/api/found-money', requireAuthAPI, foundMoneyRoutes);
 app.use('/api/crosssell', requireAuth, crosssellRoutes);
 app.use('/api/recap', requireAuth, recapRoutes);
 app.get('/zoho-import', requireAuth, (req, res) =>
