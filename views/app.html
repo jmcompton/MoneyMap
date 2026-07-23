@@ -1460,6 +1460,109 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
   .page.active { padding-bottom:calc(62px + env(safe-area-inset-bottom, 0px)) !important; }
   #pwa-install-banner { bottom:calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESIGN LAYER — unified surface treatment across every screen.
+   Appended last so it settles specificity in one place instead of fighting
+   the rules above it. Everything here is derived from the existing navy/blue
+   tokens; nothing is rebranded.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root{
+  /* A deeper page ground so white cards actually lift off it. The old #f7f8fa
+     was so close to white that every panel read as a flat outline. */
+  --bg:#eef1f6;
+  --r:8px;
+  --r2:12px;
+  --shadow:0 1px 2px rgba(15,25,35,.04),0 1px 3px rgba(15,25,35,.05);
+  --shadow-md:0 2px 6px rgba(15,25,35,.05),0 8px 24px rgba(15,25,35,.07);
+  --ink:#0f1923;
+}
+body{background:var(--bg)}
+
+/* ── Sidebar ──────────────────────────────────────────────────────────────
+   More air, a real active state, and a hairline between the brand and nav. */
+.sidebar{background:linear-gradient(180deg,#111c27 0%,#0d1720 100%)}
+.sb-item{
+  padding:9px 14px;margin:1px 8px;border-radius:8px;width:calc(100% - 16px);
+  font-size:13.5px;font-weight:500;border-left:none;color:rgba(255,255,255,.62);
+  transition:background .13s ease,color .13s ease;
+}
+.sb-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.sb-item.active{
+  background:rgba(255,255,255,.11);color:#fff;font-weight:650;border-left:none;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);
+}
+.sb-item.active svg{color:var(--accent);opacity:1}
+.sb-sec-label{
+  font-size:10px;font-weight:700;color:rgba(255,255,255,.32);
+  text-transform:uppercase;letter-spacing:.09em;padding:14px 22px 5px;
+}
+.sb-search{border-radius:8px;padding:7px 11px;margin:0 8px}
+.sb-user{border-radius:9px}
+
+/* ── Top bar ──────────────────────────────────────────────────────────────
+   Taller, with the page name carrying real typographic weight. */
+.topbar{height:56px;padding:0 22px;gap:12px;backdrop-filter:saturate(1.6) blur(6px)}
+#page-title{font-size:16.5px;font-weight:750;color:var(--ink);letter-spacing:-.35px}
+
+/* ── Buttons ──────────────────────────────────────────────────────────────
+   One clear primary, quieter secondaries, and a hover that responds. */
+.btn{padding:8px 15px;border-radius:8px;font-size:12.5px;font-weight:650;letter-spacing:-.1px}
+.btn-primary{background:var(--accent);box-shadow:0 1px 2px rgba(29,106,255,.28)}
+.btn-primary:hover{background:var(--accent2)}
+.btn-secondary{border-color:var(--border);color:var(--text2)}
+.btn-secondary:hover{background:#f6f8fb;border-color:var(--border2);color:var(--ink)}
+
+/* ── Shared page frame ────────────────────────────────────────────────────
+   Every screen gets the same working width and rhythm, so moving between
+   them stops feeling like moving between different products. */
+.pg-wrap{max-width:1320px;margin:0;padding:18px 22px 48px}
+.pg-head{margin-bottom:15px}
+.pg-h1{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.45px;line-height:1.15}
+.pg-sub{font-size:12.5px;color:var(--text3);margin-top:3px;max-width:640px}
+
+/* ── Surfaces ─────────────────────────────────────────────────────────────
+   A single card treatment shared by every list and panel in the app. */
+.rc-card,.surface{box-shadow:var(--shadow)}
+.rc-card:hover{box-shadow:var(--shadow-md)}
+.rec-sec{border-radius:var(--r2)!important;box-shadow:var(--shadow);border-color:var(--border)!important}
+.rec-sec-hdr{padding:13px 16px!important}
+.rec-sec-title{font-size:12.5px!important;font-weight:750!important;letter-spacing:.01em}
+
+/* Tables read as part of the same system rather than raw grids. */
+.tbl thead th,table thead th{
+  font-size:10.5px;font-weight:700;color:var(--text3);
+  text-transform:uppercase;letter-spacing:.055em;
+}
+
+/* ── Segmented controls / filter chips ────────────────────────────────────
+   Softer container, clearer selected state. */
+.rc-seg-btn{padding:8px 15px;font-size:12.5px;font-weight:650}
+.mod-tab,.crm-tab{font-weight:600}
+
+/* ── Inputs ───────────────────────────────────────────────────────────────*/
+input[type=text],input[type=search],input[type=email],input[type=tel],select,textarea{
+  border-radius:8px;
+}
+input:focus-visible,select:focus-visible,textarea:focus-visible,
+button:focus-visible,a:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;
+}
+
+/* ── Money ────────────────────────────────────────────────────────────────
+   Figures line up column to column wherever dollars appear. */
+.rc-money,.rc-banner-fig,.rc-banner-side .v,.money{font-variant-numeric:tabular-nums}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+
+@media(max-width:640px){
+  .pg-wrap{padding:14px 13px 40px}
+  .topbar{height:52px;padding:0 14px}
+}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
 
@@ -1883,19 +1986,36 @@ window.addEventListener('load', function() {
     <div class="list-bar" style="flex-wrap:wrap;gap:6px">
       <span class="list-count" id="list-count">0 records</span>
       <div class="sb-in"><span style="font-size:12px;color:var(--text3)">&#128269;</span><input id="p-search" placeholder="Search accounts..." type="search" name="acct_search_p" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" oninput="handleContactSearch()" onkeydown="if(event.key==='Enter'){event.preventDefault();handleContactSearch();}" /></div>
-      <select id="filter-company-type" onchange="handleContactSearch()" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;background:#fff;color:var(--navy)">
-        <option value="All">All Types</option>
+      <button class="btn btn-secondary btn-sm" id="acct-filter-toggle" onclick="toggleAcctFilters()">Filters</button>
+      <div style="display:flex;gap:6px;margin-left:auto">
+        <button class="btn btn-secondary btn-sm" id="btn-add-contact" onclick="openModal('add-prospect')">+ New</button>
+        <button class="btn btn-primary btn-sm" onclick="go('leads')">Find Leads</button>
+        <button class="btn btn-secondary btn-sm" onclick="toggleAcctMore()" title="More actions" style="padding:8px 11px">&#8943;</button>
+        <button id="view-route-btn" onclick="go('leads')" style="display:none;padding:6px 12px;background:#059669;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">View Route (<span id="view-route-count">0</span>)</button>
+      </div>
+    </div>
+
+    <!-- Secondary actions, out of the way until asked for. -->
+    <div id="acct-more" style="display:none;padding:0 16px 10px;gap:6px;flex-wrap:wrap">
+      <button class="btn btn-secondary btn-sm" id="btn-enrich-phones" onclick="findMissingPhones()" title="Auto-fill missing phone numbers and addresses">Find phone numbers</button>
+      <button class="btn btn-secondary btn-sm" onclick="go('bulk')">Bulk import</button>
+    </div>
+
+    <!-- Filters, collapsed by default so the list is what you see first. -->
+    <div id="acct-filters" style="display:none;padding:0 16px 12px;gap:8px;flex-wrap:wrap;align-items:center">
+      <select id="filter-company-type" onchange="handleContactSearch()" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;font-family:inherit;background:#fff;color:var(--navy)">
+        <option value="All">All types</option>
         <option value="Distributor">Distributor</option>
         <option value="Contractor">Contractor</option>
       </select>
-      <select id="filter-data-status" onchange="handleContactSearch()" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;background:#fff;color:var(--navy)">
-        <option value="All">All Data Status</option>
+      <select id="filter-data-status" onchange="handleContactSearch()" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;font-family:inherit;background:#fff;color:var(--navy)">
+        <option value="All">All data status</option>
         <option value="Unvetted">Unvetted</option>
         <option value="Contacted">Contacted</option>
         <option value="Verified CRM Data">Verified</option>
       </select>
-      <select id="sort-contacts" onchange="handleContactSearch()" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;background:#fff;color:var(--navy)">
-        <option value="default">Sort: Default</option>
+      <select id="sort-contacts" onchange="handleContactSearch()" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;font-family:inherit;background:#fff;color:var(--navy)">
+        <option value="default">Sort: default</option>
         <option value="city_asc">City A→Z</option>
         <option value="city_desc">City Z→A</option>
         <option value="company_asc">Company A→Z</option>
@@ -1904,17 +2024,10 @@ window.addEventListener('load', function() {
         <option value="category_desc">Category Z→A</option>
         <option value="contact_asc">Contact A→Z</option>
         <option value="status_asc">Status A→Z</option>
-        <option value="data_status_asc">Data Status</option>
-        <option value="newest">Newest First</option>
-        <option value="oldest">Oldest First</option>
+        <option value="data_status_asc">Data status</option>
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
       </select>
-      <div style="display:flex;gap:6px;margin-left:auto">
-        <button class="btn btn-secondary btn-sm" id="btn-add-contact" onclick="openModal('add-prospect')">+ New</button>
-        <button class="btn btn-secondary btn-sm" id="btn-enrich-phones" onclick="findMissingPhones()" title="Auto-fill missing phone numbers &amp; addresses via Google Places">📞 Find phone #s</button>
-        <button class="btn btn-primary btn-sm" onclick="go('leads')">Find Leads</button>
-        <button class="btn btn-sm" onclick="go('bulk')" style="background:var(--navy);color:#00FF87;border:none;font-weight:700;padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">Bulk Import</button>
-        <button id="view-route-btn" onclick="go('leads')" style="display:none;padding:6px 12px;background:#059669;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">View Route (<span id="view-route-count">0</span>)</button>
-      </div>
     </div>
 
     <div class="contacts-split">
@@ -2741,9 +2854,9 @@ window.addEventListener('load', function() {
   <!-- RECONNECT PAGE — lapsed accounts, value-ranked -->
   <div class="page" id="page-found-money" style="overflow-y:auto;padding-bottom:90px">
     <div class="rc-wrap">
-      <div style="margin-bottom:12px">
-        <div style="font-size:17px;font-weight:800;color:var(--navy);letter-spacing:-.3px">Found Money</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:2px">Accounts buying less than they used to, measured against their own history. Every dollar here is business you already had.</div>
+      <div class="pg-head">
+        <div class="pg-h1">Found Money</div>
+        <div class="pg-sub">Accounts buying less than they used to, measured against their own history. Every dollar here is business you already had.</div>
       </div>
       <div id="fm-summary" style="display:flex;gap:10px;margin-bottom:12px"></div>
       <div id="fm-list" class="rc-grid"><div style="font-size:12px;color:var(--text3);padding:20px">Loading…</div></div>
@@ -2752,9 +2865,9 @@ window.addEventListener('load', function() {
 
   <div class="page" id="page-reconnect" style="overflow-y:auto;padding-bottom:90px">
     <div class="rc-wrap">
-      <div style="margin-bottom:12px">
-        <div style="font-size:17px;font-weight:800;color:var(--navy);letter-spacing:-.3px">Reconnect</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:2px">Accounts going quiet, ranked by money at risk. Bigger commission, longer silence — reach out first.</div>
+      <div class="pg-head">
+        <div class="pg-h1">Reconnect</div>
+        <div class="pg-sub">Accounts going quiet, ranked by the commission you stand to lose. Bigger money and longer silence rise to the top.</div>
       </div>
 
       <!-- Summary strip -->
@@ -4763,6 +4876,21 @@ function loadProspects() {
 
 // handleContactSearch — triggered by search input OR filter dropdowns.
 // Just re-render; no refetch needed since filtering is client-side.
+// Accounts toolbar: filters and secondary actions stay out of the way until
+// asked for, so the list is the first thing on the page rather than the last.
+function toggleAcctFilters(){
+  var el = document.getElementById('acct-filters');
+  var btn = document.getElementById('acct-filter-toggle');
+  if(!el) return;
+  var open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'flex';
+  if(btn) btn.classList.toggle('btn-primary', !open);
+}
+function toggleAcctMore(){
+  var el = document.getElementById('acct-more');
+  if(!el) return;
+  el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+}
 function handleContactSearch() {
   window._userNavigated = true;
   renderProspects();
