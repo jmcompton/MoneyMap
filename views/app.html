@@ -36,7 +36,44 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 .rc-seg-btn{padding:8px 14px;font-size:13px;font-weight:600;font-family:inherit;color:var(--text2);background:#fff;border:none;cursor:pointer}
 .rc-seg-btn+.rc-seg-btn{border-left:1px solid var(--border)}
 .rc-seg-btn.active{background:var(--navy);color:#fff}
-.rc-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px}
+.rc-card{position:relative;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:15px 16px 13px 19px;margin:0;transition:box-shadow .16s ease,border-color .16s ease}
+.rc-card:hover{box-shadow:0 6px 22px rgba(15,25,35,.09);border-color:#d7dee6}
+.rc-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:12px 0 0 12px;background:var(--rc-accent,#a16207)}
+/* Wide, left-aligned working surface instead of a narrow centred ribbon. */
+.rc-wrap{max-width:1320px;margin:0;padding:16px 22px 48px}
+.rc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(390px,1fr));gap:12px;align-items:start}
+/* Money is the point of this screen, so it gets the size and tabular figures. */
+.rc-money{font-size:25px;font-weight:800;color:var(--navy);letter-spacing:-.6px;line-height:1;font-variant-numeric:tabular-nums}
+.rc-money-sub{font-size:10.5px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+.rc-name{font-size:15px;font-weight:800;color:var(--navy);line-height:1.25;letter-spacing:-.2px}
+.rc-meta{font-size:12px;color:var(--text3);margin-top:2px}
+.rc-lines{font-size:11.5px;color:var(--text2);margin-top:7px;padding-top:7px;border-top:1px dashed var(--border)}
+/* Silence meter: how far past this account's own cadence it has drifted.
+   The notch is the threshold for its value tier; the fill is actual silence. */
+.rc-silence{position:relative;height:5px;border-radius:99px;background:#eef1f5;margin-top:11px}
+.rc-silence-fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px}
+.rc-silence-notch{position:absolute;top:-3.5px;bottom:-3.5px;width:2px;background:var(--navy);opacity:.4;border-radius:2px}
+.rc-silence-label{display:flex;justify-content:space-between;font-size:10.5px;color:var(--text3);margin-top:5px;font-variant-numeric:tabular-nums}
+.rc-actions{display:flex;gap:6px;margin-top:12px}
+.rc-call{flex:1.4;padding:10px 8px;border-radius:8px;border:none;background:var(--navy);color:#fff;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.rc-call:hover{opacity:.9}
+.rc-call.rc-dim{background:#e8ecf0;color:var(--text3);cursor:default}
+.rc-utils{display:flex;gap:4px;margin-top:7px;border-top:1px solid var(--border);padding-top:8px}
+.rc-util{flex:1;padding:6px 4px;border-radius:6px;border:none;background:none;font-size:11.5px;font-weight:600;font-family:inherit;color:var(--text3);cursor:pointer}
+.rc-util:hover{background:#f4f6f8;color:var(--navy)}
+/* Headline banner: one figure that answers "how much is walking out the door". */
+.rc-banner{display:flex;align-items:stretch;gap:0;background:var(--white);border:1px solid var(--border);border-left:5px solid #b91c1c;border-radius:12px;overflow:hidden;margin-bottom:14px}
+.rc-banner-main{padding:15px 22px;flex-shrink:0}
+.rc-banner-fig{font-size:34px;font-weight:800;color:#b91c1c;letter-spacing:-1.2px;line-height:1;font-variant-numeric:tabular-nums}
+.rc-banner-lbl{font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-top:5px}
+.rc-banner-side{padding:15px 22px;border-left:1px solid var(--border);display:flex;flex-direction:column;justify-content:center}
+.rc-banner-side .v{font-size:20px;font-weight:800;color:var(--navy);line-height:1;font-variant-numeric:tabular-nums}
+@media(max-width:640px){
+  .rc-wrap{padding:12px 12px 40px}
+  .rc-grid{grid-template-columns:1fr}
+  .rc-banner{flex-direction:column}
+  .rc-banner-side{border-left:none;border-top:1px solid var(--border)}
+}
 .rc-act{flex:1;min-width:64px;padding:9px 6px;border-radius:8px;border:1px solid var(--border);background:#fff;font-size:12px;font-weight:700;font-family:inherit;color:var(--navy);cursor:pointer;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:4px}
 .rc-act:active{background:#f1f5f9}
 .sb-sec-label{font-size:10px;font-weight:600;color:rgba(255,255,255,.34);letter-spacing:.09em;text-transform:uppercase;padding:8px 16px 4px}
@@ -1424,7 +1461,6 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
   #pwa-install-banner { bottom:calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
 }
 </style>
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
 
 <script>
@@ -2705,18 +2741,18 @@ window.addEventListener('load', function() {
 
   <!-- RECONNECT PAGE — lapsed accounts, value-ranked -->
   <div class="page" id="page-found-money" style="overflow-y:auto;padding-bottom:90px">
-    <div style="max-width:760px;margin:0 auto;padding:14px 14px 40px">
+    <div class="rc-wrap">
       <div style="margin-bottom:12px">
         <div style="font-size:17px;font-weight:800;color:var(--navy);letter-spacing:-.3px">Found Money</div>
         <div style="font-size:12px;color:var(--text3);margin-top:2px">Accounts buying less than they used to, measured against their own history. Every dollar here is business you already had.</div>
       </div>
       <div id="fm-summary" style="display:flex;gap:10px;margin-bottom:12px"></div>
-      <div id="fm-list"><div style="font-size:12px;color:var(--text3);padding:20px;text-align:center">Loading…</div></div>
+      <div id="fm-list" class="rc-grid"><div style="font-size:12px;color:var(--text3);padding:20px">Loading…</div></div>
     </div>
   </div>
 
   <div class="page" id="page-reconnect" style="overflow-y:auto;padding-bottom:90px">
-    <div style="max-width:760px;margin:0 auto;padding:14px 14px 40px">
+    <div class="rc-wrap">
       <div style="margin-bottom:12px">
         <div style="font-size:17px;font-weight:800;color:var(--navy);letter-spacing:-.3px">Reconnect</div>
         <div style="font-size:12px;color:var(--text3);margin-top:2px">Accounts going quiet, ranked by money at risk. Bigger commission, longer silence — reach out first.</div>
@@ -2737,7 +2773,7 @@ window.addEventListener('load', function() {
         </select>
       </div>
 
-      <div id="rc-list"></div>
+      <div id="rc-list" class="rc-grid"></div>
     </div>
   </div>
 
@@ -16672,20 +16708,26 @@ function loadFoundMoney() {
       var s = (d && d.summary) || {};
 
       if (sum) {
+        sum.className = '';
         sum.innerHTML =
-          '<div style="flex:1;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px 12px">' +
-            '<div style="font-size:19px;font-weight:800;color:#b91c1c">' + _fmMoney(s.total_found) + '</div>' +
-            '<div style="font-size:11px;color:var(--text3)">Sales below normal</div></div>' +
-          '<div style="flex:1;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px 12px">' +
-            '<div style="font-size:19px;font-weight:800;color:var(--navy)">' + _fmMoney(s.total_commission_at_risk) + '</div>' +
-            '<div style="font-size:11px;color:var(--text3)">Your commission at risk</div></div>' +
-          '<div style="flex:1;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px 12px">' +
-            '<div style="font-size:19px;font-weight:800;color:var(--navy)">' + (s.count||0) + '</div>' +
-            '<div style="font-size:11px;color:var(--text3)">' + (s.stopped||0) + ' stopped · ' + (s.dropped||0) + ' down</div></div>';
+          '<div class="rc-banner">'
+            + '<div class="rc-banner-main">'
+              + '<div class="rc-banner-fig">' + _fmMoney(s.total_found) + '</div>'
+              + '<div class="rc-banner-lbl">Sales below normal</div>'
+            + '</div>'
+            + '<div class="rc-banner-side">'
+              + '<div class="v">' + _fmMoney(s.total_commission_at_risk) + '</div>'
+              + '<div class="rc-banner-lbl">Your commission</div>'
+            + '</div>'
+            + '<div class="rc-banner-side">'
+              + '<div class="v">' + (s.stopped||0) + ' / ' + (s.dropped||0) + '</div>'
+              + '<div class="rc-banner-lbl">Stopped / buying less</div>'
+            + '</div>'
+          + '</div>';
       }
 
       if (!items.length) {
-        list.innerHTML = '<div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:28px;text-align:center">' +
+        list.innerHTML = '<div style="grid-column:1/-1;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:34px 20px">' +
           '<div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:4px">Nothing slipping right now</div>' +
           '<div style="font-size:12px;color:var(--text3);max-width:420px;margin:0 auto">' +
           _fmEsc((d && d.message) || 'Every account is buying at or above its usual pace. Found Money compares each account against its own commission history, so it needs a couple of confirmed periods before it can spot a gap.') +
@@ -16695,25 +16737,39 @@ function loadFoundMoney() {
 
       list.innerHTML = items.map(function(i){
         var stopped = i.type === 'stopped';
+        var accent = stopped ? '#b91c1c' : '#c2410c';
         var badge = stopped
-          ? '<span style="background:#fee2e2;color:#b91c1c;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px">STOPPED BUYING</span>'
-          : '<span style="background:#ffedd5;color:#c2410c;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px">DOWN ' + (100 - (i.pct_of_normal||0)) + '%</span>';
-        var clickable = i.account_id ? ' onclick="viewRecord(' + i.account_id + ')" style="cursor:pointer;' : ' style="';
-        return '<div' + clickable + 'background:var(--white);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:12px">' +
-            '<div style="min-width:0">' +
-              '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' +
-                '<span style="font-weight:700;color:var(--navy)">' + _fmEsc(i.customer_name) + '</span>' + badge +
-              '</div>' +
-              '<div style="font-size:11.5px;color:var(--text3);margin-top:3px">' +
-                _fmEsc(i.manufacturer) + ' · normally ' + _fmMoney(i.baseline_sales) + '/period' +
-                (stopped ? '' : ' · now ' + _fmMoney(i.latest_sales)) +
-              '</div>' +
-            '</div>' +
-            '<div style="text-align:right;white-space:nowrap">' +
-              '<div style="font-weight:800;color:#b91c1c;font-size:15px">' + _fmMoney(i.gap_sales) + '</div>' +
-              '<div style="font-size:10.5px;color:var(--text3)">' + _fmMoney(i.gap_commission) + ' commission</div>' +
-            '</div>' +
-          '</div>';
+          ? '<span style="background:#fee2e2;color:#b91c1c;font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;letter-spacing:.3px">STOPPED</span>'
+          : '<span style="background:#ffedd5;color:#c2410c;font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;letter-spacing:.3px">DOWN ' + (100 - (i.pct_of_normal||0)) + '%</span>';
+        // Bar shows what is left of normal buying: the empty space is the gap.
+        var pct = Math.max(0, Math.min(100, i.pct_of_normal || 0));
+        var click = i.account_id ? ' onclick="viewRecord(' + i.account_id + ')" style="cursor:pointer;--rc-accent:' + accent + '"'
+                                 : ' style="--rc-accent:' + accent + '"';
+        return '<div class="rc-card"' + click + '>'
+            + '<div style="display:flex;justify-content:space-between;gap:14px;align-items:flex-start">'
+              + '<div style="min-width:0;flex:1">'
+                + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+                  + '<span class="rc-name">' + _fmEsc(i.customer_name) + '</span>' + badge
+                + '</div>'
+                + '<div class="rc-meta">' + _fmEsc(i.manufacturer) + '</div>'
+              + '</div>'
+              + '<div style="text-align:right;flex-shrink:0">'
+                + '<div class="rc-money" style="color:' + accent + '">' + _fmMoney(i.gap_sales) + '</div>'
+                + '<div class="rc-money-sub">gone this period</div>'
+              + '</div>'
+            + '</div>'
+            + '<div class="rc-silence">'
+                + '<div class="rc-silence-fill" style="width:' + pct + '%;background:' + accent + '"></div>'
+              + '</div>'
+            + '<div class="rc-silence-label">'
+              + '<span>' + (stopped ? 'Buying nothing' : 'Now ' + _fmMoney(i.latest_sales)) + '</span>'
+              + '<span>Normally ' + _fmMoney(i.baseline_sales) + '/period</span>'
+            + '</div>'
+            + '<div class="rc-utils" style="justify-content:space-between">'
+              + '<span style="font-size:11.5px;color:var(--text3);padding:6px 2px">' + _fmMoney(i.gap_commission) + ' commission</span>'
+              + '<span style="font-size:11.5px;font-weight:700;color:var(--navy);padding:6px 2px">Open account \u2192</span>'
+            + '</div>'
+          + '</div>';
       }).join('');
     })
     .catch(function(){
@@ -16755,7 +16811,7 @@ function loadReconnect() {
     if (!data || !Array.isArray(data.accounts)) { list.innerHTML = '<div style="color:#b91c1c;font-size:13px">'+cEsc((data&&data.error)||'Could not load.')+'</div>'; return; }
     rcRenderSummary(sumEl, data.summary);
     if (!data.accounts.length) {
-      list.innerHTML = '<div style="text-align:center;padding:40px 16px;color:var(--text3);font-size:13px">🎉 Nobody’s gone quiet. Every tracked account is within cadence.</div>';
+      list.innerHTML = '<div style="grid-column:1/-1;background:#fff;border:1px solid var(--border);border-radius:12px;padding:34px 20px"><div style="font-size:14px;font-weight:700;color:var(--navy)">Every account is within cadence</div><div style="font-size:12.5px;color:var(--text3);margin-top:5px;max-width:460px">Nothing has gone quiet past its threshold. Accounts appear here automatically once they drift, ranked by the commission you stand to lose.</div></div>';
       return;
     }
     list.innerHTML = data.accounts.map(rcCard).join('');
@@ -16764,54 +16820,72 @@ function loadReconnect() {
 
 function rcRenderSummary(el, s) {
   s = s || {};
+  var n = s.count || 0;
+  el.className = '';
   el.innerHTML =
-    '<div style="flex:1;background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px">'
-      + '<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px">Commission at risk</div>'
-      + '<div style="font-size:22px;font-weight:800;color:#b91c1c;margin-top:2px">'+rcMoney(s.total_at_risk)+'</div>'
-    + '</div>'
-    + '<div style="flex:1;background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px">'
-      + '<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px">Flagged accounts</div>'
-      + '<div style="font-size:22px;font-weight:800;color:var(--navy);margin-top:2px">'+(s.count||0)+'</div>'
+    '<div class="rc-banner">'
+      + '<div class="rc-banner-main">'
+        + '<div class="rc-banner-fig">' + rcMoney(s.total_at_risk) + '</div>'
+        + '<div class="rc-banner-lbl">Commission at risk</div>'
+      + '</div>'
+      + '<div class="rc-banner-side">'
+        + '<div class="v">' + n + '</div>'
+        + '<div class="rc-banner-lbl">' + (n === 1 ? 'Account gone quiet' : 'Accounts gone quiet') + '</div>'
+      + '</div>'
     + '</div>';
 }
 
 function rcCard(a) {
   var phone = a.phone ? String(a.phone).replace(/[^0-9+]/g, '') : '';
   var dest = encodeURIComponent([a.address, a.company, a.city, a.state].filter(Boolean).join(', '));
-  var meta = [a.category, a.city].filter(Boolean).join(' · ');
-  var badge = '<span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:10px;color:#fff;background:'+(a.tier_color||'#a16207')+'">'+a.days_quiet+' days</span>';
-  var commLine = a.has_commission
-    ? '<div style="font-size:13px;font-weight:700;color:var(--navy)">'+rcMoney(a.trailing_commission)+' <span style="font-weight:500;color:var(--text3)">· '+rcWindowLabel(a.months_loaded)+'</span></div>'
-    : '<div style="font-size:12px;color:var(--text3)">No commission history (lead)</div>';
-  var lines = a.lines ? '<div style="font-size:11.5px;color:var(--text2);margin-top:4px">'+cEsc(a.lines)+'</div>' : '';
+  var meta = [a.category, a.city].filter(Boolean).join(' \u00b7 ');
+  var accent = a.tier_color || '#a16207';
+
+  // Silence meter: fill = actual days quiet, notch = this tier's cadence.
+  // Scaled so an overdue account visibly overshoots its own threshold.
+  var quiet = Number(a.days_quiet) || 0;
+  var thresh = Number(a.tier_threshold) || 90;
+  var scale = quiet > thresh ? quiet * 1.08 : thresh * 1.25;
+  var fillPct = Math.max(3, Math.min(100, (quiet / scale) * 100));
+  var notchPct = Math.max(0, Math.min(99, (thresh / scale) * 100));
+
+  var money = a.has_commission
+    ? '<div class="rc-money">' + rcMoney(a.trailing_commission) + '</div>' +
+      '<div class="rc-money-sub">at risk \u00b7 ' + cEsc(rcWindowLabel(a.months_loaded)) + '</div>'
+    : '<div class="rc-money" style="color:var(--text3)">\u2014</div>' +
+      '<div class="rc-money-sub">lead \u00b7 no history</div>';
+
   var repTag = (window.currentUser && window.currentUser.role === 'manager' && a.rep_name)
-    ? '<div style="font-size:11px;color:var(--text3);margin-top:2px">Rep: '+cEsc(a.rep_name)+'</div>' : '';
+    ? ' \u00b7 ' + cEsc(a.rep_name) : '';
 
   var callBtn = phone
-    ? '<a class="rc-act" href="tel:'+phone+'">📞 Call</a>'
-    : '<span class="rc-act" style="opacity:.4">📞 Call</span>';
+    ? '<a class="rc-call" href="tel:' + phone + '">Call</a>'
+    : '<span class="rc-call rc-dim">No number</span>';
   var textBtn = phone
-    ? '<a class="rc-act" href="sms:'+phone+'">💬 Text</a>'
-    : '<span class="rc-act" style="opacity:.4">💬 Text</span>';
-  var routeBtn = '<a class="rc-act" href="https://www.google.com/maps/dir/?api=1&destination='+dest+'" target="_blank" rel="noopener">🧭 Route</a>';
+    ? '<a class="rc-act" href="sms:' + phone + '">Text</a>'
+    : '<span class="rc-act" style="opacity:.4">Text</span>';
+  var routeBtn = '<a class="rc-act" href="https://www.google.com/maps/dir/?api=1&destination=' + dest + '" target="_blank" rel="noopener">Route</a>';
 
-  return '<div class="rc-card" id="rc-card-'+a.id+'">'
-    + '<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">'
-      + '<div style="min-width:0">'
-        + '<div style="font-size:14.5px;font-weight:800;color:var(--navy);line-height:1.25">'+cEsc(a.company)+'</div>'
-        + (meta ? '<div style="font-size:12px;color:var(--text3);margin-top:1px">'+cEsc(meta)+'</div>' : '')
-        + repTag
+  return '<div class="rc-card" id="rc-card-' + a.id + '" style="--rc-accent:' + accent + '">'
+    + '<div style="display:flex;justify-content:space-between;gap:14px;align-items:flex-start">'
+      + '<div style="min-width:0;flex:1">'
+        + '<div class="rc-name">' + cEsc(a.company) + '</div>'
+        + '<div class="rc-meta">' + cEsc(meta) + repTag + '</div>'
       + '</div>'
-      + '<div style="text-align:right;flex-shrink:0">'+badge+'<div style="margin-top:6px">'+commLine+'</div></div>'
+      + '<div style="text-align:right;flex-shrink:0">' + money + '</div>'
     + '</div>'
-    + lines
-    + '<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">'
-      + callBtn + textBtn + routeBtn
-    + '</div>'
-    + '<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">'
-      + '<button class="rc-act" onclick="rcAction('+a.id+',\'touch\')">✓ Log touch</button>'
-      + '<button class="rc-act" onclick="rcAction('+a.id+',\'snooze\')">😴 Snooze</button>'
-      + '<button class="rc-act" onclick="rcAction('+a.id+',\'dismiss\')">✕ Dismiss</button>'
+    + (a.lines ? '<div class="rc-lines">' + cEsc(a.lines) + '</div>' : '')
+    + '<div class="rc-silence">'
+        + '<div class="rc-silence-fill" style="width:' + fillPct.toFixed(1) + '%;background:' + accent + '"></div>'
+        + '<div class="rc-silence-notch" style="left:' + notchPct.toFixed(1) + '%"></div>'
+      + '</div>'
+    + '<div class="rc-silence-label"><span style="font-weight:700;color:' + accent + '">' + quiet + ' days quiet</span>'
+      + '<span>' + thresh + '-day cadence</span></div>'
+    + '<div class="rc-actions">' + callBtn + textBtn + routeBtn + '</div>'
+    + '<div class="rc-utils">'
+      + '<button class="rc-util" onclick="rcAction(' + a.id + ',\'touch\')">Log touch</button>'
+      + '<button class="rc-util" onclick="rcAction(' + a.id + ',\'snooze\')">Snooze</button>'
+      + '<button class="rc-util" onclick="rcAction(' + a.id + ',\'dismiss\')">Dismiss</button>'
     + '</div>'
   + '</div>';
 }
