@@ -1588,11 +1588,10 @@ window.addEventListener('load', function() {
   </div>
   <div class="sb-search-wrap"><div class="sb-search"><svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;flex-shrink:0;opacity:.3"><circle cx="7" cy="7" r="4"/><path d="M10.5 10.5l2.5 2.5"/></svg><input id="sb-search-input" placeholder="Search accounts..." type="search" name="acct_search_sb" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" oninput="globalSearch(this.value)" onkeydown="if(event.key==='Escape')this.value=''" /></div></div>
   <div class="sb-section" data-roles="intern manager">
-    <button class="sb-item active" data-roles="intern manager" onclick="go('dashboard')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 6l6-4 6 4v8H2V6z"/><path d="M6 14v-4h4v4"/></svg>Home</button>
   </div>
   <div class="sb-section" data-roles="rep intern manager">
     <div class="sb-sec-label">Sales</div>
-    <button class="sb-item" data-roles="rep intern manager" onclick="go('reconnect')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 8a6 6 0 0110-4.5M14 8a6 6 0 01-10 4.5"/><polyline points="12 1.5 12 4 9.5 4"/><polyline points="4 14.5 4 12 6.5 12"/></svg>Reconnect</button>
+    <button class="sb-item active" data-roles="rep intern manager" onclick="go('reconnect')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 8a6 6 0 0110-4.5M14 8a6 6 0 01-10 4.5"/><polyline points="12 1.5 12 4 9.5 4"/><polyline points="4 14.5 4 12 6.5 12"/></svg>Reconnect</button>
     <button class="sb-item" data-roles="rep intern manager" onclick="go('found-money')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><circle cx="8" cy="8" r="6"/><path d="M8 5v6M6.5 6.5h3M6.5 9.5h3"/></svg>Found Money</button>
     <button class="sb-item" data-roles="rep intern manager" onclick="go('today')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 7h12M11 1.5v2M5 1.5v2"/><path d="M6.5 10.5l1.25 1.25L10 9"/></svg>Today</button>
     <button class="sb-item" data-roles="rep intern manager" onclick="go('contacts')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>Accounts</button>
@@ -4174,7 +4173,7 @@ function goLogCall(prospectId) {
 function go(id) {
   // Home is now the adaptive Today cockpit. Old money-dashboard is retired as a
   // landing surface; both "Home" entry points resolve to the Today cockpit.
-  if (id === 'dashboard' || id === 'home') id = 'today';
+  if (id === 'dashboard' || id === 'home') id = 'reconnect';
   if (window._teamViewActive && id !== 'record') {
     var _lb = document.querySelector('[onclick="logCallForRecord()"]');
     var _ob = document.querySelector('[onclick="writeOutreachForRecord()"]');
@@ -5467,11 +5466,20 @@ function loadToday() {
   if (!content) return;
   content.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:30px;text-align:center">Loading today…</div>';
   function okJson(r){ return r && r.ok ? r.json() : null; }
+  // Each panel is optional. A slow or unavailable endpoint (the AI morning brief
+  // is the usual offender) must never hold the whole page on a spinner, so every
+  // request races a timeout and resolves to null instead of hanging.
+  function soft(url, ms){
+    return Promise.race([
+      fetch(url).then(okJson).catch(function(){ return null; }),
+      new Promise(function(resolve){ setTimeout(function(){ resolve(null); }, ms || 6000); })
+    ]);
+  }
   Promise.all([
-    fetch('/api/planner/today').then(okJson).catch(function(){ return null; }),
-    fetch('/api/morning').then(okJson).catch(function(){ return null; }),
-    fetch('/api/reconnect?filter=all').then(okJson).catch(function(){ return null; }),
-    fetch('/api/planner/panel').then(okJson).catch(function(){ return null; })
+    soft('/api/planner/today'),
+    soft('/api/morning', 4000),
+    soft('/api/reconnect?filter=all'),
+    soft('/api/planner/panel')
   ]).then(function(res){
     var d = res[0] || { date: new Date().toISOString().slice(0,10), goal: 10, progress:{done:0,total:0}, stops:[], carried_over:[], nearby:[] };
     window._todayData = d;
@@ -5479,6 +5487,11 @@ function loadToday() {
     var recon = (res[2] && res[2].accounts) || [];
     var commissionCount = (res[3] && res[3].revenue && res[3].revenue.length) || 0;
     renderTodayCockpit(d, { calls: calls, recon: recon, commissionCount: commissionCount });
+  }).catch(function(err){
+    console.error('[today]', err);
+    content.innerHTML = '<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:30px 20px;margin:16px 0">'
+      + '<div style="font-size:14px;font-weight:700;color:var(--navy)">Today could not load</div>'
+      + '<div style="font-size:12.5px;color:var(--text3);margin-top:5px">Refresh to try again. Your accounts and Reconnect are unaffected.</div></div>';
   });
 }
 
