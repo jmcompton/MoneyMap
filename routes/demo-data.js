@@ -125,6 +125,8 @@ const DEMO_ACCOUNTS = [
   { company: 'Savannah Coastal Supply',    category: 'Distributor',  city: 'Savannah',   state: 'GA', pattern: 'healthy', scale: 2.2, lines: ['BOSS Sealants', 'Alum-A-Pole'] },
   { company: 'Volunteer Roofing Supply',   category: 'Distributor',  city: 'Chattanooga',state: 'TN', pattern: 'dropped', scale: 2.0, lines: ['BOSS Sealants'] },
   { company: 'Music City Materials',       category: 'Lumber Yard',  city: 'Nashville',  state: 'TN', pattern: 'stopped', scale: 2.6, lines: ['Quality Aluminum', 'Fortress Railing'] },
+  { company: 'Riverbend Supply Co',        category: 'Distributor',  city: 'Knoxville',  state: 'TN', pattern: 'mixed',   scale: 3.4, lines: ['BOSS Sealants', 'Quality Aluminum'] },
+  { company: 'Piedmont Building Center',   category: 'Dealer',       city: 'Augusta',    state: 'GA', pattern: 'sliding', scale: 2.7, lines: ['Fortress Railing', 'ShurTape'] },
 ];
 
 // Month-end date for N months back from the current month.
@@ -140,12 +142,23 @@ function monthStart(monthsBack) {
 function iso(d) { return d.toISOString().slice(0, 10); }
 
 // How much this account bought in a given period index (0 = oldest, 5 = latest).
-function salesFor(pattern, idx, scale) {
+function salesFor(pattern, idx, scale, lineIdx) {
   const base = 9000 * scale;
   const wobble = 1 + (((idx * 37) % 11) - 5) / 40; // deterministic +/-12%
   if (pattern === 'healthy') return base * wobble;
   if (pattern === 'stopped') return idx <= 2 ? base * wobble : 0;  // silent after period 3
   if (pattern === 'dropped') return idx >= 5 ? base * 0.28 : base * wobble; // latest way down
+  // 'mixed': the first line is lost to a competitor while the rest keep buying.
+  // This is the most telling case — same account, one line gone.
+  if (pattern === 'mixed') {
+    if (lineIdx === 0) return idx <= 3 ? base * wobble : 0;
+    return base * wobble;
+  }
+  // 'sliding': a slow four-period decline rather than a hard stop.
+  if (pattern === 'sliding') {
+    const decay = [1, 1, 0.95, 0.78, 0.6, 0.42][idx] || 1;
+    return base * decay;
+  }
   return base;
 }
 
@@ -196,14 +209,15 @@ router.post('/seed', async (req, res) => {
       accountsMade++;
 
       // Per manufacturer, write a commission line for each period it bought in.
-      for (const lineName of a.lines) {
+      for (let lineIdx = 0; lineIdx < a.lines.length; lineIdx++) {
+        const lineName = a.lines[lineIdx];
         const lineId = lineIds[lineName];
         const share = 1 / a.lines.length;
         let totalSales = 0, totalComm = 0, first = null, last = null, cnt = 0;
 
         for (let idx = 0; idx < importIds.length; idx++) {
           const imp = importIds[idx];
-          const sales = salesFor(a.pattern, idx, a.scale) * share;
+          const sales = salesFor(a.pattern, idx, a.scale, lineIdx) * share;
           if (sales <= 0) continue;
           const comm = sales * 0.05;
           await client.query(

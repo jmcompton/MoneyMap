@@ -16833,6 +16833,12 @@ function rcSetSeg(seg) {
 // ── Found Money ──────────────────────────────────────────────────────────────
 // Accounts whose buying stopped or fell off versus their own commission history.
 function _fmEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function _fmDate(d){
+  if(!d) return '';
+  var dt = new Date(String(d) + 'T00:00:00');
+  if (isNaN(dt)) return String(d);
+  return dt.toLocaleDateString('en-US',{month:'short',year:'numeric'});
+}
 function _fmMoney(n){ return '$' + Math.round(Number(n)||0).toLocaleString('en-US'); }
 
 function loadFoundMoney() {
@@ -16861,8 +16867,8 @@ function loadFoundMoney() {
               + '<div class="rc-banner-lbl">Your commission</div>'
             + '</div>'
             + '<div class="rc-banner-side">'
-              + '<div class="v">' + (s.stopped||0) + ' / ' + (s.dropped||0) + '</div>'
-              + '<div class="rc-banner-lbl">Stopped / buying less</div>'
+              + '<div class="v">' + (s.account_lost||0) + ' \u00b7 ' + (s.lines_lost||0) + ' \u00b7 ' + (s.declining||0) + '</div>'
+              + '<div class="rc-banner-lbl">Lost \u00b7 Line lost \u00b7 Declining</div>'
             + '</div>'
           + '</div>';
       }
@@ -16877,38 +16883,66 @@ function loadFoundMoney() {
       }
 
       list.innerHTML = items.map(function(i){
-        var stopped = i.type === 'stopped';
-        var accent = stopped ? '#b91c1c' : '#c2410c';
-        var badge = stopped
-          ? '<span style="background:#fee2e2;color:#b91c1c;font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;letter-spacing:.3px">STOPPED</span>'
-          : '<span style="background:#ffedd5;color:#c2410c;font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;letter-spacing:.3px">DOWN ' + (100 - (i.pct_of_normal||0)) + '%</span>';
-        // Bar shows what is left of normal buying: the empty space is the gap.
-        var pct = Math.max(0, Math.min(100, i.pct_of_normal || 0));
-        var click = i.account_id ? ' onclick="viewRecord(' + i.account_id + ')" style="cursor:pointer;--rc-accent:' + accent + '"'
-                                 : ' style="--rc-accent:' + accent + '"';
-        return '<div class="rc-card"' + click + '>'
+        // The classification is the sales call: being fired is a different
+        // problem from losing one line to a competitor.
+        var kind = {
+          account_lost: { label: 'ACCOUNT LOST', accent: '#b91c1c', bg: '#fee2e2',
+                          note: 'Every line stopped' },
+          lines_lost:   { label: 'LINE LOST',    accent: '#c2410c', bg: '#ffedd5',
+                          note: 'Competitor likely took a line' },
+          declining:    { label: 'DECLINING',    accent: '#a16207', bg: '#fef3c7',
+                          note: 'Buying under its normal' }
+        }[i.type] || { label: 'AT RISK', accent: '#a16207', bg: '#fef3c7', note: '' };
+
+        var phone = i.phone ? String(i.phone).replace(/[^0-9+]/g,'') : '';
+        var meta = [i.category, i.city].filter(Boolean).join(' \u00b7 ');
+
+        // Per-line breakdown: which manufacturer, how far down, since when.
+        var lines = (i.lines || []).map(function(l){
+          var isStopped = l.type === 'stopped';
+          var bar = Math.max(0, Math.min(100, l.pct_of_normal || 0));
+          return '<div style="padding:7px 0;border-top:1px solid var(--border)">'
+            + '<div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">'
+              + '<span style="font-size:12.5px;font-weight:650;color:var(--navy)">' + _fmEsc(l.manufacturer) + '</span>'
+              + '<span style="font-size:12.5px;font-weight:750;color:' + kind.accent + ';font-variant-numeric:tabular-nums">'
+                + _fmMoney(l.gap_sales) + '</span>'
+            + '</div>'
+            + '<div style="height:4px;border-radius:99px;background:#eef1f5;margin-top:5px">'
+              + '<div style="height:100%;width:' + bar + '%;border-radius:99px;background:' + kind.accent + '"></div>'
+            + '</div>'
+            + '<div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--text3);margin-top:4px">'
+              + '<span>' + (isStopped ? 'Stopped buying' : 'At ' + bar + '% of normal') + '</span>'
+              + '<span>was ' + _fmMoney(l.baseline_sales) + '/period</span>'
+            + '</div>'
+          + '</div>';
+        }).join('');
+
+        // Trend and recency turn a number into something you can open a call with.
+        var facts = [];
+        if (i.periods_sliding > 1) facts.push(i.periods_sliding + ' periods sliding');
+        if (i.last_bought) facts.push('last bought ' + _fmDate(i.last_bought));
+        if (i.still_buying > 0) facts.push('still buys ' + _fmMoney(i.still_buying));
+
+        return '<div class="rc-card" style="--rc-accent:' + kind.accent + '">'
             + '<div style="display:flex;justify-content:space-between;gap:14px;align-items:flex-start">'
               + '<div style="min-width:0;flex:1">'
-                + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
-                  + '<span class="rc-name">' + _fmEsc(i.customer_name) + '</span>' + badge
+                + '<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">'
+                  + '<span class="rc-name">' + _fmEsc(i.customer_name) + '</span>'
+                  + '<span style="background:' + kind.bg + ';color:' + kind.accent + ';font-size:9.5px;font-weight:800;padding:3px 8px;border-radius:99px;letter-spacing:.4px">' + kind.label + '</span>'
                 + '</div>'
-                + '<div class="rc-meta">' + _fmEsc(i.manufacturer) + '</div>'
+                + '<div class="rc-meta">' + _fmEsc(meta || kind.note) + '</div>'
               + '</div>'
               + '<div style="text-align:right;flex-shrink:0">'
-                + '<div class="rc-money" style="color:' + accent + '">' + _fmMoney(i.gap_sales) + '</div>'
-                + '<div class="rc-money-sub">gone this period</div>'
+                + '<div class="rc-money" style="color:' + kind.accent + '">' + _fmMoney(i.gap_sales) + '</div>'
+                + '<div class="rc-money-sub">' + _fmMoney(i.gap_commission) + ' commission</div>'
               + '</div>'
             + '</div>'
-            + '<div class="rc-silence">'
-                + '<div class="rc-silence-fill" style="width:' + pct + '%;background:' + accent + '"></div>'
-              + '</div>'
-            + '<div class="rc-silence-label">'
-              + '<span>' + (stopped ? 'Buying nothing' : 'Now ' + _fmMoney(i.latest_sales)) + '</span>'
-              + '<span>Normally ' + _fmMoney(i.baseline_sales) + '/period</span>'
-            + '</div>'
-            + '<div class="rc-utils" style="justify-content:space-between">'
-              + '<span style="font-size:11.5px;color:var(--text3);padding:6px 2px">' + _fmMoney(i.gap_commission) + ' commission</span>'
-              + '<span style="font-size:11.5px;font-weight:700;color:var(--navy);padding:6px 2px">Open account \u2192</span>'
+            + (facts.length ? '<div style="font-size:11px;color:var(--text3);margin-top:8px">' + _fmEsc(facts.join('  \u00b7  ')) + '</div>' : '')
+            + '<div style="margin-top:8px">' + lines + '</div>'
+            + '<div class="rc-actions">'
+              + (phone ? '<a class="rc-call" href="tel:' + phone + '">Call</a>'
+                       : '<span class="rc-call rc-dim">No number</span>')
+              + (i.account_id ? '<button class="rc-act" onclick="viewRecord(' + i.account_id + ')">Open account</button>' : '')
             + '</div>'
           + '</div>';
       }).join('');
