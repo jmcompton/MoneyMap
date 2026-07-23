@@ -170,6 +170,20 @@ router.post('/seed', async (req, res) => {
   try {
     await client.query('BEGIN');
 
+    // Re-running the seed must not stack duplicates, so clear any previous demo
+    // firm for this user first. Only touches source='Demo Data' rows the caller
+    // owns, plus the statements this seeder created.
+    const prevAcct = await client.query(
+      `SELECT id FROM prospects WHERE source = 'Demo Data' AND user_id = $1`, [uid]);
+    const prevIds = prevAcct.rows.map(r => r.id);
+    if (prevIds.length) {
+      await client.query('DELETE FROM account_lines WHERE account_id = ANY($1::int[])', [prevIds]);
+      await client.query(`DELETE FROM prospects WHERE source = 'Demo Data' AND user_id = $1`, [uid]);
+    }
+    await client.query(
+      `DELETE FROM commission_imports WHERE rep_id = $1 AND source_filename LIKE 'demo-statement-%'`,
+      [uid]);
+
     // 1) Manufacturer lines (shared catalog, matched by name).
     const lineIds = {};
     for (const name of DEMO_LINES) {
