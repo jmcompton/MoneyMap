@@ -1669,23 +1669,23 @@ window.addEventListener('load', function() {
 
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 <nav class="bottom-nav">
-  <button class="bn-item active" id="bn-home" data-roles="rep intern manager" onclick="go('reconnect');setActiveNav('bn-home')">
+  <button class="bn-item active" id="bn-home" data-roles="rep manager" onclick="go('reconnect');setActiveNav('bn-home')">
     <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     <span>Home</span>
   </button>
-  <button class="bn-item" id="bn-today" data-roles="rep intern" onclick="go('today');setActiveNav('bn-today')">
+  <button class="bn-item" id="bn-today" data-roles="rep" onclick="go('today');setActiveNav('bn-today')">
     <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 10h18M16 2v4M8 2v4"/><path d="M9 15.5l1.75 1.75L14.5 13.5"/></svg>
     <span>Today</span>
   </button>
-  <button class="bn-item" id="bn-contacts" data-roles="rep intern manager" onclick="go('contacts');setActiveNav('bn-contacts')">
+  <button class="bn-item" id="bn-contacts" data-roles="rep manager" onclick="go('contacts');setActiveNav('bn-contacts')">
     <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     <span>Accounts</span>
   </button>
-  <button class="bn-item" id="bn-quotes" data-roles="rep intern manager" onclick="go('quotes');setActiveNav('bn-quotes')">
+  <button class="bn-item" id="bn-quotes" data-roles="rep manager" onclick="go('quotes');setActiveNav('bn-quotes')">
     <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
     <span>Quotes</span>
   </button>
-  <button class="bn-item" id="bn-more" data-roles="rep intern manager" onclick="openMobileMenu()">
+  <button class="bn-item" id="bn-more" data-roles="rep manager" onclick="openMobileMenu()">
     <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     <span>More</span>
   </button>
@@ -1696,14 +1696,14 @@ window.addEventListener('load', function() {
     <div><div class="sb-name">OutsideSelling</div><div class="sb-sub">Field Sales CRM</div></div>
   </div>
   <div class="sb-search-wrap"><div class="sb-search"><svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;flex-shrink:0;opacity:.3"><circle cx="7" cy="7" r="4"/><path d="M10.5 10.5l2.5 2.5"/></svg><input id="sb-search-input" placeholder="Search accounts..." type="search" name="acct_search_sb" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" oninput="globalSearch(this.value)" onkeydown="if(event.key==='Escape')this.value=''" /></div></div>
-  <div class="sb-section" data-roles="intern manager">
+  <div class="sb-section" data-roles="manager">
   </div>
-  <div class="sb-section" data-roles="rep intern manager">
+  <div class="sb-section" data-roles="rep manager">
     <div class="sb-sec-label">Sales</div>
-    <button class="sb-item active" data-roles="rep intern manager" onclick="go('reconnect')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 8a6 6 0 0110-4.5M14 8a6 6 0 01-10 4.5"/><polyline points="12 1.5 12 4 9.5 4"/><polyline points="4 14.5 4 12 6.5 12"/></svg>Reconnect</button>
-    <button class="sb-item" data-roles="rep intern manager" onclick="go('found-money')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><circle cx="8" cy="8" r="6"/><path d="M8 5v6M6.5 6.5h3M6.5 9.5h3"/></svg>Found Money</button>
-    <button class="sb-item" data-roles="rep intern manager" onclick="go('today')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 7h12M11 1.5v2M5 1.5v2"/><path d="M6.5 10.5l1.25 1.25L10 9"/></svg>Today</button>
-    <button class="sb-item" data-roles="rep intern manager" onclick="go('contacts')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>Accounts</button>
+    <button class="sb-item active" data-roles="rep manager" onclick="go('reconnect')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 8a6 6 0 0110-4.5M14 8a6 6 0 01-10 4.5"/><polyline points="12 1.5 12 4 9.5 4"/><polyline points="4 14.5 4 12 6.5 12"/></svg>Reconnect</button>
+    <button class="sb-item" data-roles="rep manager" onclick="go('found-money')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><circle cx="8" cy="8" r="6"/><path d="M8 5v6M6.5 6.5h3M6.5 9.5h3"/></svg>Found Money</button>
+    <button class="sb-item" data-roles="rep manager" onclick="go('today')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 7h12M11 1.5v2M5 1.5v2"/><path d="M6.5 10.5l1.25 1.25L10 9"/></svg>Today</button>
+    <button class="sb-item" data-roles="rep manager" onclick="go('contacts')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>Accounts</button>
 
     <button class="sb-item" data-roles="rep manager" onclick="go('quotes')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><path d="M3 2h10a1 1 0 011 1v11a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zM5 7h6M5 9.5h4"/></svg>Quotes</button>
   </div>
@@ -2188,6 +2188,7 @@ window.addEventListener('load', function() {
             <div class="rec-sec" style="order:4">
               <div class="rec-sec-hdr"><span class="rec-sec-title">Contact Information</span><span style="font-size:11.5px;color:var(--blue);cursor:pointer">Edit</span></div>
               <div class="rec-sec-body" id="rec-fields"></div>
+              <div id="rec-tags" style="padding:0 16px 14px"></div>
             </div>
             <div class="rec-sec" style="order:1"><div class="rec-sec-hdr"><span class="rec-sec-title">People</span></div>
               <div style="padding:16px">
@@ -4193,7 +4194,7 @@ var pageTitles = {
 
 // Role-based nav visibility. Returns the normalized role used.
 function applyRoleNav(role) {
-  role = (role === 'manager' || role === 'intern') ? role : 'rep';
+  role = (role === 'manager') ? role : 'rep';
   function allowed(el) {
     var dr = el.getAttribute('data-roles');
     return !dr || dr.split(/\s+/).indexOf(role) !== -1;
@@ -4240,7 +4241,7 @@ window.addEventListener('load', function() {
         var initials = u.name ? u.name.split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().slice(0,2) : 'JM';
         document.getElementById('s-av').textContent = initials;
         document.getElementById('s-name').textContent = u.name || 'Rep';
-        document.getElementById('s-role').textContent = u.role === 'manager' ? 'Manager' : (u.role === 'intern' ? 'Intern' : 'Sales Rep');
+        document.getElementById('s-role').textContent = u.role === 'manager' ? 'Manager' : 'Sales Rep';
         if (u.role === 'manager') {
           document.querySelectorAll('.manager-only').forEach(function(el) { el.style.display = ''; });
         }
@@ -4292,7 +4293,8 @@ function goLogCall(prospectId) {
 function go(id) {
   // Home is now the adaptive Today cockpit. Old money-dashboard is retired as a
   // landing surface; both "Home" entry points resolve to the Today cockpit.
-  if (id === 'dashboard' || id === 'home') id = 'reconnect';
+  if (id === 'home') id = 'reconnect';
+  if (id === 'leads') id = 'dashboard';
   if (window._teamViewActive && id !== 'record') {
     var _lb = document.querySelector('[onclick="logCallForRecord()"]');
     var _ob = document.querySelector('[onclick="writeOutreachForRecord()"]');
@@ -5149,16 +5151,17 @@ function viewRecord(id) {
       // People (contact name/title/email/mobile) now live in the Contacts tab,
       // sourced from the contacts table — they are NOT repeated in this business
       // grid so the same person isn't shown twice. Business facts stay here.
+      // One line per fact a rep needs standing in a parking lot. City/state/zip
+      // collapse into a single address line rather than four separate rows.
+      var addr = [p.address, [p.city, p.state].filter(Boolean).join(', '), p.zip]
+                   .filter(Boolean).join('  ');
       var fields = [
-        ['Contact Owner','You'],['Company Type',ctRecBadge],
-        ['Account Name',p.company],
-        ['Business Phone',p.phone||'—'],
-        ['City',p.city||'—'],['State',p.state||'GA'],
-        ['Address',p.address||'—'],['Zip',p.zip||'—'],
-        ['Website',p.website ? '<a href="' + p.website + '" target="_blank">Website</a>' : '—'],
+        ['Account Name', p.company],
+        ['Type', ctRecBadge],
+        ['Phone', p.phone ? '<a href="tel:' + String(p.phone).replace(/[^0-9+]/g,'') + '">' + p.phone + '</a>' : '—'],
+        ['Address', addr || '—'],
         ['Status','<span class="badge b-' + (p.status||'new').toLowerCase() + '">' + (p.status||'New') + '</span>'],
-        ['Created',p.created_at ? new Date(p.created_at).toLocaleDateString() : '—'],
-        ['Notes',p.notes||'—']
+        ['Website', p.website ? '<a href="' + p.website + '" target="_blank" rel="noopener">Website</a>' : '—']
       ];
       document.getElementById('rec-fields').innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0">' +
         fields.map(function(f) { return '<div class="frow"><div class="flabel">' + f[0] + '</div><div class="fval' + (f[1]==='—'?' empty':'') + '">' + f[1] + '</div></div>'; }).join('') + '</div>';
@@ -5170,6 +5173,7 @@ function viewRecord(id) {
         pf.map(function(f) { return '<div class="frow"><div class="flabel">' + f[0] + '</div><div class="fval' + (f[1]==='—'?' empty':'') + '">' + f[1] + '</div></div>'; }).join('') + '</div>';
       // Lines this account buys (from confirmed commission data)
       loadAccountLines(p.id);
+      loadAccountTags(p.id);
       // Cross-sell opportunities for this account
       loadCrossSell(p.id);
       // Business card image section
@@ -5359,6 +5363,82 @@ function submitAccountContact() {
 // (some enriched with commission totals from imports), and a rep can add or remove
 // which lines the account buys. A line belongs to the account, not to a contact.
 function _alEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+
+// ── Account tags ─────────────────────────────────────────────────────────────
+// Firm-defined labels. Typing a new name creates it, so the vocabulary grows
+// out of use rather than a setup screen nobody fills in.
+var TAG_COLORS = {
+  slate:  ['#eef1f5','#334155'],
+  blue:   ['#e0edff','#1d4ed8'],
+  green:  ['#dcfce7','#15803d'],
+  amber:  ['#fef3c7','#a16207'],
+  red:    ['#fee2e2','#b91c1c'],
+  purple: ['#ede9fe','#6d28d9']
+};
+function _tagEsc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function loadAccountTags(accountId){
+  var el = document.getElementById('rec-tags');
+  if(!el) return;
+  window._tagAccountId = accountId;
+  fetch('/api/tags/account/' + accountId)
+    .then(function(r){ return r.ok ? r.json() : []; })
+    .then(function(tags){ renderAccountTags(Array.isArray(tags) ? tags : [], accountId); })
+    .catch(function(){ renderAccountTags([], accountId); });
+}
+
+function renderAccountTags(tags, accountId){
+  var el = document.getElementById('rec-tags');
+  if(!el) return;
+  var chips = tags.map(function(t){
+    var c = TAG_COLORS[t.color] || TAG_COLORS.slate;
+    return '<span style="display:inline-flex;align-items:center;gap:5px;background:' + c[0] + ';color:' + c[1] +
+      ';font-size:11.5px;font-weight:650;padding:4px 9px;border-radius:99px">' + _tagEsc(t.name) +
+      '<button onclick="removeAccountTag(' + accountId + ',' + t.id + ')" title="Remove tag" ' +
+      'style="background:none;border:none;color:inherit;opacity:.55;cursor:pointer;font-size:13px;line-height:1;padding:0">&times;</button></span>';
+  }).join('');
+  el.innerHTML =
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">' + chips +
+      '<input id="tag-add-input" list="tag-catalog" placeholder="+ Add tag" ' +
+        'onkeydown="if(event.key===\'Enter\'){event.preventDefault();addAccountTag(' + accountId + ');}" ' +
+        'style="width:118px;padding:4px 9px;border:1px dashed var(--border2);border-radius:99px;font-family:inherit;font-size:11.5px;background:transparent" />' +
+      '<datalist id="tag-catalog"></datalist>' +
+    '</div>';
+  loadTagCatalog();
+}
+
+// Suggest labels the firm already uses so the vocabulary stays consistent
+// instead of drifting into "Key Account", "key acct", "KeyAccount".
+function loadTagCatalog(){
+  var dl = document.getElementById('tag-catalog');
+  if(!dl) return;
+  fetch('/api/tags').then(function(r){ return r.ok ? r.json() : []; }).then(function(list){
+    if(!Array.isArray(list)) return;
+    dl.innerHTML = list.map(function(t){ return '<option value="' + _tagEsc(t.name) + '"></option>'; }).join('');
+  }).catch(function(){});
+}
+
+function addAccountTag(accountId){
+  var input = document.getElementById('tag-add-input');
+  if(!input) return;
+  var name = (input.value || '').trim();
+  if(!name){ input.focus(); return; }
+  input.disabled = true;
+  fetch('/api/tags/account/' + accountId, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ name: name, color: 'slate' })
+  }).then(function(r){ return r.json(); }).then(function(res){
+    if(res && res.error){ alert(res.error); input.disabled = false; return; }
+    loadAccountTags(accountId);
+  }).catch(function(){ input.disabled = false; });
+}
+
+function removeAccountTag(accountId, tagId){
+  fetch('/api/tags/account/' + accountId + '/tag/' + tagId, { method:'DELETE' })
+    .then(function(){ loadAccountTags(accountId); })
+    .catch(function(){});
+}
 
 function loadAccountLines(accountId) {
   var section = document.getElementById('rec-lines-section');
