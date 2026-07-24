@@ -171,6 +171,11 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 .rq-label{font-size:11px;color:var(--text3)}
 .rq-val{font-size:12.5px;color:var(--text);font-weight:500}
 .rec-body{padding:16px 20px}
+.seg-chip{display:inline-flex;align-items:center;gap:0;cursor:pointer;background:#fff;border:1.5px solid var(--border);border-radius:99px;padding:9px 15px;font-size:13px;font-weight:600;color:var(--text2);user-select:none;transition:background .12s,border-color .12s,color .12s}
+.seg-chip:hover{border-color:var(--border2)}
+.seg-chip:has(input:checked){background:var(--navy);border-color:var(--navy);color:#fff}
+.seg-chip input{position:absolute;opacity:0;width:0;height:0;margin:0}
+#segment-pill-row label{min-height:0}
 #rec-tab-overview{display:flex;flex-direction:column}
 .rec-sec{background:var(--white);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden}
 .rec-sec-hdr{padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#fafbfc}
@@ -1814,68 +1819,23 @@ window.addEventListener('load', function() {
       </div>
 
       <!-- Find Today's Leads -->
-      <div id="daily-lead-finder">
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px 20px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
-        <div style="flex:1;min-width:200px">
-          <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:3px">Find Today's Leads</div>
-          <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Pick your brands and channel, then enter a city</div>
+      <!-- Find New Leads -->
+      <div id="daily-lead-finder" style="margin-bottom:24px">
+        <div class="rc-card">
+          <div style="font-size:15px;font-weight:750;color:var(--navy)">Find new leads</div>
+          <div style="font-size:12.5px;color:var(--text3);margin:3px 0 15px">Enter a city and pick what you're after. We'll pull real businesses with contact info you can call today.</div>
 
-          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Brands</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="lead-brand-row">
-            <label class="lead-brand-pill" data-brand="BOSS Products" style="cursor:pointer;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:flex;align-items:center;gap:5px;border:2px solid transparent">
-              <input type="checkbox" value="BOSS Products" style="margin:0;accent-color:#b91c1c"> BOSS
-            </label>
-            <label class="lead-brand-pill" data-brand="ShurTape" style="cursor:pointer;background:#dbeafe;color:#1d4ed8;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:flex;align-items:center;gap:5px;border:2px solid transparent">
-              <input type="checkbox" value="ShurTape" style="margin:0;accent-color:#1d4ed8"> ShurTape
-            </label>
-            <label class="lead-brand-pill" data-brand="Alum-A-Pole" style="cursor:pointer;background:#d1fae5;color:#065f46;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:flex;align-items:center;gap:5px;border:2px solid transparent">
-              <input type="checkbox" value="Alum-A-Pole" style="margin:0;accent-color:#065f46"> Alum-A-Pole
-            </label>
+          <div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">What are you looking for?</div>
+          <div id="segment-pill-row" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+            <label class="seg-chip"><input type="checkbox" name="seg" value="Dealer" checked> Distributors &amp; Dealers</label>
+            <label class="seg-chip"><input type="checkbox" name="seg" value="Contractor"> Contractors</label>
+            <label class="seg-chip"><input type="checkbox" name="seg" value="Lumber / Building Supply"> Lumber &amp; Building Supply</label>
           </div>
 
-          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Segments <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#059669">&#9650; Distributors &amp; Dealers prioritized</span></div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px" id="segment-pill-row">
-            <label style="cursor:pointer;background:#ede9fe;color:#6d28d9;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;user-select:none;border:1.5px solid #c4b5fd">
-              <input type="checkbox" name="seg" value="Window/Door Installer" style="margin:0;accent-color:#6d28d9"> Window / Door
-            </label>
-            <label style="cursor:pointer;background:#fef3c7;color:#92400e;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;user-select:none;border:1.5px solid #fcd34d">
-              <input type="checkbox" name="seg" value="Deck Contractor" style="margin:0;accent-color:#92400e"> Deck Contractors
-            </label>
-            <label style="cursor:pointer;background:#fff7ed;color:#c2410c;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;user-select:none;border:1.5px solid #fdba74">
-              <input type="checkbox" name="seg" value="Deck Distributor/Dealer" checked style="margin:0;accent-color:#c2410c"> Deck Distributors
-            </label>
-            <label style="cursor:pointer;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;user-select:none;border:1.5px solid #fca5a5">
-              <input type="checkbox" name="seg" value="Roofing Contractor" style="margin:0;accent-color:#b91c1c"> Commercial Roofing Contractors
-            </label>
-            <label style="cursor:pointer;background:#ffedd5;color:#c2410c;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;user-select:none;border:1.5px solid #fdba74">
-              <input type="checkbox" name="seg" value="Roofing Distributor" checked style="margin:0;accent-color:#c2410c"> Commercial Roofing Distributors
-            </label>
-            <label style="cursor:pointer;background:#dbeafe;color:#1d4ed8;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;user-select:none;border:1.5px solid #93c5fd">
-              <input type="checkbox" name="seg" value="Siding Contractor" style="margin:0;accent-color:#1d4ed8"> Siding Contractors
-            </label>
-            <label style="cursor:pointer;background:#bfdbfe;color:#1e40af;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;user-select:none;border:1.5px solid #60a5fa">
-              <input type="checkbox" name="seg" value="Siding Distributor" checked style="margin:0;accent-color:#1e40af"> Siding Distributors
-            </label>
-            <label style="cursor:pointer;background:#ccfbf1;color:#0f766e;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;user-select:none;border:1.5px solid #5eead4">
-              <input type="checkbox" name="seg" value="Cornice Contractor" style="margin:0;accent-color:#0f766e"> Cornice Contractors
-            </label>
-            <label style="cursor:pointer;background:#d1fae5;color:#065f46;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;user-select:none;border:1.5px solid #6ee7b7">
-              <input type="checkbox" name="seg" value="Construction Fasteners" style="margin:0;accent-color:#065f46"> Construction Fasteners
-            </label>
-            <label style="cursor:pointer;background:#fef9c3;color:#854d0e;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;user-select:none;border:1.5px solid #fde047">
-              <input type="checkbox" name="seg" value="Lumber / Building Supply" style="margin:0;accent-color:#854d0e"> Lumber / Building Supply
-            </label>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <input id="lead-city-input" type="text" name="lead_city_search" inputmode="text" placeholder="Enter city (e.g. Norcross GA)" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
-          <div style="display:flex;gap:8px;align-items:center">
-            <button onclick="runDailyLeads()" id="lead-find-btn" style="padding:10px 22px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">
-              Find Today's Leads
-            </button>
-            <button onclick="refreshLeads()" id="lead-refresh-btn" style="display:none;padding:10px 14px;background:var(--surface);color:var(--navy);border:1px solid var(--border);border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap" title="Get 10 new leads">
-              ↻ Refresh
-            </button>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input id="lead-city-input" type="text" name="lead_city_search" inputmode="text" placeholder="Enter a city (e.g. Birmingham AL)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" style="flex:1;min-width:220px;padding:11px 13px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit">
+            <button onclick="runDailyLeads()" id="lead-find-btn" class="btn btn-primary" style="padding:11px 26px;font-size:14px">Find leads</button>
+            <button onclick="refreshLeads()" id="lead-refresh-btn" class="btn btn-secondary" style="display:none;padding:11px 16px;font-size:13px" title="Get 10 new leads">&#8635; 10 more</button>
           </div>
         </div>
       </div>
@@ -10998,7 +10958,7 @@ window.getSelectedSegments = function() {
   document.querySelectorAll('#segment-pill-row input[type="checkbox"]:checked').forEach(function(cb) {
     checked.push(cb.value);
   });
-  return checked.length ? checked : ['Roofing Contractor'];
+  return checked.length ? checked : ['Dealer'];
 };
 
 window.getSelectedBrands = function() {
@@ -11006,7 +10966,7 @@ window.getSelectedBrands = function() {
   document.querySelectorAll('#lead-brand-row input[type="checkbox"]:checked').forEach(function(cb) {
     checked.push(cb.value);
   });
-  return checked.length ? checked : ['BOSS Products', 'ShurTape', 'Alum-A-Pole'];
+  return checked;   // brands are optional; no firm-specific default
 };
 
 
