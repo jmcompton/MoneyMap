@@ -6,12 +6,12 @@
 <meta name="theme-color" content="#0f1923"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="OutsideSelling"/>
+<meta name="apple-mobile-web-app-title" content="RepRoute"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <link rel="manifest" href="/manifest.json"/>
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg"/>
-<title>OutsideSelling</title>
+<title>RepRoute</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <style>
 :root{--sw:220px;--navy:#0f1923;--accent:#1d6aff;--accent2:#0d4fd4;--blue:#1d6aff;--blue-lt:#e8f0ff;--white:#ffffff;--bg:#f7f8fa;--surface:#ffffff;--border:#e2e5ea;--border2:#d0d4db;--text:#0f1923;--text2:#4a5568;--text3:#8a95a3;--green:#0a7c52;--green-lt:#edf7f3;--amber:#92600a;--amber-lt:#fef6e4;--red:#c0392b;--red-lt:#fdf0ef;--purple:#5b21b6;--purple-lt:#ede9fe;--r:6px;--r2:8px;--shadow:0 1px 2px rgba(15,25,35,.06),0 1px 3px rgba(15,25,35,.04);--shadow-md:0 2px 4px rgba(15,25,35,.06),0 4px 12px rgba(15,25,35,.06)}
@@ -36,50 +36,7 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 .rc-seg-btn{padding:8px 14px;font-size:13px;font-weight:600;font-family:inherit;color:var(--text2);background:#fff;border:none;cursor:pointer}
 .rc-seg-btn+.rc-seg-btn{border-left:1px solid var(--border)}
 .rc-seg-btn.active{background:var(--navy);color:#fff}
-.rc-card{position:relative;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:15px 16px 13px 19px;margin:0;transition:box-shadow .16s ease,border-color .16s ease}
-.rc-card:hover{box-shadow:0 6px 22px rgba(15,25,35,.09);border-color:#d7dee6}
-.rc-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:12px 0 0 12px;background:var(--rc-accent,#a16207)}
-/* Wide, left-aligned working surface instead of a narrow centred ribbon. */
-.rc-wrap{max-width:1320px;margin:0;padding:16px 22px 48px}
-/* Masonry rather than grid: these cards vary in height (one line vs three),
-   and a grid forces every row to the tallest card, leaving dead space under the
-   short ones. Columns let each card sit directly under the one above it.
-   Order runs down each column, and the figures are sorted, so the largest
-   amounts still sit at the top of the reading path. */
-.rc-grid{columns:400px 3;column-gap:12px}
-.rc-grid > *{break-inside:avoid;-webkit-column-break-inside:avoid;page-break-inside:avoid;margin-bottom:12px;width:100%}
-/* Money is the point of this screen, so it gets the size and tabular figures. */
-.rc-money{font-size:25px;font-weight:800;color:var(--navy);letter-spacing:-.6px;line-height:1;font-variant-numeric:tabular-nums}
-.rc-money-sub{font-size:10.5px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
-.rc-name{font-size:15px;font-weight:800;color:var(--navy);line-height:1.25;letter-spacing:-.2px}
-.rc-meta{font-size:12px;color:var(--text3);margin-top:2px}
-.rc-lines{font-size:11.5px;color:var(--text2);margin-top:7px;padding-top:7px;border-top:1px dashed var(--border)}
-/* Silence meter: how far past this account's own cadence it has drifted.
-   The notch is the threshold for its value tier; the fill is actual silence. */
-.rc-silence{position:relative;height:5px;border-radius:99px;background:#eef1f5;margin-top:11px}
-.rc-silence-fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px}
-.rc-silence-notch{position:absolute;top:-3.5px;bottom:-3.5px;width:2px;background:var(--navy);opacity:.4;border-radius:2px}
-.rc-silence-label{display:flex;justify-content:space-between;font-size:10.5px;color:var(--text3);margin-top:5px;font-variant-numeric:tabular-nums}
-.rc-actions{display:flex;gap:6px;margin-top:12px}
-.rc-call{flex:1.4;padding:10px 8px;border-radius:8px;border:none;background:var(--navy);color:#fff;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:5px}
-.rc-call:hover{opacity:.9}
-.rc-call.rc-dim{background:#e8ecf0;color:var(--text3);cursor:default}
-.rc-utils{display:flex;gap:4px;margin-top:7px;border-top:1px solid var(--border);padding-top:8px}
-.rc-util{flex:1;padding:6px 4px;border-radius:6px;border:none;background:none;font-size:11.5px;font-weight:600;font-family:inherit;color:var(--text3);cursor:pointer}
-.rc-util:hover{background:#f4f6f8;color:var(--navy)}
-/* Headline banner: one figure that answers "how much is walking out the door". */
-.rc-banner{display:flex;align-items:stretch;gap:0;background:var(--white);border:1px solid var(--border);border-left:5px solid #b91c1c;border-radius:12px;overflow:hidden;margin-bottom:14px}
-.rc-banner-main{padding:15px 22px;flex-shrink:0}
-.rc-banner-fig{font-size:34px;font-weight:800;color:#b91c1c;letter-spacing:-1.2px;line-height:1;font-variant-numeric:tabular-nums}
-.rc-banner-lbl{font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-top:5px}
-.rc-banner-side{padding:15px 22px;border-left:1px solid var(--border);display:flex;flex-direction:column;justify-content:center}
-.rc-banner-side .v{font-size:20px;font-weight:800;color:var(--navy);line-height:1;font-variant-numeric:tabular-nums}
-@media(max-width:640px){
-  .rc-wrap{padding:12px 12px 40px}
-  .rc-grid{columns:1}
-  .rc-banner{flex-direction:column}
-  .rc-banner-side{border-left:none;border-top:1px solid var(--border)}
-}
+.rc-card{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px}
 .rc-act{flex:1;min-width:64px;padding:9px 6px;border-radius:8px;border:1px solid var(--border);background:#fff;font-size:12px;font-weight:700;font-family:inherit;color:var(--navy);cursor:pointer;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:4px}
 .rc-act:active{background:#f1f5f9}
 .sb-sec-label{font-size:10px;font-weight:600;color:rgba(255,255,255,.34);letter-spacing:.09em;text-transform:uppercase;padding:8px 16px 4px}
@@ -150,7 +107,7 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 .b-medium{background:var(--amber-lt);color:var(--amber)}
 .b-low{background:#f1f5f9;color:var(--text3)}
 .rec-layout{display:flex;flex:1;min-height:0}
-.rec-left{display:none}
+.rec-left{width:200px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);overflow-y:auto;padding:8px 0}
 .rl-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;padding:4px 16px 6px}
 .rl-item{padding:8px 16px;font-size:12.5px;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .1s}
 .rl-item:hover{background:var(--blue-lt);color:var(--accent)}
@@ -163,20 +120,14 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 .rec-name{font-size:17px;font-weight:700;color:var(--navy);margin-bottom:2px}
 .rec-cat{font-size:12.5px;color:var(--blue)}
 .rec-btns{display:flex;gap:6px;align-items:center;flex-shrink:0}
-.rec-tabs{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px;display:none;gap:2px;align-items:center}
+.rec-tabs{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:2px;align-items:center}
 .rt{padding:10px 14px;font-size:12.5px;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:all .12s}
 .rt:hover{color:var(--blue)}
 .rt.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
-.rec-quick{background:#fafbfc;border-bottom:1px solid var(--border);padding:12px 20px;display:none;grid-template-columns:repeat(4,1fr);gap:16px}
+.rec-quick{background:#fafbfc;border-bottom:1px solid var(--border);padding:12px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
 .rq-label{font-size:11px;color:var(--text3)}
 .rq-val{font-size:12.5px;color:var(--text);font-weight:500}
 .rec-body{padding:16px 20px}
-.seg-chip{display:inline-flex;align-items:center;gap:0;cursor:pointer;background:#fff;border:1.5px solid var(--border);border-radius:99px;padding:9px 15px;font-size:13px;font-weight:600;color:var(--text2);user-select:none;transition:background .12s,border-color .12s,color .12s}
-.seg-chip:hover{border-color:var(--border2)}
-.seg-chip:has(input:checked){background:var(--navy);border-color:var(--navy);color:#fff}
-.seg-chip input{position:absolute;opacity:0;width:0;height:0;margin:0}
-#segment-pill-row label{min-height:0}
-#rec-tab-overview{display:flex;flex-direction:column}
 .rec-sec{background:var(--white);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px;overflow:hidden}
 .rec-sec-hdr{padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#fafbfc}
 .rec-sec-title{font-size:12.5px;font-weight:700;color:var(--navy)}
@@ -1472,109 +1423,41 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
   #pwa-install-banner { bottom:calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   DESIGN LAYER — unified surface treatment across every screen.
-   Appended last so it settles specificity in one place instead of fighting
-   the rules above it. Everything here is derived from the existing navy/blue
-   tokens; nothing is rebranded.
-   ═══════════════════════════════════════════════════════════════════════════ */
+.seg-chip{display:inline-flex;align-items:center;gap:0;cursor:pointer;background:#fff;border:1.5px solid var(--border);border-radius:99px;padding:9px 15px;font-size:13px;font-weight:600;color:var(--text2);user-select:none;transition:background .12s,border-color .12s,color .12s}
+.seg-chip:hover{border-color:var(--text3)}
+.seg-chip:has(input:checked){background:var(--navy);border-color:var(--navy);color:#fff}
+.seg-chip input{position:absolute;opacity:0;width:0;height:0;margin:0}
+.lead-brand-pill.on{border-color:var(--navy)!important;box-shadow:inset 0 0 0 1px var(--navy)}
 
-:root{
-  /* A deeper page ground so white cards actually lift off it. The old #f7f8fa
-     was so close to white that every panel read as a flat outline. */
-  --bg:#eef1f6;
-  --r:8px;
-  --r2:12px;
-  --shadow:0 1px 2px rgba(15,25,35,.04),0 1px 3px rgba(15,25,35,.05);
-  --shadow-md:0 2px 6px rgba(15,25,35,.05),0 8px 24px rgba(15,25,35,.07);
-  --ink:#0f1923;
-}
-body{background:var(--bg)}
-
-/* ── Sidebar ──────────────────────────────────────────────────────────────
-   More air, a real active state, and a hairline between the brand and nav. */
-.sidebar{background:linear-gradient(180deg,#111c27 0%,#0d1720 100%)}
-.sb-item{
-  padding:9px 14px;margin:1px 8px;border-radius:8px;width:calc(100% - 16px);
-  font-size:13.5px;font-weight:500;border-left:none;color:rgba(255,255,255,.62);
-  transition:background .13s ease,color .13s ease;
-}
-.sb-item:hover{background:rgba(255,255,255,.07);color:#fff}
-.sb-item.active{
-  background:rgba(255,255,255,.11);color:#fff;font-weight:650;border-left:none;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);
-}
-.sb-item.active svg{color:var(--accent);opacity:1}
-.sb-sec-label{
-  font-size:10px;font-weight:700;color:rgba(255,255,255,.32);
-  text-transform:uppercase;letter-spacing:.09em;padding:14px 22px 5px;
-}
-.sb-search{border-radius:8px;padding:7px 11px;margin:0 8px}
-.sb-user{border-radius:9px}
-
-/* ── Top bar ──────────────────────────────────────────────────────────────
-   Taller, with the page name carrying real typographic weight. */
-.topbar{height:56px;padding:0 22px;gap:12px;backdrop-filter:saturate(1.6) blur(6px)}
-#page-title{font-size:16.5px;font-weight:750;color:var(--ink);letter-spacing:-.35px}
-
-/* ── Buttons ──────────────────────────────────────────────────────────────
-   One clear primary, quieter secondaries, and a hover that responds. */
-.btn{padding:8px 15px;border-radius:8px;font-size:12.5px;font-weight:650;letter-spacing:-.1px}
-.btn-primary{background:var(--accent);box-shadow:0 1px 2px rgba(29,106,255,.28)}
-.btn-primary:hover{background:var(--accent2)}
-.btn-secondary{border-color:var(--border);color:var(--text2)}
-.btn-secondary:hover{background:#f6f8fb;border-color:var(--border2);color:var(--ink)}
-
-/* ── Shared page frame ────────────────────────────────────────────────────
-   Every screen gets the same working width and rhythm, so moving between
-   them stops feeling like moving between different products. */
-.pg-wrap{max-width:1320px;margin:0;padding:18px 22px 48px}
-.pg-head{margin-bottom:15px}
-.pg-h1{font-size:19px;font-weight:800;color:var(--ink);letter-spacing:-.45px;line-height:1.15}
-.pg-sub{font-size:12.5px;color:var(--text3);margin-top:3px;max-width:640px}
-
-/* ── Surfaces ─────────────────────────────────────────────────────────────
-   A single card treatment shared by every list and panel in the app. */
-.rc-card,.surface{box-shadow:var(--shadow)}
-.rc-card:hover{box-shadow:var(--shadow-md)}
-.rec-sec{border-radius:var(--r2)!important;box-shadow:var(--shadow);border-color:var(--border)!important}
-.rec-sec-hdr{padding:13px 16px!important}
-.rec-sec-title{font-size:12.5px!important;font-weight:750!important;letter-spacing:.01em}
-
-/* Tables read as part of the same system rather than raw grids. */
-.tbl thead th,table thead th{
-  font-size:10.5px;font-weight:700;color:var(--text3);
-  text-transform:uppercase;letter-spacing:.055em;
-}
-
-/* ── Segmented controls / filter chips ────────────────────────────────────
-   Softer container, clearer selected state. */
-.rc-seg-btn{padding:8px 15px;font-size:12.5px;font-weight:650}
-.mod-tab,.crm-tab{font-weight:600}
-
-/* ── Inputs ───────────────────────────────────────────────────────────────*/
-input[type=text],input[type=search],input[type=email],input[type=tel],select,textarea{
-  border-radius:8px;
-}
-input:focus-visible,select:focus-visible,textarea:focus-visible,
-button:focus-visible,a:focus-visible{
-  outline:2px solid var(--accent);outline-offset:2px;
-}
-
-/* ── Money ────────────────────────────────────────────────────────────────
-   Figures line up column to column wherever dollars appear. */
-.rc-money,.rc-banner-fig,.rc-banner-side .v,.money{font-variant-numeric:tabular-nums}
-
-@media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
-}
-
-@media(max-width:640px){
-  .pg-wrap{padding:14px 13px 40px}
-  .topbar{height:52px;padding:0 14px}
-}
-
+/* ── Found Money (scoped to its own page; cannot affect RepRoute Reconnect) ── */
+#page-found-money .rc-wrap{max-width:1320px;margin:0;padding:16px 22px 48px}
+#page-found-money .pg-head{margin-bottom:15px}
+#page-found-money .pg-h1{font-size:19px;font-weight:800;color:var(--navy);letter-spacing:-.45px;line-height:1.15}
+#page-found-money .pg-sub{font-size:12.5px;color:var(--text3);margin-top:3px;max-width:640px}
+#page-found-money .rc-grid{columns:400px 3;column-gap:12px}
+#page-found-money .rc-grid > *{break-inside:avoid;-webkit-column-break-inside:avoid;margin-bottom:12px;width:100%}
+#page-found-money .rc-card{position:relative;background:#fff;border:1px solid var(--border);border-radius:12px;padding:15px 16px 13px 19px;box-shadow:0 1px 3px rgba(15,25,35,.05)}
+#page-found-money .rc-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:12px 0 0 12px;background:var(--rc-accent,#a16207)}
+#page-found-money .rc-money{font-size:25px;font-weight:800;color:var(--navy);letter-spacing:-.6px;line-height:1;font-variant-numeric:tabular-nums}
+#page-found-money .rc-money-sub{font-size:10.5px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+#page-found-money .rc-name{font-size:15px;font-weight:800;color:var(--navy);line-height:1.25;letter-spacing:-.2px}
+#page-found-money .rc-meta{font-size:12px;color:var(--text3);margin-top:2px}
+#page-found-money .rc-silence{position:relative;height:5px;border-radius:99px;background:#eef1f5;margin-top:11px}
+#page-found-money .rc-silence-fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px}
+#page-found-money .rc-banner{display:flex;align-items:stretch;background:#fff;border:1px solid var(--border);border-left:5px solid #b91c1c;border-radius:12px;overflow:hidden;margin-bottom:14px}
+#page-found-money .rc-banner-main{padding:15px 22px;flex-shrink:0}
+#page-found-money .rc-banner-fig{font-size:34px;font-weight:800;color:#b91c1c;letter-spacing:-1.2px;line-height:1;font-variant-numeric:tabular-nums}
+#page-found-money .rc-banner-lbl{font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-top:5px}
+#page-found-money .rc-banner-side{padding:15px 22px;border-left:1px solid var(--border);display:flex;flex-direction:column;justify-content:center}
+#page-found-money .rc-banner-side .v{font-size:20px;font-weight:800;color:var(--navy);line-height:1;font-variant-numeric:tabular-nums}
+#page-found-money .rc-actions{display:flex;gap:6px;margin-top:12px}
+#page-found-money .rc-call{flex:1.4;padding:10px 8px;border-radius:8px;border:none;background:var(--navy);color:#fff;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:5px}
+#page-found-money .rc-call.rc-dim{background:#e8ecf0;color:var(--text3);cursor:default}
+#page-found-money .rc-act{padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text2);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+#page-found-money .rc-utils{display:flex;gap:4px;margin-top:7px;border-top:1px solid var(--border);padding-top:8px}
+@media(max-width:640px){#page-found-money .rc-grid{columns:1}#page-found-money .rc-banner{flex-direction:column}#page-found-money .rc-banner-side{border-left:none;border-top:1px solid var(--border)}}
 </style>
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
 
 <script>
@@ -1641,7 +1524,7 @@ function installPWA() {
   if (!deferredPrompt) {
     // iOS doesn't support beforeinstallprompt - show iOS instructions
     if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-      alert('To install OutsideSelling on your iPhone:\n\n1. Tap the Share button at the bottom of Safari\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" in the top right');
+      alert('To install RepRoute on your iPhone:\n\n1. Tap the Share button at the bottom of Safari\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add" in the top right');
       return;
     }
     return;
@@ -1674,7 +1557,7 @@ window.addEventListener('load', function() {
 
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 <nav class="bottom-nav">
-  <button class="bn-item active" id="bn-home" data-roles="rep manager" onclick="go('reconnect');setActiveNav('bn-home')">
+  <button class="bn-item active" id="bn-home" data-roles="rep manager" onclick="go('dashboard');setActiveNav('bn-home')">
     <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     <span>Home</span>
   </button>
@@ -1686,9 +1569,13 @@ window.addEventListener('load', function() {
     <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     <span>Accounts</span>
   </button>
-  <button class="bn-item" id="bn-quotes" data-roles="rep manager" onclick="go('quotes');setActiveNav('bn-quotes')">
-    <svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
-    <span>Quotes</span>
+  <button class="bn-item" id="bn-calls" data-roles="manager" onclick="go('calls');setActiveNav('bn-calls')">
+    <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.58 3.38 2 2 0 0 1 3.55 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.5a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+    <span>Calls</span>
+  </button>
+  <button class="bn-item" id="bn-reconnect" data-roles="rep manager" onclick="go('reconnect');setActiveNav('bn-reconnect')">
+    <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0115.5-6M21 12a9 9 0 01-15.5 6"/><polyline points="18 2 18 6 14 6"/><polyline points="6 22 6 18 10 18"/></svg>
+    <span>Reconnect</span>
   </button>
   <button class="bn-item" id="bn-more" data-roles="rep manager" onclick="openMobileMenu()">
     <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -1698,35 +1585,55 @@ window.addEventListener('load', function() {
 <aside class="sidebar">
   <div class="sb-brand">
     <div class="sb-logo"><svg viewBox="0 0 17 17" fill="none"><circle cx="8.5" cy="8.5" r="3" fill="white"/><path d="M8.5 1v3M8.5 13v3M1 8.5h3M13 8.5h3" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg></div>
-    <div><div class="sb-name">OutsideSelling</div><div class="sb-sub">Field Sales CRM</div></div>
+    <div><div class="sb-name">RepRoute</div><div class="sb-sub">Field Sales CRM</div></div>
   </div>
-  <div class="sb-search-wrap"><div class="sb-search"><svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;flex-shrink:0;opacity:.3"><circle cx="7" cy="7" r="4"/><path d="M10.5 10.5l2.5 2.5"/></svg><input id="sb-search-input" placeholder="Search accounts..." type="search" name="acct_search_sb" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" oninput="globalSearch(this.value)" onkeydown="if(event.key==='Escape')this.value=''" /></div></div>
+  <div class="sb-search-wrap"><div class="sb-search"><svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;flex-shrink:0;opacity:.3"><circle cx="7" cy="7" r="4"/><path d="M10.5 10.5l2.5 2.5"/></svg><input id="sb-search-input" placeholder="Search accounts..." oninput="globalSearch(this.value)" onkeydown="if(event.key==='Escape')this.value=''" /></div></div>
   <div class="sb-section" data-roles="manager">
+    <button class="sb-item active" data-roles="manager" onclick="go('dashboard')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 6l6-4 6 4v8H2V6z"/><path d="M6 14v-4h4v4"/></svg>Home</button>
   </div>
   <div class="sb-section" data-roles="rep manager">
     <div class="sb-sec-label">Sales</div>
-    <button class="sb-item active" data-roles="rep manager" onclick="go('reconnect')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 8a6 6 0 0110-4.5M14 8a6 6 0 01-10 4.5"/><polyline points="12 1.5 12 4 9.5 4"/><polyline points="4 14.5 4 12 6.5 12"/></svg>Reconnect</button>
+    <button class="sb-item" data-roles="rep manager" onclick="go('reconnect')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 8a6 6 0 0110.5-4M14 8a6 6 0 01-10.5 4"/><path d="M12.5 1.5V4h-2.5M3.5 14.5V12h2.5"/></svg>Reconnect</button>
     <button class="sb-item" data-roles="rep manager" onclick="go('found-money')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><circle cx="8" cy="8" r="6"/><path d="M8 5v6M6.5 6.5h3M6.5 9.5h3"/></svg>Found Money</button>
     <button class="sb-item" data-roles="rep manager" onclick="go('today')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 7h12M11 1.5v2M5 1.5v2"/><path d="M6.5 10.5l1.25 1.25L10 9"/></svg>Today</button>
+    <button class="sb-item" data-roles="rep manager" onclick="go('recap')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M4 1.5h6l3 3V14a.5.5 0 01-.5.5h-9A.5.5 0 013 14V2a.5.5 0 01.5-.5z"/><path d="M9.5 1.5V5h3.5M5.5 8h5M5.5 10.5h5"/></svg>Daily Recap</button>
     <button class="sb-item" data-roles="rep manager" onclick="go('contacts')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>Accounts</button>
 
+    <button class="sb-item" data-roles="rep manager" onclick="go('deals')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 4h12M2 8h9M2 12h6"/></svg>Deal Pipeline</button>
     <button class="sb-item" data-roles="rep manager" onclick="go('quotes')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><path d="M3 2h10a1 1 0 011 1v11a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zM5 7h6M5 9.5h4"/></svg>Quotes</button>
+    <button class="sb-item" data-roles="rep manager" onclick="go('opportunities')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M8 1l2 4.5 4.9.4-3.7 3.2 1.1 4.8L8 11.5 3.7 13.9l1.1-4.8L1.1 5.9 6 5.5z"/></svg>Opportunities</button>
+    <button class="sb-item" data-roles="rep manager" onclick="go('manufacturers')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 14V6l4-2v3l4-2v3l4-2v8z"/><path d="M2 14h12"/></svg>Manufacturers</button>
+    <button class="sb-item" data-roles="rep manager" onclick="go('fortress')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 14V5l3-2 3 2 3-2 3 2v9z"/><path d="M5 14V8M11 14V8M2 11h12"/></svg>Fortress Promo</button>
   </div>
   <div class="sb-section" data-roles="rep manager">
     <div class="sb-sec-label">Activities</div>
+    <button class="sb-item" data-roles="manager" onclick="go('calendar')" style="padding-left:18px"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M5 2v2M11 2v2M2 7h12"/></svg>Team Calendar</button>
+    <button class="sb-item" data-roles="manager" onclick="go('email')" style="padding-left:18px"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><rect x="1" y="3" width="14" height="10" rx="1"/><path d="M1 4l7 5 7-5"/></svg>Email</button>
     <button class="sb-item" data-roles="rep manager" onclick="go('weekly-planner')" style="padding-left:18px"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 6h12M6 3v11"/></svg>Weekly Planner</button>
     <button class="sb-item" data-roles="manager" onclick="go('weekly-report')" style="padding-left:18px"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 14V2M2 14h12M5 11V7M8 11V4M11 11V9"/></svg>Weekly Report</button>
+    <button class="sb-item" data-roles="manager" onclick="go('command')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><path d="M9 2L7 14M3 6l-2 2 2 2M13 6l2 2-2 2"/></svg>AI Command</button>
+    <button class="sb-item" data-roles="manager" onclick="go('bulk')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 2h5v5H2z"/><path d="M9 2h5v5H9z"/><path d="M2 9h5v5H2z"/><path d="M9 9h5v5H9z"/></svg>Bulk Import</button>
+    <button class="sb-item" data-roles="manager" onclick="window.location.href='/zoho-import'"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M3 12h10"/></svg>Zoho Import</button>
+  </div>
+  <div class="sb-section manager-only" data-roles="manager" style="display:none">
+    <div class="sb-sec-label">Team</div>
+    <button class="sb-item" data-roles="manager" onclick="go('manager')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><circle cx="5" cy="5" r="2.5"/><circle cx="11" cy="5" r="2.5"/><path d="M1 13c0-2.2 1.8-4 4-4s4 1.8 4 4"/><path d="M11 9c1.7.3 3 1.9 3 4"/></svg>Team Dashboard</button>
+    <button class="sb-item" data-roles="manager" onclick="go('commissions')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M8 1v14M11 4H6.5a2 2 0 000 4h3a2 2 0 010 4H5"/></svg>Commissions</button>
+  </div>
+  <div class="sb-section jm-only">
+    <div class="sb-sec-label">Personal</div>
+    <button class="sb-item" onclick="go('time')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><circle cx="8" cy="8" r="6"/><path d="M8 5v3.5l2 1.5"/></svg>Time Tracker</button>
   </div>
   <div class="sb-bottom">
     <div style="padding:8px 10px;background:rgba(255,255,255,.05);border-radius:5px;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between">
       <div>
         <div style="font-size:9px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;font-weight:600">Territory</div>
-        <div style="font-size:12px;font-weight:500;color:#fff" id="sb-territory-label">My Territory</div>
+        <div style="font-size:12px;font-weight:500;color:#fff" id="sb-territory-label">Atlanta Metro</div>
       </div>
       <button onclick="openTerritoryModal()" style="font-size:10px;padding:3px 8px;background:transparent;border:1px solid var(--border);border-radius:4px;color:rgba(255,255,255,.5);cursor:pointer;font-family:inherit">Change</button>
     </div>
     <div class="sb-user"><div class="sb-av" id="s-av">JM</div><div><div class="sb-uname" id="s-name">Loading...</div><div class="sb-urole" id="s-role">Rep</div></div></div>
-    
+    <button onclick="wipeMyData()" style="width:calc(100% - 16px);margin:0 8px 6px;padding:7px;background:transparent;border:1px solid #ef444455;border-radius:5px;color:#ef4444;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Clear My Demo Data</button>
     <button class="sb-out" onclick="signOut()">Sign Out</button>
   </div>
 </aside>
@@ -1750,7 +1657,7 @@ window.addEventListener('load', function() {
     </div>
     <button class="btn btn-secondary btn-sm" onclick="openModal('add-prospect')">+ New Account</button>
     <button class="btn btn-primary btn-sm" onclick="go('leads')">AI Find Leads</button>
-    <span style="font-size:11px;color:var(--text3);background:var(--bg);border:1px solid var(--border);padding:4px 10px;border-radius:12px">📍 My Territory</span>
+    <span style="font-size:11px;color:var(--text3);background:var(--bg);border:1px solid var(--border);padding:4px 10px;border-radius:12px">📍 Atlanta Metro</span>
   </div>
 
   <div class="mod-tabs" id="mod-tabs" style="display:none">
@@ -1819,11 +1726,10 @@ window.addEventListener('load', function() {
       </div>
 
       <!-- Find Today's Leads -->
-      <!-- Find New Leads -->
       <div id="daily-lead-finder" style="margin-bottom:24px">
-        <div class="rc-card">
+        <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px 20px;box-shadow:0 1px 3px rgba(15,25,35,.05)">
           <div style="font-size:15px;font-weight:750;color:var(--navy)">Find new leads</div>
-          <div style="font-size:12.5px;color:var(--text3);margin:3px 0 15px">Enter a city and pick what you're after. We'll pull real businesses with contact info you can call today.</div>
+          <div style="font-size:12.5px;color:var(--text3);margin:3px 0 15px">Pick what you're after and enter a city. We'll pull real businesses with contact info you can call today.</div>
 
           <div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">What are you looking for?</div>
           <div id="segment-pill-row" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
@@ -1832,10 +1738,15 @@ window.addEventListener('load', function() {
             <label class="seg-chip"><input type="checkbox" name="seg" value="Lumber / Building Supply"> Lumber &amp; Building Supply</label>
           </div>
 
+          <div id="lead-brand-wrap" style="display:none;margin-bottom:16px">
+            <div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Your lines <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">&#183; optional, sharpens the match</span></div>
+            <div id="lead-brand-row" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+          </div>
+
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <input id="lead-city-input" type="text" name="lead_city_search" inputmode="text" placeholder="Enter a city (e.g. Birmingham AL)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" style="flex:1;min-width:220px;padding:11px 13px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit">
-            <button onclick="runDailyLeads()" id="lead-find-btn" class="btn btn-primary" style="padding:11px 26px;font-size:14px">Find leads</button>
-            <button onclick="refreshLeads()" id="lead-refresh-btn" class="btn btn-secondary" style="display:none;padding:11px 16px;font-size:13px" title="Get 10 new leads">&#8635; 10 more</button>
+            <button onclick="runDailyLeads()" id="lead-find-btn" style="padding:11px 26px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit">Find leads</button>
+            <button onclick="refreshLeads()" id="lead-refresh-btn" style="display:none;padding:11px 16px;background:var(--surface);color:var(--navy);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit" title="Get 10 new leads">&#8635; 10 more</button>
           </div>
         </div>
       </div>
@@ -1951,37 +1862,20 @@ window.addEventListener('load', function() {
     </div>
     <div class="list-bar" style="flex-wrap:wrap;gap:6px">
       <span class="list-count" id="list-count">0 records</span>
-      <div class="sb-in"><span style="font-size:12px;color:var(--text3)">&#128269;</span><input id="p-search" placeholder="Search accounts..." type="search" name="acct_search_p" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true" oninput="handleContactSearch()" onkeydown="if(event.key==='Enter'){event.preventDefault();handleContactSearch();}" /></div>
-      <button class="btn btn-secondary btn-sm" id="acct-filter-toggle" onclick="toggleAcctFilters()">Filters</button>
-      <div style="display:flex;gap:6px;margin-left:auto">
-        <button class="btn btn-secondary btn-sm" id="btn-add-contact" onclick="openModal('add-prospect')">+ New</button>
-        <button class="btn btn-primary btn-sm" onclick="go('leads')">Find Leads</button>
-        <button class="btn btn-secondary btn-sm" onclick="toggleAcctMore()" title="More actions" style="padding:8px 11px">&#8943;</button>
-        <button id="view-route-btn" onclick="go('leads')" style="display:none;padding:6px 12px;background:#059669;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">View Route (<span id="view-route-count">0</span>)</button>
-      </div>
-    </div>
-
-    <!-- Secondary actions, out of the way until asked for. -->
-    <div id="acct-more" style="display:none;padding:0 16px 10px;gap:6px;flex-wrap:wrap">
-      <button class="btn btn-secondary btn-sm" id="btn-enrich-phones" onclick="findMissingPhones()" title="Auto-fill missing phone numbers and addresses">Find phone numbers</button>
-      <button class="btn btn-secondary btn-sm" onclick="go('bulk')">Bulk import</button>
-    </div>
-
-    <!-- Filters, collapsed by default so the list is what you see first. -->
-    <div id="acct-filters" style="display:none;padding:0 16px 12px;gap:8px;flex-wrap:wrap;align-items:center">
-      <select id="filter-company-type" onchange="handleContactSearch()" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;font-family:inherit;background:#fff;color:var(--navy)">
-        <option value="All">All types</option>
+      <div class="sb-in"><span style="font-size:12px;color:var(--text3)">&#128269;</span><input id="p-search" placeholder="Search accounts..." oninput="handleContactSearch()" onkeydown="if(event.key==='Enter'){event.preventDefault();handleContactSearch();}" /></div>
+      <select id="filter-company-type" onchange="handleContactSearch()" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;background:#fff;color:var(--navy)">
+        <option value="All">All Types</option>
         <option value="Distributor">Distributor</option>
         <option value="Contractor">Contractor</option>
       </select>
-      <select id="filter-data-status" onchange="handleContactSearch()" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;font-family:inherit;background:#fff;color:var(--navy)">
-        <option value="All">All data status</option>
+      <select id="filter-data-status" onchange="handleContactSearch()" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;background:#fff;color:var(--navy)">
+        <option value="All">All Data Status</option>
         <option value="Unvetted">Unvetted</option>
         <option value="Contacted">Contacted</option>
         <option value="Verified CRM Data">Verified</option>
       </select>
-      <select id="sort-contacts" onchange="handleContactSearch()" style="padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;font-family:inherit;background:#fff;color:var(--navy)">
-        <option value="default">Sort: default</option>
+      <select id="sort-contacts" onchange="handleContactSearch()" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;background:#fff;color:var(--navy)">
+        <option value="default">Sort: Default</option>
         <option value="city_asc">City A→Z</option>
         <option value="city_desc">City Z→A</option>
         <option value="company_asc">Company A→Z</option>
@@ -1990,10 +1884,17 @@ window.addEventListener('load', function() {
         <option value="category_desc">Category Z→A</option>
         <option value="contact_asc">Contact A→Z</option>
         <option value="status_asc">Status A→Z</option>
-        <option value="data_status_asc">Data status</option>
-        <option value="newest">Newest first</option>
-        <option value="oldest">Oldest first</option>
+        <option value="data_status_asc">Data Status</option>
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
       </select>
+      <div style="display:flex;gap:6px;margin-left:auto">
+        <button class="btn btn-secondary btn-sm" id="btn-add-contact" onclick="openModal('add-prospect')">+ New</button>
+        <button class="btn btn-secondary btn-sm" id="btn-enrich-phones" onclick="findMissingPhones()" title="Auto-fill missing phone numbers &amp; addresses via Google Places">📞 Find phone #s</button>
+        <button class="btn btn-primary btn-sm" onclick="go('leads')">Find Leads</button>
+        <button class="btn btn-sm" onclick="go('bulk')" style="background:var(--navy);color:#00FF87;border:none;font-weight:700;padding:6px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">Bulk Import</button>
+        <button id="view-route-btn" onclick="go('leads')" style="display:none;padding:6px 12px;background:#059669;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">View Route (<span id="view-route-count">0</span>)</button>
+      </div>
     </div>
 
     <div class="contacts-split">
@@ -2094,11 +1995,11 @@ window.addEventListener('load', function() {
     <div class="rec-layout">
       <div class="rec-left">
         <div class="rl-title">Related List</div>
-        <div class="rl-item active" onclick="setRecTab('overview',this)">Notes</div>
+        <div class="rl-item active" onclick="setRecTab('notes',this)">Notes</div>
         <div class="rl-item" onclick="setRecTab('overview',this)">Connected Records</div>
         <div class="rl-item" onclick="setRecTab('overview',this)">Attachments</div>
         <div class="rl-item" onclick="setRecTab('deals',this)">Deals</div>
-        <div class="rl-item" onclick="setRecTab('overview',this)">Contacts <span class="rl-cnt" id="rec-contacts-count">0</span></div>
+        <div class="rl-item" onclick="setRecTab('contacts',this)">Contacts <span class="rl-cnt" id="rec-contacts-count">0</span></div>
         <div class="rl-item" onclick="setRecTab('quotes',this)">Quotes <span class="rl-cnt" id="rec-quote-count">0</span></div>
         <div class="rl-item" onclick="setRecTab('calls',this)">Open Activities <span class="rl-cnt" id="rec-call-count">0</span></div>
         <div class="rl-item" onclick="setRecTab('calls',this)">Closed Activities</div>
@@ -2118,7 +2019,6 @@ window.addEventListener('load', function() {
           <div class="rec-btns">
             <button class="btn btn-primary btn-sm" onclick="logCallForRecord()">Log Call</button>
             <button class="btn btn-secondary btn-sm" onclick="writeOutreachForRecord()">Outreach</button>
-            <button class="btn btn-secondary btn-sm" onclick="openAiOverlay()">AI</button>
             <button class="btn btn-secondary btn-sm" onclick="openEditContact(currentRecord)">✏️ Edit</button>
             <button class="btn btn-secondary btn-sm" onclick="recGoBack()">✕ Close</button>
           </div>
@@ -2131,8 +2031,8 @@ window.addEventListener('load', function() {
         </div>
         <!-- Mobile-only extra tab row — mirrors the left sidebar items hidden on small screens -->
         <div id="rec-mobile-extra-tabs" style="display:none">
-          <div class="rl-item" onclick="setRecTab('overview',this)">Notes</div>
-          <div class="rl-item" onclick="setRecTab('overview',this)">Contacts <span class="rl-cnt" id="rec-contacts-count-mob"><!-- synced by JS --></span></div>
+          <div class="rl-item" onclick="setRecTab('notes',this)">Notes</div>
+          <div class="rl-item" onclick="setRecTab('contacts',this)">Contacts <span class="rl-cnt" id="rec-contacts-count-mob"><!-- synced by JS --></span></div>
           <div class="rl-item" onclick="setRecTab('quotes',this)">Quotes <span class="rl-cnt" id="rec-quote-count-mob"><!-- synced by JS --></span></div>
           <div class="rl-item" onclick="setRecTab('deals',this)">Deals</div>
           <div class="rl-item" onclick="setRecTab('outreach',this)">Emails</div>
@@ -2145,52 +2045,17 @@ window.addEventListener('load', function() {
         </div>
         <div class="rec-body">
           <div id="rec-tab-overview">
-            <div class="rec-sec" style="order:4">
+            <div class="rec-sec">
               <div class="rec-sec-hdr"><span class="rec-sec-title">Contact Information</span><span style="font-size:11.5px;color:var(--blue);cursor:pointer">Edit</span></div>
               <div class="rec-sec-body" id="rec-fields"></div>
               <div id="rec-tags" style="padding:0 16px 14px"></div>
             </div>
-            <div class="rec-sec" style="order:1"><div class="rec-sec-hdr"><span class="rec-sec-title">People</span></div>
-              <div style="padding:16px">
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-    <div></div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <div style="font-size:11px;color:var(--text3)" id="rec-contacts-summary"></div>
-      <button id="rec-add-contact-btn" onclick="toggleAddContactForm()" style="padding:6px 12px;background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;min-height:36px;white-space:nowrap">+ Add Contact</button>
-    </div>
-  </div>
-  <div id="rec-add-contact-form" style="display:none;background:var(--surface,#f8fafc);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px">
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <input id="rec-ct-name" type="text" placeholder="Contact name *" autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:16px;font-family:inherit;outline:none">
-      <input id="rec-ct-title" type="text" placeholder="Title (e.g. Owner, GM)" autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:16px;font-family:inherit;outline:none">
-      <input id="rec-ct-phone" type="tel" placeholder="Phone" autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:16px;font-family:inherit;outline:none">
-      <input id="rec-ct-email" type="email" placeholder="Email" autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:16px;font-family:inherit;outline:none">
-      <select id="rec-ct-status" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:16px;font-family:inherit;background:#fff">
-        <option value="New">New</option>
-        <option value="Contacted">Contacted</option>
-        <option value="Active">Active</option>
-        <option value="Hot">Hot</option>
-        <option value="Warm">Warm</option>
-        <option value="Cold">Cold</option>
-      </select>
-      <div style="display:flex;gap:8px;margin-top:2px">
-        <button id="rec-ct-save" onclick="submitAccountContact()" style="flex:1;min-height:44px;background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Save Contact</button>
-        <button onclick="toggleAddContactForm(false)" style="min-height:44px;padding:0 16px;background:transparent;border:1px solid var(--border);border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--text2)">Cancel</button>
-      </div>
-    </div>
-  </div>
-  <div id="rec-contacts-list"><div style="font-size:12px;color:var(--text3);text-align:center;padding:20px">Loading...</div></div>
-</div>
-            </div>
-            <div class="rec-sec" style="order:2"><div class="rec-sec-hdr"><span class="rec-sec-title">Notes</span></div>
-              <div style="padding:16px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div></div><button onclick="saveNote()" style="padding:6px 14px;background:var(--blue);color:#fff;border:none;border-radius:40px;font-size:11px;font-weight:700;cursor:pointer">+ Add Note</button></div><textarea id="note-input" placeholder="Write a note..." style="width:100%;height:80px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12px;font-family:inherit;resize:vertical;margin-bottom:12px;box-sizing:border-box"></textarea><div id="notes-list"></div></div>
-            </div>
-            <div class="rec-sec" style="order:5">
+            <div class="rec-sec">
               <div class="rec-sec-hdr"><span class="rec-sec-title">Products & Territory</span><span style="font-size:11.5px;color:var(--blue);cursor:pointer">Edit</span></div>
               <div class="rec-sec-body" id="rec-prod-fields"></div>
             </div>
             <!-- Lines this account buys — built from confirmed commission data -->
-            <div class="rec-sec" id="rec-lines-section" style="order:3">
+            <div class="rec-sec" id="rec-lines-section">
               <div class="rec-sec-hdr"><span class="rec-sec-title">Lines</span><span id="rec-lines-summary" style="font-size:11px;color:var(--text3)"></span></div>
               <div class="rec-sec-body" id="rec-lines-body"></div>
             </div>
@@ -2223,29 +2088,52 @@ window.addEventListener('load', function() {
                 </div>
               </div>
             </div>
-            <div class="rec-sec" style="order:9">
+          </div>
+          <div id="rec-tab-calls" style="display:none">
+            <div class="rec-sec">
               <div class="rec-sec-hdr"><span class="rec-sec-title" id="rec-timeline-title">Activity Timeline</span><button class="btn btn-primary btn-sm" onclick="logCallForRecord()">+ Log Activity</button></div>
               <div class="rec-sec-body" id="rec-timeline"></div>
             </div>
           </div>
-          <div id="rec-tab-calls" style="display:none"></div>
           <div id="rec-tab-outreach" style="display:none"><div id="rec-outreach-body"></div></div>
-<div id="rec-tab-notes" style="display:none"></div>
+<div id="rec-tab-notes" style="display:none"><div style="padding:16px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:var(--navy)">Notes</div><button onclick="saveNote()" style="padding:6px 14px;background:var(--blue);color:#fff;border:none;border-radius:40px;font-size:11px;font-weight:700;cursor:pointer">+ Add Note</button></div><textarea id="note-input" placeholder="Write a note..." style="width:100%;height:80px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12px;font-family:inherit;resize:vertical;margin-bottom:12px;box-sizing:border-box"></textarea><div id="notes-list"></div></div></div>
 <div id="rec-tab-deals" style="display:none"><div style="padding:16px"><div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:12px">Deals</div><div id="rec-deals-list"><div style="font-size:12px;color:var(--text3);text-align:center;padding:20px">No deals linked yet</div></div></div></div>
 <div id="rec-tab-quotes" style="display:none"><div style="padding:16px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div style="font-size:12px;font-weight:700;color:var(--navy)">Quotes</div><div style="font-size:11px;color:var(--text3)" id="rec-quotes-summary"></div></div><div id="rec-quotes-list"><div style="font-size:12px;color:var(--text3);text-align:center;padding:20px">Loading quotes...</div></div></div></div>
-<div id="rec-tab-contacts" style="display:none"></div>
-          <div id="rec-tab-ai" style="display:none"></div>
-          <div id="ai-overlay" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.5);align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto" onclick="if(event.target===this)closeAiOverlay()">
-            <div style="background:#fff;border-radius:12px;max-width:640px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.25);overflow:hidden">
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)">
-                <span style="font-weight:700;color:var(--navy)">AI Intel</span>
-                <button onclick="closeAiOverlay()" style="background:none;border:none;font-size:20px;line-height:1;color:var(--text3);cursor:pointer">&times;</button>
-              </div>
-              <div class="ai-panel" style="padding:16px 18px">
-                <div class="ai-phdr"><span class="ai-badge">AI</span><span class="ai-ptitle">Contact Intelligence</span></div>
-                <button class="ai-send" onclick="runRecordAI()">Get AI Strategy for this Contact →</button>
-                <div class="ai-resp" id="rec-ai-resp"></div>
-              </div>
+<div id="rec-tab-contacts" style="display:none"><div style="padding:16px">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+    <div style="font-size:12px;font-weight:700;color:var(--navy)">Contacts at this Account</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="font-size:11px;color:var(--text3)" id="rec-contacts-summary"></div>
+      <button id="rec-add-contact-btn" onclick="toggleAddContactForm()" style="padding:6px 12px;background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;min-height:36px;white-space:nowrap">+ Add Contact</button>
+    </div>
+  </div>
+  <div id="rec-add-contact-form" style="display:none;background:var(--surface,#f8fafc);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <input id="rec-ct-name" type="text" placeholder="Contact name *" autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:16px;font-family:inherit;outline:none">
+      <input id="rec-ct-title" type="text" placeholder="Title (e.g. Owner, GM)" autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:16px;font-family:inherit;outline:none">
+      <input id="rec-ct-phone" type="tel" placeholder="Phone" autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:16px;font-family:inherit;outline:none">
+      <input id="rec-ct-email" type="email" placeholder="Email" autocomplete="off" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:16px;font-family:inherit;outline:none">
+      <select id="rec-ct-status" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:16px;font-family:inherit;background:#fff">
+        <option value="New">New</option>
+        <option value="Contacted">Contacted</option>
+        <option value="Active">Active</option>
+        <option value="Hot">Hot</option>
+        <option value="Warm">Warm</option>
+        <option value="Cold">Cold</option>
+      </select>
+      <div style="display:flex;gap:8px;margin-top:2px">
+        <button id="rec-ct-save" onclick="submitAccountContact()" style="flex:1;min-height:44px;background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Save Contact</button>
+        <button onclick="toggleAddContactForm(false)" style="min-height:44px;padding:0 16px;background:transparent;border:1px solid var(--border);border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--text2)">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <div id="rec-contacts-list"><div style="font-size:12px;color:var(--text3);text-align:center;padding:20px">Loading...</div></div>
+</div></div>
+          <div id="rec-tab-ai" style="display:none">
+            <div class="ai-panel">
+              <div class="ai-phdr"><span class="ai-badge">AI</span><span class="ai-ptitle">Contact Intelligence</span></div>
+              <button class="ai-send" onclick="runRecordAI()">Get AI Strategy for this Contact →</button>
+              <div class="ai-resp" id="rec-ai-resp"></div>
             </div>
           </div>
         </div>
@@ -2700,7 +2588,7 @@ window.addEventListener('load', function() {
       <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:14px">
         <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)">Generate 30-Day Onboarding Plan</div>
         <div class="g2">
-          <div class="fg"><label>Rep Name *</label><input type="text" id="ob-name" placeholder="e.g. Daniel Compton" /></div>
+          <div class="fg"><label>Rep Name *</label><input type="text" id="ob-name" placeholder="e.g. Jane Smith" /></div>
           <div class="fg"><label>Territory</label><input type="text" id="ob-territory" placeholder="Southeast" /></div>
         </div>
         <div class="fg"><label>Start Date</label><input type="date" id="ob-start" style="width:200px" /></div>
@@ -2831,10 +2719,10 @@ window.addEventListener('load', function() {
   </div>
 
   <div class="page" id="page-reconnect" style="overflow-y:auto;padding-bottom:90px">
-    <div class="rc-wrap">
-      <div class="pg-head">
-        <div class="pg-h1">Reconnect</div>
-        <div class="pg-sub">Accounts going quiet, ranked by the commission you stand to lose. Bigger money and longer silence rise to the top.</div>
+    <div style="max-width:760px;margin:0 auto;padding:14px 14px 40px">
+      <div style="margin-bottom:12px">
+        <div style="font-size:17px;font-weight:800;color:var(--navy);letter-spacing:-.3px">Reconnect</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">Accounts going quiet, ranked by money at risk. Bigger commission, longer silence — reach out first.</div>
       </div>
 
       <!-- Summary strip -->
@@ -2852,7 +2740,7 @@ window.addEventListener('load', function() {
         </select>
       </div>
 
-      <div id="rc-list" class="rc-grid"></div>
+      <div id="rc-list"></div>
     </div>
   </div>
 
@@ -3755,7 +3643,7 @@ window.addEventListener('load', function() {
 <div class="mo" id="modal-apple-cal">
   <div class="mb">
     <h2>Apple Calendar Sync</h2>
-    <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Subscribe to your personal iCal feed to see all Compton Sales events in Apple Calendar. It stays live — new events appear automatically.</p>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Subscribe to your personal iCal feed to see all your firm events in Apple Calendar. It stays live — new events appear automatically.</p>
     <div class="fg">
       <label>Your iCal Feed URL</label>
       <div style="display:flex;gap:8px">
@@ -3837,7 +3725,7 @@ window.addEventListener('load', function() {
   <div class="mb">
     <h2>Add Team Member</h2>
     <div class="g2"><div class="fg"><label>Full Name *</label><input type="text" id="ar-name" /></div><div class="fg"><label>Email *</label><input type="email" id="ar-email" /></div></div>
-    <div class="g2"><div class="fg"><label>Territory</label><input type="text" id="ar-territory" placeholder="e.g. North Texas" /></div><div class="fg"><label>Temp Password</label><input type="password" id="ar-pw" placeholder="Set a password" /></div></div>
+    <div class="g2"><div class="fg"><label>Territory</label><input type="text" id="ar-territory" placeholder="Atlanta Metro" /></div><div class="fg"><label>Temp Password</label><input type="password" id="ar-pw" placeholder="Set a password" /></div></div>
     <div class="mfoot"><button class="btn btn-secondary" onclick="closeModal('add-rep')">Cancel</button><button class="btn btn-primary" onclick="addRep()">Add Rep</button></div>
   </div>
 </div>
@@ -4130,6 +4018,7 @@ var selectedLeads = new Set();
 var currentContactType = 'installers';
 
 var pageTitles = {
+  'found-money': 'Found Money',
     reports: 'Reports', analytics: 'Analytics', accounts: 'Accounts',
     forecasts: 'Forecasts', campaigns: 'Campaigns', tasks: 'Tasks',
   dashboard: 'Home', contacts: 'Accounts', record: 'Account Detail', contact: 'Contact',
@@ -4138,7 +4027,6 @@ var pageTitles = {
   onboarding: 'Onboarding', manager: 'Team Dashboard', deals: 'Deal Pipeline', quotes: 'Quotes',
   opportunities: 'Cross-sell Opportunities',
   today: 'Today',
-  'found-money': 'Found Money',
   calendar: 'Team Calendar',
   email: 'Email',
   samples: 'Sample Tracker',
@@ -4217,9 +4105,8 @@ window.addEventListener('load', function() {
         // "search bounces me to Today" bug on slower loads).
         var _role = applyRoleNav(u.role);
         if (!window._userNavigated) {
-          // Landing page is Reconnect: the accounts going quiet, ranked by dollars
-          // at risk. A rep logs in and immediately sees who needs attention.
-          go('reconnect');
+          // Home for everyone is the adaptive Today cockpit.
+          go('today');
           setActiveNav('bn-home');
         }
       } else {
@@ -4253,8 +4140,7 @@ function goLogCall(prospectId) {
 function go(id) {
   // Home is now the adaptive Today cockpit. Old money-dashboard is retired as a
   // landing surface; both "Home" entry points resolve to the Today cockpit.
-  if (id === 'home') id = 'reconnect';
-  if (id === 'leads') id = 'dashboard';
+  if (id === 'dashboard' || id === 'home') id = 'today';
   if (window._teamViewActive && id !== 'record') {
     var _lb = document.querySelector('[onclick="logCallForRecord()"]');
     var _ob = document.querySelector('[onclick="writeOutreachForRecord()"]');
@@ -4306,7 +4192,6 @@ function go(id) {
   if (id === 'email') loadEmailPage();
   if (id === 'opportunities') loadOpportunities();
   if (id === 'today') loadToday();
-  if (id === 'found-money') loadFoundMoney();
   if (id === 'samples') loadSamples();
   if (id === 'time') loadTimeTracker();
   if (id === 'weekly-report') loadWeeklyReport();
@@ -4314,13 +4199,15 @@ function go(id) {
   if (id === 'commissions') loadCommissions();
   if (id === 'manufacturers') loadManufacturers();
   if (id === 'reconnect') loadReconnect();
+  if (id === 'found-money') loadFoundMoney();
   if (id === 'fortress') loadFortress();
   if (id === 'recap') loadRecap();
   // Refresh route panel whenever user navigates to home/dashboard
-  if (id === 'dashboard' || id === 'home') {
+  if (id === 'dashboard' || id === 'home' || id === 'leads') {
     if (typeof window._renderRoutePanel === 'function') {
       setTimeout(function() { window._renderRoutePanel(); }, 50);
     }
+    if (typeof loadLeadBrands === 'function') loadLeadBrands();
   }
 }
 
@@ -4844,21 +4731,6 @@ function loadProspects() {
 
 // handleContactSearch — triggered by search input OR filter dropdowns.
 // Just re-render; no refetch needed since filtering is client-side.
-// Accounts toolbar: filters and secondary actions stay out of the way until
-// asked for, so the list is the first thing on the page rather than the last.
-function toggleAcctFilters(){
-  var el = document.getElementById('acct-filters');
-  var btn = document.getElementById('acct-filter-toggle');
-  if(!el) return;
-  var open = el.style.display !== 'none';
-  el.style.display = open ? 'none' : 'flex';
-  if(btn) btn.classList.toggle('btn-primary', !open);
-}
-function toggleAcctMore(){
-  var el = document.getElementById('acct-more');
-  if(!el) return;
-  el.style.display = el.style.display === 'none' ? 'flex' : 'none';
-}
 function handleContactSearch() {
   window._userNavigated = true;
   renderProspects();
@@ -5111,29 +4983,29 @@ function viewRecord(id) {
       // People (contact name/title/email/mobile) now live in the Contacts tab,
       // sourced from the contacts table — they are NOT repeated in this business
       // grid so the same person isn't shown twice. Business facts stay here.
-      // One line per fact a rep needs standing in a parking lot. City/state/zip
-      // collapse into a single address line rather than four separate rows.
-      var addr = [p.address, [p.city, p.state].filter(Boolean).join(', '), p.zip]
-                   .filter(Boolean).join('  ');
       var fields = [
-        ['Account Name', p.company],
-        ['Type', ctRecBadge],
-        ['Phone', p.phone ? '<a href="tel:' + String(p.phone).replace(/[^0-9+]/g,'') + '">' + p.phone + '</a>' : '—'],
-        ['Address', addr || '—'],
+        ['Contact Owner','You'],['Company Type',ctRecBadge],
+        ['Account Name',p.company],
+        ['Business Phone',p.phone||'—'],
+        ['City',p.city||'—'],['State',p.state||'GA'],
+        ['Address',p.address||'—'],['Zip',p.zip||'—'],
+        ['Website',p.website ? '<a href="' + p.website + '" target="_blank">Website</a>' : '—'],
         ['Status','<span class="badge b-' + (p.status||'new').toLowerCase() + '">' + (p.status||'New') + '</span>'],
-        ['Website', p.website ? '<a href="' + p.website + '" target="_blank" rel="noopener">Website</a>' : '—']
+        ['Data Status', dsBadgeRec + verifyBtn],['Manufacturer',p.manufacturer_assoc||'—'],
+        ['Created',p.created_at ? new Date(p.created_at).toLocaleDateString() : '—'],
+        ['Notes',p.notes||'—']
       ];
       document.getElementById('rec-fields').innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0">' +
         fields.map(function(f) { return '<div class="frow"><div class="flabel">' + f[0] + '</div><div class="fval' + (f[1]==='—'?' empty':'') + '">' + f[1] + '</div></div>'; }).join('') + '</div>';
       var pf = [
-        ['Products',p.products||'—'],['Territory',p.territory||'—'],
+        ['Products',p.products||'—'],['Territory','Atlanta Metro, GA'],
         ['Priority',p.priority||'Medium'],['Source',p.source||'Manual']
       ];
       document.getElementById('rec-prod-fields').innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0">' +
         pf.map(function(f) { return '<div class="frow"><div class="flabel">' + f[0] + '</div><div class="fval' + (f[1]==='—'?' empty':'') + '">' + f[1] + '</div></div>'; }).join('') + '</div>';
       // Lines this account buys (from confirmed commission data)
       loadAccountLines(p.id);
-      loadAccountTags(p.id);
+      if (typeof loadAccountTags === 'function') loadAccountTags(p.id);
       // Cross-sell opportunities for this account
       loadCrossSell(p.id);
       // Business card image section
@@ -5225,7 +5097,6 @@ function viewRecord(id) {
       window._recAccountId = p.id;
       toggleAddContactForm(false);          // ensure the add form starts collapsed
       loadAccountContacts(p.id);
-      loadNotes();                          // Notes now live on the Overview, so load them on open
 
       // Respect pending tab (e.g. returning from a drill-in)
       var pendingTab = window._pendingRecTab || 'overview';
@@ -5319,87 +5190,7 @@ function submitAccountContact() {
     });
 }
 
-// Manufacturer lines this account carries. Editable: rows come from account_lines
-// (some enriched with commission totals from imports), and a rep can add or remove
-// which lines the account buys. A line belongs to the account, not to a contact.
-function _alEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-
-// ── Account tags ─────────────────────────────────────────────────────────────
-// Firm-defined labels. Typing a new name creates it, so the vocabulary grows
-// out of use rather than a setup screen nobody fills in.
-var TAG_COLORS = {
-  slate:  ['#eef1f5','#334155'],
-  blue:   ['#e0edff','#1d4ed8'],
-  green:  ['#dcfce7','#15803d'],
-  amber:  ['#fef3c7','#a16207'],
-  red:    ['#fee2e2','#b91c1c'],
-  purple: ['#ede9fe','#6d28d9']
-};
-function _tagEsc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-function loadAccountTags(accountId){
-  var el = document.getElementById('rec-tags');
-  if(!el) return;
-  window._tagAccountId = accountId;
-  fetch('/api/tags/account/' + accountId)
-    .then(function(r){ return r.ok ? r.json() : []; })
-    .then(function(tags){ renderAccountTags(Array.isArray(tags) ? tags : [], accountId); })
-    .catch(function(){ renderAccountTags([], accountId); });
-}
-
-function renderAccountTags(tags, accountId){
-  var el = document.getElementById('rec-tags');
-  if(!el) return;
-  var chips = tags.map(function(t){
-    var c = TAG_COLORS[t.color] || TAG_COLORS.slate;
-    return '<span style="display:inline-flex;align-items:center;gap:5px;background:' + c[0] + ';color:' + c[1] +
-      ';font-size:11.5px;font-weight:650;padding:4px 9px;border-radius:99px">' + _tagEsc(t.name) +
-      '<button onclick="removeAccountTag(' + accountId + ',' + t.id + ')" title="Remove tag" ' +
-      'style="background:none;border:none;color:inherit;opacity:.55;cursor:pointer;font-size:13px;line-height:1;padding:0">&times;</button></span>';
-  }).join('');
-  el.innerHTML =
-    '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">' + chips +
-      '<input id="tag-add-input" list="tag-catalog" placeholder="+ Add tag" ' +
-        'onkeydown="if(event.key===\'Enter\'){event.preventDefault();addAccountTag(' + accountId + ');}" ' +
-        'style="width:118px;padding:4px 9px;border:1px dashed var(--border2);border-radius:99px;font-family:inherit;font-size:11.5px;background:transparent" />' +
-      '<datalist id="tag-catalog"></datalist>' +
-    '</div>';
-  loadTagCatalog();
-}
-
-// Suggest labels the firm already uses so the vocabulary stays consistent
-// instead of drifting into "Key Account", "key acct", "KeyAccount".
-function loadTagCatalog(){
-  var dl = document.getElementById('tag-catalog');
-  if(!dl) return;
-  fetch('/api/tags').then(function(r){ return r.ok ? r.json() : []; }).then(function(list){
-    if(!Array.isArray(list)) return;
-    dl.innerHTML = list.map(function(t){ return '<option value="' + _tagEsc(t.name) + '"></option>'; }).join('');
-  }).catch(function(){});
-}
-
-function addAccountTag(accountId){
-  var input = document.getElementById('tag-add-input');
-  if(!input) return;
-  var name = (input.value || '').trim();
-  if(!name){ input.focus(); return; }
-  input.disabled = true;
-  fetch('/api/tags/account/' + accountId, {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ name: name, color: 'slate' })
-  }).then(function(r){ return r.json(); }).then(function(res){
-    if(res && res.error){ alert(res.error); input.disabled = false; return; }
-    loadAccountTags(accountId);
-  }).catch(function(){ input.disabled = false; });
-}
-
-function removeAccountTag(accountId, tagId){
-  fetch('/api/tags/account/' + accountId + '/tag/' + tagId, { method:'DELETE' })
-    .then(function(){ loadAccountTags(accountId); })
-    .catch(function(){});
-}
-
+// Lines this account buys — built from confirmed commission data (account_lines).
 function loadAccountLines(accountId) {
   var section = document.getElementById('rec-lines-section');
   var body = document.getElementById('rec-lines-body');
@@ -5410,70 +5201,28 @@ function loadAccountLines(accountId) {
   fetch('/api/lines/account/' + accountId)
     .then(function(r){ return r.ok ? r.json() : []; })
     .then(function(lines){
-      lines = Array.isArray(lines) ? lines : [];
+      if (!Array.isArray(lines) || !lines.length) {
+        body.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:14px 16px">No commission lines linked to this account yet.</div>';
+        return;
+      }
       var money = function(n){ return '$' + (Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); };
       var totSales = lines.reduce(function(s,l){ return s + (Number(l.total_sales)||0); }, 0);
-      if (summary) summary.textContent = lines.length ? (lines.length + ' line' + (lines.length!==1?'s':'') + (totSales? ' · ' + money(totSales) : '')) : '';
-      var rows = lines.length ? lines.map(function(l){
-        var hasSales = (Number(l.total_sales) > 0) || (Number(l.total_commission) > 0);
-        var sub = hasSales
-          ? ((l.line_count||0) + ' line' + ((l.line_count||0)!==1?'s':'') + ' · ' + money(l.total_commission) + ' commission')
-          : 'Carried';
-        return '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)">' +
-            '<div style="min-width:0"><div style="font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + _alEsc(l.name||'—') + '</div>' +
-            '<div style="font-size:11px;color:var(--text3)">' + sub + '</div></div>' +
-            '<div style="display:flex;align-items:center;gap:10px;white-space:nowrap">' +
-              (hasSales ? '<span style="font-weight:700;color:var(--navy)">' + money(l.total_sales) + '</span>' : '') +
-              '<button title="Remove line" onclick="removeAccountLine(' + accountId + ',' + l.line_id + ')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:17px;line-height:1;padding:2px 5px">&times;</button>' +
-            '</div>' +
+      var totComm  = lines.reduce(function(s,l){ return s + (Number(l.total_commission)||0); }, 0);
+      if (summary) summary.textContent = lines.length + ' line' + (lines.length!==1?'s':'') + ' · ' + money(totSales);
+      body.innerHTML = '<div style="padding:6px 16px 14px">' + lines.map(function(l){
+        return '<div class="frow" style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)">' +
+            '<div style="min-width:0"><div style="font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (l.name||'—') + '</div>' +
+            '<div style="font-size:11px;color:var(--text3)">' + (l.line_count||0) + ' line' + ((l.line_count||0)!==1?'s':'') + ' · ' + money(l.total_commission) + ' commission</div></div>' +
+            '<div style="font-weight:700;color:var(--navy);white-space:nowrap">' + money(l.total_sales) + '</div>' +
           '</div>';
-      }).join('') : '<div style="font-size:12px;color:var(--text3);padding:4px 0 10px">No lines yet. Add the manufacturers this account carries.</div>';
-
-      body.innerHTML = '<div style="padding:6px 16px 14px">' + rows +
-        '<div style="display:flex;gap:8px;margin-top:12px">' +
-          '<input id="al-add-input" list="al-catalog" placeholder="Add a manufacturer (e.g. Quality)" ' +
-             'onkeydown="if(event.key===\'Enter\'){event.preventDefault();addAccountLine(' + accountId + ');}" ' +
-             'style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px" />' +
-          '<datalist id="al-catalog"></datalist>' +
-          '<button class="btn btn-sm" onclick="addAccountLine(' + accountId + ')" style="font-size:12px;padding:8px 14px">Add</button>' +
-        '</div>' +
+      }).join('') +
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 0;font-size:12px;font-weight:700;color:var(--navy)">' +
+          '<span>Total · ' + money(totComm) + ' commission</span><span>' + money(totSales) + '</span></div>' +
       '</div>';
-      loadLineCatalog();
     })
     .catch(function(){
       body.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:14px 16px">Lines unavailable.</div>';
     });
-}
-
-// Populate the manufacturer autocomplete from the firm's line catalog.
-function loadLineCatalog() {
-  var dl = document.getElementById('al-catalog');
-  if (!dl) return;
-  fetch('/api/lines/catalog').then(function(r){ return r.ok ? r.json() : []; }).then(function(cat){
-    if (!Array.isArray(cat)) return;
-    dl.innerHTML = cat.map(function(c){ return '<option value="' + _alEsc(c.name||'') + '"></option>'; }).join('');
-  }).catch(function(){});
-}
-
-function addAccountLine(accountId) {
-  var input = document.getElementById('al-add-input');
-  if (!input) return;
-  var name = (input.value||'').trim();
-  if (!name) { input.focus(); return; }
-  input.disabled = true;
-  fetch('/api/lines/account/' + accountId, {
-    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name: name })
-  }).then(function(r){ return r.json(); }).then(function(res){
-    if (res && res.error) { alert(res.error); input.disabled = false; return; }
-    loadAccountLines(accountId);
-  }).catch(function(){ input.disabled = false; });
-}
-
-function removeAccountLine(accountId, lineId) {
-  fetch('/api/lines/account/' + accountId + '/line/' + lineId, { method:'DELETE' })
-    .then(function(r){ return r.json(); })
-    .then(function(){ loadAccountLines(accountId); })
-    .catch(function(){});
 }
 
 // Cross-sell opportunities for one account — peer co-occurrence over confirmed
@@ -5640,20 +5389,11 @@ function loadToday() {
   if (!content) return;
   content.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:30px;text-align:center">Loading today…</div>';
   function okJson(r){ return r && r.ok ? r.json() : null; }
-  // Each panel is optional. A slow or unavailable endpoint (the AI morning brief
-  // is the usual offender) must never hold the whole page on a spinner, so every
-  // request races a timeout and resolves to null instead of hanging.
-  function soft(url, ms){
-    return Promise.race([
-      fetch(url).then(okJson).catch(function(){ return null; }),
-      new Promise(function(resolve){ setTimeout(function(){ resolve(null); }, ms || 6000); })
-    ]);
-  }
   Promise.all([
-    soft('/api/planner/today'),
-    soft('/api/morning', 4000),
-    soft('/api/reconnect?filter=all'),
-    soft('/api/planner/panel')
+    fetch('/api/planner/today').then(okJson).catch(function(){ return null; }),
+    fetch('/api/morning').then(okJson).catch(function(){ return null; }),
+    fetch('/api/reconnect?filter=all').then(okJson).catch(function(){ return null; }),
+    fetch('/api/planner/panel').then(okJson).catch(function(){ return null; })
   ]).then(function(res){
     var d = res[0] || { date: new Date().toISOString().slice(0,10), goal: 10, progress:{done:0,total:0}, stops:[], carried_over:[], nearby:[] };
     window._todayData = d;
@@ -5661,11 +5401,6 @@ function loadToday() {
     var recon = (res[2] && res[2].accounts) || [];
     var commissionCount = (res[3] && res[3].revenue && res[3].revenue.length) || 0;
     renderTodayCockpit(d, { calls: calls, recon: recon, commissionCount: commissionCount });
-  }).catch(function(err){
-    console.error('[today]', err);
-    content.innerHTML = '<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:30px 20px;margin:16px 0">'
-      + '<div style="font-size:14px;font-weight:700;color:var(--navy)">Today could not load</div>'
-      + '<div style="font-size:12.5px;color:var(--text3);margin-top:5px">Refresh to try again. Your accounts and Reconnect are unaffected.</div></div>';
   });
 }
 
@@ -6007,8 +5742,6 @@ function todayAddNearby(accountId, btn) {
     .catch(function(){ showToast('Could not add lead'); loadToday(); });
 }
 
-function openAiOverlay(){ var o=document.getElementById('ai-overlay'); if(o) o.style.display='flex'; }
-function closeAiOverlay(){ var o=document.getElementById('ai-overlay'); if(o) o.style.display='none'; }
 function setRecTab(tab, el) {
   ['overview','calls','outreach','ai','notes','deals','quotes','contacts'].forEach(function(t) {
     var e = document.getElementById('rec-tab-' + t);
@@ -6514,7 +6247,7 @@ function runRecordAI() {
   var resp = document.getElementById('rec-ai-resp');
   resp.className = 'ai-resp vis';
   resp.innerHTML = '<div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
-  var prompt = "I'm a manufacturer's rep. Give me a specific sales strategy for " + currentRecord.company + ", a " + currentRecord.category + " in " + (currentRecord.city||'the area') + ". Products: " + (currentRecord.products||'TBD') + ". Status: " + currentRecord.status + ". Priority: " + currentRecord.priority + ". Notes: " + (currentRecord.notes||'none') + ". Give 3 talking points, 2 objection handlers, and a suggested next action.";
+  var prompt = "I'm a manufacturer's rep at Field Sales CRM in Atlanta. Give me a specific sales strategy for " + currentRecord.company + ", a " + currentRecord.category + " in " + (currentRecord.city||'Atlanta') + ". Products: " + (currentRecord.products||'TBD') + ". Status: " + currentRecord.status + ". Priority: " + currentRecord.priority + ". Notes: " + (currentRecord.notes||'none') + ". Give 3 talking points, 2 objection handlers, and a suggested next action.";
   fetch('/api/ai/command', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({prompt:prompt}) })
     .then(function(r) { return r.json(); })
     .then(function(d) { resp.innerHTML = (d.response||d.error||'').replace(/\n/g,'<br/>'); });
@@ -6666,7 +6399,7 @@ function pickAiCandidate(i) {
 
 function findLeads() {
   var product = document.getElementById('lead-cat').value;
-  var territory = document.getElementById('lead-territory').value || '';
+  var territory = document.getElementById('lead-territory').value || 'Atlanta Metro, Georgia';
   var contactType = (document.getElementById('lead-contact-type') || {}).value || 'installers';
   var workType = (document.getElementById('lead-work-type') || {}).value || 'new_construction';
   currentContactType = contactType;
@@ -7711,7 +7444,7 @@ function loadManager() {
       var reps = results[0]; var activity = results[1];
       document.getElementById('manager-reps').innerHTML = reps.length ? reps.map(function(r) {
         var initials = r.name.split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase();
-        return '<div class="rep-card"><div class="rep-top"><div class="rep-av">' + initials + '</div><div><div class="rep-name">' + r.name + '</div><div class="rep-meta">📍 ' + (r.territory||'—') + ' · ' + r.email + '</div></div><button class="btn btn-secondary btn-sm" style="margin-left:auto" onclick="go(\'onboarding\')">Onboarding</button></div><div class="rep-stats"><div class="rs"><div class="rs-val">' + r.prospect_count + '</div><div class="rs-lbl">Contacts</div></div><div class="rs"><div class="rs-val">' + r.hot_count + '</div><div class="rs-lbl"> Hot</div></div><div class="rs"><div class="rs-val">' + r.call_count + '</div><div class="rs-lbl">Calls</div></div><div class="rs"><div class="rs-val">' + r.calls_this_week + '</div><div class="rs-lbl">This Week</div></div></div></div>';
+        return '<div class="rep-card"><div class="rep-top"><div class="rep-av">' + initials + '</div><div><div class="rep-name">' + r.name + '</div><div class="rep-meta">📍 ' + (r.territory||'Atlanta Metro') + ' · ' + r.email + '</div></div><button class="btn btn-secondary btn-sm" style="margin-left:auto" onclick="go(\'onboarding\')">Onboarding</button></div><div class="rep-stats"><div class="rs"><div class="rs-val">' + r.prospect_count + '</div><div class="rs-lbl">Contacts</div></div><div class="rs"><div class="rs-val">' + r.hot_count + '</div><div class="rs-lbl"> Hot</div></div><div class="rs"><div class="rs-val">' + r.call_count + '</div><div class="rs-lbl">Calls</div></div><div class="rs"><div class="rs-val">' + r.calls_this_week + '</div><div class="rs-lbl">This Week</div></div></div></div>';
       }).join('') : '<div style="text-align:center;padding:24px;color:var(--text3)">No reps added yet.</div>';
       document.getElementById('manager-activity').innerHTML = activity.length ? activity.map(function(a) {
         return '<tr><td style="font-weight:600">' + a.rep_name + '</td><td>' + a.company + '</td><td>' + (a.outcome||'—') + '</td><td style="color:var(--text3)">' + (a.call_date||'—') + '</td></tr>';
@@ -10953,6 +10686,27 @@ function optimizeRouteOrder(stops) {
 
 
 // getSelectedSegments — reads checked boxes from the segment pill row
+
+// The lead finder's brand chips come from the firm's OWN manufacturer lines,
+// not a hardcoded list. Any rep group sees their own brands; a brand-new firm
+// with no lines yet sees no brand row at all, keeping the form clean.
+function loadLeadBrands(){
+  var wrap = document.getElementById('lead-brand-wrap');
+  var row = document.getElementById('lead-brand-row');
+  if(!row) return;
+  fetch('/api/lines/catalog').then(function(r){ return r.ok ? r.json() : []; }).then(function(list){
+    list = Array.isArray(list) ? list : [];
+    if(!list.length){ if(wrap) wrap.style.display='none'; return; }
+    row.innerHTML = list.slice(0,12).map(function(l){
+      var n = String(l.name||'').replace(/"/g,'&quot;');
+      return '<label class="lead-brand-pill" data-brand="'+n+'" style="cursor:pointer;background:#fff;border:1.5px solid var(--border);border-radius:99px;padding:7px 13px;font-size:12px;font-weight:600;color:var(--text2);display:inline-flex;align-items:center;gap:6px;user-select:none">'
+        + '<input type="checkbox" value="'+n+'" style="margin:0" onchange="this.closest(\'.lead-brand-pill\').classList.toggle(\'on\', this.checked)"> '+n+'</label>';
+    }).join('');
+    if(wrap) wrap.style.display='';
+  }).catch(function(){ if(wrap) wrap.style.display='none'; });
+}
+window.getSelectedSegments = window.getSelectedSegments;
+
 window.getSelectedSegments = function() {
   var checked = [];
   document.querySelectorAll('#segment-pill-row input[type="checkbox"]:checked').forEach(function(cb) {
@@ -10966,7 +10720,7 @@ window.getSelectedBrands = function() {
   document.querySelectorAll('#lead-brand-row input[type="checkbox"]:checked').forEach(function(cb) {
     checked.push(cb.value);
   });
-  return checked;   // brands are optional; no firm-specific default
+  return checked;   // brands optional; drawn from the firm's own lines
 };
 
 
@@ -11797,7 +11551,7 @@ fetch('/api/notifications/evaluate', { method: 'POST' }).then(function(r){ retur
     <svg viewBox="0 0 20 20" width="20" height="20"><path d="M3 4h14v2H3zM3 9h10v2H3zM3 14h7v2H3z" fill="#fff"/></svg>
   </div>
   <div style="flex:1;min-width:0">
-    <div style="font-size:13px;font-weight:700;margin-bottom:2px">Install OutsideSelling</div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:2px">Install RepRoute</div>
     <div style="font-size:11.5px;opacity:.7">Get the app on your home screen</div>
   </div>
   <button onclick="installPWA()" style="background:#1d6aff;color:#fff;border:none;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">Install</button>
@@ -11945,7 +11699,7 @@ fetch('/api/notifications/evaluate', { method: 'POST' }).then(function(r){ retur
     <div style="font-size:11px;font-weight:700;color:#8a95a3;text-transform:uppercase;letter-spacing:.06em;margin:20px 0 10px">App Info</div>
     <div style="background:#fff;border:1px solid #e2e5ea;border-radius:8px;padding:14px">
       <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0"><span style="color:#8a95a3">Version</span><span style="color:#0f1923;font-weight:500">1.0</span></div>
-      <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0"><span style="color:#8a95a3">App</span><span style="color:#0f1923;font-weight:500">OutsideSelling</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0"><span style="color:#8a95a3">App</span><span style="color:#0f1923;font-weight:500">RepRoute</span></div>
     </div>
   </div>
 </div>
@@ -16876,8 +16630,6 @@ function rcSetSeg(seg) {
   loadReconnect();
 }
 
-// ── Found Money ──────────────────────────────────────────────────────────────
-// Accounts whose buying stopped or fell off versus their own commission history.
 function _fmEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function _fmDate(d){
   if(!d) return '';
@@ -16886,6 +16638,78 @@ function _fmDate(d){
   return dt.toLocaleDateString('en-US',{month:'short',year:'numeric'});
 }
 function _fmMoney(n){ return '$' + Math.round(Number(n)||0).toLocaleString('en-US'); }
+
+var TAG_COLORS = {
+  slate:  ['#eef1f5','#334155'],
+  blue:   ['#e0edff','#1d4ed8'],
+  green:  ['#dcfce7','#15803d'],
+  amber:  ['#fef3c7','#a16207'],
+  red:    ['#fee2e2','#b91c1c'],
+  purple: ['#ede9fe','#6d28d9']
+};
+function _tagEsc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function loadAccountTags(accountId){
+  var el = document.getElementById('rec-tags');
+  if(!el) return;
+  window._tagAccountId = accountId;
+  fetch('/api/tags/account/' + accountId)
+    .then(function(r){ return r.ok ? r.json() : []; })
+    .then(function(tags){ renderAccountTags(Array.isArray(tags) ? tags : [], accountId); })
+    .catch(function(){ renderAccountTags([], accountId); });
+}
+
+function renderAccountTags(tags, accountId){
+  var el = document.getElementById('rec-tags');
+  if(!el) return;
+  var chips = tags.map(function(t){
+    var c = TAG_COLORS[t.color] || TAG_COLORS.slate;
+    return '<span style="display:inline-flex;align-items:center;gap:5px;background:' + c[0] + ';color:' + c[1] +
+      ';font-size:11.5px;font-weight:650;padding:4px 9px;border-radius:99px">' + _tagEsc(t.name) +
+      '<button onclick="removeAccountTag(' + accountId + ',' + t.id + ')" title="Remove tag" ' +
+      'style="background:none;border:none;color:inherit;opacity:.55;cursor:pointer;font-size:13px;line-height:1;padding:0">&times;</button></span>';
+  }).join('');
+  el.innerHTML =
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">' + chips +
+      '<input id="tag-add-input" list="tag-catalog" placeholder="+ Add tag" ' +
+        'onkeydown="if(event.key===\'Enter\'){event.preventDefault();addAccountTag(' + accountId + ');}" ' +
+        'style="width:118px;padding:4px 9px;border:1px dashed var(--border2);border-radius:99px;font-family:inherit;font-size:11.5px;background:transparent" />' +
+      '<datalist id="tag-catalog"></datalist>' +
+    '</div>';
+  loadTagCatalog();
+}
+
+// Suggest labels the firm already uses so the vocabulary stays consistent
+// instead of drifting into "Key Account", "key acct", "KeyAccount".
+function loadTagCatalog(){
+  var dl = document.getElementById('tag-catalog');
+  if(!dl) return;
+  fetch('/api/tags').then(function(r){ return r.ok ? r.json() : []; }).then(function(list){
+    if(!Array.isArray(list)) return;
+    dl.innerHTML = list.map(function(t){ return '<option value="' + _tagEsc(t.name) + '"></option>'; }).join('');
+  }).catch(function(){});
+}
+
+function addAccountTag(accountId){
+  var input = document.getElementById('tag-add-input');
+  if(!input) return;
+  var name = (input.value || '').trim();
+  if(!name){ input.focus(); return; }
+  input.disabled = true;
+  fetch('/api/tags/account/' + accountId, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ name: name, color: 'slate' })
+  }).then(function(r){ return r.json(); }).then(function(res){
+    if(res && res.error){ alert(res.error); input.disabled = false; return; }
+    loadAccountTags(accountId);
+  }).catch(function(){ input.disabled = false; });
+}
+
+function removeAccountTag(accountId, tagId){
+  fetch('/api/tags/account/' + accountId + '/tag/' + tagId, { method:'DELETE' })
+    .then(function(){ loadAccountTags(accountId); })
+    .catch(function(){});
+}
 
 function loadFoundMoney() {
   var list = document.getElementById('fm-list');
@@ -17032,7 +16856,7 @@ function loadReconnect() {
     if (!data || !Array.isArray(data.accounts)) { list.innerHTML = '<div style="color:#b91c1c;font-size:13px">'+cEsc((data&&data.error)||'Could not load.')+'</div>'; return; }
     rcRenderSummary(sumEl, data.summary);
     if (!data.accounts.length) {
-      list.innerHTML = '<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:34px 20px"><div style="font-size:14px;font-weight:700;color:var(--navy)">Every account is within cadence</div><div style="font-size:12.5px;color:var(--text3);margin-top:5px;max-width:460px">Nothing has gone quiet past its threshold. Accounts appear here automatically once they drift, ranked by the commission you stand to lose.</div></div>';
+      list.innerHTML = '<div style="text-align:center;padding:40px 16px;color:var(--text3);font-size:13px">🎉 Nobody’s gone quiet. Every tracked account is within cadence.</div>';
       return;
     }
     list.innerHTML = data.accounts.map(rcCard).join('');
@@ -17041,72 +16865,54 @@ function loadReconnect() {
 
 function rcRenderSummary(el, s) {
   s = s || {};
-  var n = s.count || 0;
-  el.className = '';
   el.innerHTML =
-    '<div class="rc-banner">'
-      + '<div class="rc-banner-main">'
-        + '<div class="rc-banner-fig">' + rcMoney(s.total_at_risk) + '</div>'
-        + '<div class="rc-banner-lbl">Commission at risk</div>'
-      + '</div>'
-      + '<div class="rc-banner-side">'
-        + '<div class="v">' + n + '</div>'
-        + '<div class="rc-banner-lbl">' + (n === 1 ? 'Account gone quiet' : 'Accounts gone quiet') + '</div>'
-      + '</div>'
+    '<div style="flex:1;background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px">'
+      + '<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px">Commission at risk</div>'
+      + '<div style="font-size:22px;font-weight:800;color:#b91c1c;margin-top:2px">'+rcMoney(s.total_at_risk)+'</div>'
+    + '</div>'
+    + '<div style="flex:1;background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px">'
+      + '<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px">Flagged accounts</div>'
+      + '<div style="font-size:22px;font-weight:800;color:var(--navy);margin-top:2px">'+(s.count||0)+'</div>'
     + '</div>';
 }
 
 function rcCard(a) {
   var phone = a.phone ? String(a.phone).replace(/[^0-9+]/g, '') : '';
   var dest = encodeURIComponent([a.address, a.company, a.city, a.state].filter(Boolean).join(', '));
-  var meta = [a.category, a.city].filter(Boolean).join(' \u00b7 ');
-  var accent = a.tier_color || '#a16207';
-
-  // Silence meter: fill = actual days quiet, notch = this tier's cadence.
-  // Scaled so an overdue account visibly overshoots its own threshold.
-  var quiet = Number(a.days_quiet) || 0;
-  var thresh = Number(a.tier_threshold) || 90;
-  var scale = quiet > thresh ? quiet * 1.08 : thresh * 1.25;
-  var fillPct = Math.max(3, Math.min(100, (quiet / scale) * 100));
-  var notchPct = Math.max(0, Math.min(99, (thresh / scale) * 100));
-
-  var money = a.has_commission
-    ? '<div class="rc-money">' + rcMoney(a.trailing_commission) + '</div>' +
-      '<div class="rc-money-sub">at risk \u00b7 ' + cEsc(rcWindowLabel(a.months_loaded)) + '</div>'
-    : '<div class="rc-money" style="color:var(--text3)">\u2014</div>' +
-      '<div class="rc-money-sub">lead \u00b7 no history</div>';
-
+  var meta = [a.category, a.city].filter(Boolean).join(' · ');
+  var badge = '<span style="font-size:11px;font-weight:800;padding:3px 9px;border-radius:10px;color:#fff;background:'+(a.tier_color||'#a16207')+'">'+a.days_quiet+' days</span>';
+  var commLine = a.has_commission
+    ? '<div style="font-size:13px;font-weight:700;color:var(--navy)">'+rcMoney(a.trailing_commission)+' <span style="font-weight:500;color:var(--text3)">· '+rcWindowLabel(a.months_loaded)+'</span></div>'
+    : '<div style="font-size:12px;color:var(--text3)">No commission history (lead)</div>';
+  var lines = a.lines ? '<div style="font-size:11.5px;color:var(--text2);margin-top:4px">'+cEsc(a.lines)+'</div>' : '';
   var repTag = (window.currentUser && window.currentUser.role === 'manager' && a.rep_name)
-    ? ' \u00b7 ' + cEsc(a.rep_name) : '';
+    ? '<div style="font-size:11px;color:var(--text3);margin-top:2px">Rep: '+cEsc(a.rep_name)+'</div>' : '';
 
   var callBtn = phone
-    ? '<a class="rc-call" href="tel:' + phone + '">Call</a>'
-    : '<span class="rc-call rc-dim">No number</span>';
+    ? '<a class="rc-act" href="tel:'+phone+'">📞 Call</a>'
+    : '<span class="rc-act" style="opacity:.4">📞 Call</span>';
   var textBtn = phone
-    ? '<a class="rc-act" href="sms:' + phone + '">Text</a>'
-    : '<span class="rc-act" style="opacity:.4">Text</span>';
-  var routeBtn = '<a class="rc-act" href="https://www.google.com/maps/dir/?api=1&destination=' + dest + '" target="_blank" rel="noopener">Route</a>';
+    ? '<a class="rc-act" href="sms:'+phone+'">💬 Text</a>'
+    : '<span class="rc-act" style="opacity:.4">💬 Text</span>';
+  var routeBtn = '<a class="rc-act" href="https://www.google.com/maps/dir/?api=1&destination='+dest+'" target="_blank" rel="noopener">🧭 Route</a>';
 
-  return '<div class="rc-card" id="rc-card-' + a.id + '" style="--rc-accent:' + accent + '">'
-    + '<div style="display:flex;justify-content:space-between;gap:14px;align-items:flex-start">'
-      + '<div style="min-width:0;flex:1">'
-        + '<div class="rc-name">' + cEsc(a.company) + '</div>'
-        + '<div class="rc-meta">' + cEsc(meta) + repTag + '</div>'
+  return '<div class="rc-card" id="rc-card-'+a.id+'">'
+    + '<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">'
+      + '<div style="min-width:0">'
+        + '<div style="font-size:14.5px;font-weight:800;color:var(--navy);line-height:1.25">'+cEsc(a.company)+'</div>'
+        + (meta ? '<div style="font-size:12px;color:var(--text3);margin-top:1px">'+cEsc(meta)+'</div>' : '')
+        + repTag
       + '</div>'
-      + '<div style="text-align:right;flex-shrink:0">' + money + '</div>'
+      + '<div style="text-align:right;flex-shrink:0">'+badge+'<div style="margin-top:6px">'+commLine+'</div></div>'
     + '</div>'
-    + (a.lines ? '<div class="rc-lines">' + cEsc(a.lines) + '</div>' : '')
-    + '<div class="rc-silence">'
-        + '<div class="rc-silence-fill" style="width:' + fillPct.toFixed(1) + '%;background:' + accent + '"></div>'
-        + '<div class="rc-silence-notch" style="left:' + notchPct.toFixed(1) + '%"></div>'
-      + '</div>'
-    + '<div class="rc-silence-label"><span style="font-weight:700;color:' + accent + '">' + quiet + ' days quiet</span>'
-      + '<span>' + thresh + '-day cadence</span></div>'
-    + '<div class="rc-actions">' + callBtn + textBtn + routeBtn + '</div>'
-    + '<div class="rc-utils">'
-      + '<button class="rc-util" onclick="rcAction(' + a.id + ',\'touch\')">Log touch</button>'
-      + '<button class="rc-util" onclick="rcAction(' + a.id + ',\'snooze\')">Snooze</button>'
-      + '<button class="rc-util" onclick="rcAction(' + a.id + ',\'dismiss\')">Dismiss</button>'
+    + lines
+    + '<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">'
+      + callBtn + textBtn + routeBtn
+    + '</div>'
+    + '<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">'
+      + '<button class="rc-act" onclick="rcAction('+a.id+',\'touch\')">✓ Log touch</button>'
+      + '<button class="rc-act" onclick="rcAction('+a.id+',\'snooze\')">😴 Snooze</button>'
+      + '<button class="rc-act" onclick="rcAction('+a.id+',\'dismiss\')">✕ Dismiss</button>'
     + '</div>'
   + '</div>';
 }
