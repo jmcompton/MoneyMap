@@ -1587,7 +1587,7 @@ window.addEventListener('load', function() {
     <div class="sb-logo"><svg viewBox="0 0 17 17" fill="none"><circle cx="8.5" cy="8.5" r="3" fill="white"/><path d="M8.5 1v3M8.5 13v3M1 8.5h3M13 8.5h3" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg></div>
     <div><div class="sb-name">RepRoute</div><div class="sb-sub">Field Sales CRM</div></div>
   </div>
-  <div class="sb-search-wrap"><div class="sb-search"><svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;flex-shrink:0;opacity:.3"><circle cx="7" cy="7" r="4"/><path d="M10.5 10.5l2.5 2.5"/></svg><input id="sb-search-input" type="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" name="acct_search_sb" placeholder="Search accounts..." oninput="globalSearch(this.value)" onkeydown="if(event.key==='Escape')this.value=''" /></div></div>
+  <div class="sb-search-wrap"><div class="sb-search"><svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;flex-shrink:0;opacity:.3"><circle cx="7" cy="7" r="4"/><path d="M10.5 10.5l2.5 2.5"/></svg><input id="sb-search-input" readonly onfocus="this.removeAttribute('readonly')" type="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" name="acct_search_sb" placeholder="Search accounts..." oninput="globalSearch(this.value)" onkeydown="if(event.key==='Escape')this.value=''" /></div></div>
   <div class="sb-section" data-roles="manager">
     <button class="sb-item active" data-roles="manager" onclick="go('dashboard')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 6l6-4 6 4v8H2V6z"/><path d="M6 14v-4h4v4"/></svg>Home</button>
   </div>
@@ -1744,7 +1744,7 @@ window.addEventListener('load', function() {
           </div>
 
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <input id="lead-city-input" type="text" name="lead_city_search" inputmode="text" placeholder="Enter a city (e.g. Birmingham AL)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" style="flex:1;min-width:220px;padding:11px 13px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit">
+            <input id="lead-city-input" readonly onfocus="this.removeAttribute('readonly')" type="text" name="lead_city_search" inputmode="text" placeholder="Enter a city (e.g. Birmingham AL)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" style="flex:1;min-width:220px;padding:11px 13px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit">
             <button onclick="runDailyLeads()" id="lead-find-btn" style="padding:11px 26px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit">Find leads</button>
             <button onclick="refreshLeads()" id="lead-refresh-btn" style="display:none;padding:11px 16px;background:var(--surface);color:var(--navy);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit" title="Get 10 new leads">&#8635; 10 more</button>
           </div>
@@ -1862,7 +1862,7 @@ window.addEventListener('load', function() {
     </div>
     <div class="list-bar" style="flex-wrap:wrap;gap:6px">
       <span class="list-count" id="list-count">0 records</span>
-      <div class="sb-in"><span style="font-size:12px;color:var(--text3)">&#128269;</span><input id="p-search" type="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" name="acct_search_p" placeholder="Search accounts..." oninput="handleContactSearch()" onkeydown="if(event.key==='Enter'){event.preventDefault();handleContactSearch();}" /></div>
+      <div class="sb-in"><span style="font-size:12px;color:var(--text3)">&#128269;</span><input id="p-search" readonly onfocus="this.removeAttribute('readonly')" type="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" name="acct_search_p" placeholder="Search accounts..." oninput="handleContactSearch()" onkeydown="if(event.key==='Enter'){event.preventDefault();handleContactSearch();}" /></div>
       <select id="filter-company-type" onchange="handleContactSearch()" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;background:#fff;color:var(--navy)">
         <option value="All">All Types</option>
         <option value="Distributor">Distributor</option>
@@ -17543,13 +17543,14 @@ function discardCommission() {
 // a remembered login address despite autocomplete=off, wipe it on load.
 (function(){
   function clearAutofill(){
-    ['sb-search-input','p-search'].forEach(function(id){
+    ['sb-search-input','p-search','lead-city-input'].forEach(function(id){
       var el=document.getElementById(id);
       if(el && el.value && el.value.indexOf('@')>-1) el.value='';
     });
   }
   document.addEventListener('DOMContentLoaded', clearAutofill);
-  window.addEventListener('load', function(){ clearAutofill(); setTimeout(clearAutofill,200); setTimeout(clearAutofill,700); });
+  window.addEventListener('load', function(){ clearAutofill(); setTimeout(clearAutofill,200); setTimeout(clearAutofill,700); setTimeout(clearAutofill,1500); });
+  window.addEventListener('pageshow', clearAutofill);
 })();
 </script>
 </body>
