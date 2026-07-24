@@ -17538,5 +17538,19 @@ function discardCommission() {
     });
 }
 </script>
+<script>
+// Hard guard: account-search boxes must never hold an email. If Chrome force-fills
+// a remembered login address despite autocomplete=off, wipe it on load.
+(function(){
+  function clearAutofill(){
+    ['sb-search-input','p-search'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el && el.value && el.value.indexOf('@')>-1) el.value='';
+    });
+  }
+  document.addEventListener('DOMContentLoaded', clearAutofill);
+  window.addEventListener('load', function(){ clearAutofill(); setTimeout(clearAutofill,200); setTimeout(clearAutofill,700); });
+})();
+</script>
 </body>
 </html>
