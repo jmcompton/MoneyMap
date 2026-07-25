@@ -128,9 +128,34 @@ router.get('/stats', async (req, res) => {
 // ── GET /api/prospects ───────────────────────────────────────────
 router.get('/', async (req, res) => {
   const uid = req.session.user.id;
-  const { category, status, data_status, company_type, search } = req.query;
-  let query = 'SELECT * FROM prospects WHERE user_id=$1';
-  const params = [uid];
+  const role = req.session.user.role;
+  const companyId = req.companyId;
+  const { category, status, data_status, company_type, search, view } = req.query;
+
+  const params = [];
+  let query;
+  // Scope: a manager sees the whole firm's book of business; a rep sees only
+  // their own accounts. Previously this was always user-scoped, so managers
+  // couldn't see their team's accounts at all.
+  if (role === 'manager' && companyId) {
+    params.push(companyId);
+    query = `SELECT * FROM prospects WHERE user_id IN (SELECT id FROM users WHERE company_id = $${params.length})`;
+  } else {
+    params.push(uid);
+    query = `SELECT * FROM prospects WHERE user_id = $${params.length}`;
+  }
+
+  // Leads vs. accounts. A raw AI-found lead that has never been worked is NOT
+  // part of the accounts book, so it's hidden from the default Accounts list.
+  // view=leads shows only those found leads; view=all shows everything.
+  if (view === 'leads') {
+    query += ` AND source = 'AI' AND pipeline_stage = 'New Lead'
+               AND NOT EXISTS (SELECT 1 FROM calls c WHERE c.prospect_id = prospects.id)`;
+  } else if (view !== 'all') {
+    query += ` AND NOT (source = 'AI' AND pipeline_stage = 'New Lead'
+                        AND NOT EXISTS (SELECT 1 FROM calls c WHERE c.prospect_id = prospects.id))`;
+  }
+
   if (category && category !== 'All') {
     params.push(category); query += ` AND category=$${params.length}`;
   }
@@ -138,16 +163,14 @@ router.get('/', async (req, res) => {
     params.push(status); query += ` AND status=$${params.length}`;
   }
   if (data_status && data_status !== 'All') {
-    // Contacted/Unvetted are computed LIVE from call activity (not just the
-    // stored data_status column) so the filter is correct for every rep — the
-    // stored column is only reliably set for accounts that were backfilled.
-    // 'Verified CRM Data' remains a pure column match (it's a manual flag).
+    // Contacted/Unvetted computed LIVE from call activity. Any call on the
+    // account counts (works for both rep-scoped and manager firm-wide views).
     if (data_status === 'Contacted') {
       query += ` AND (data_status IN ('Contacted','Verified CRM Data')
-                      OR EXISTS (SELECT 1 FROM calls c WHERE c.prospect_id = prospects.id AND c.user_id = $1))`;
+                      OR EXISTS (SELECT 1 FROM calls c WHERE c.prospect_id = prospects.id))`;
     } else if (data_status === 'Unvetted') {
       query += ` AND data_status NOT IN ('Contacted','Verified CRM Data')
-                 AND NOT EXISTS (SELECT 1 FROM calls c WHERE c.prospect_id = prospects.id AND c.user_id = $1)`;
+                 AND NOT EXISTS (SELECT 1 FROM calls c WHERE c.prospect_id = prospects.id)`;
     } else {
       params.push(data_status); query += ` AND data_status=$${params.length}`;
     }
