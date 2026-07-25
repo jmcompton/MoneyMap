@@ -124,6 +124,22 @@ function lumberKindBoost(name, types) {
 // Segment-level search config — each pill maps directly to specific queries
 // This ensures "Window/Door" never returns roofing results, etc.
 const SEGMENT_SEARCH_CONFIG = {
+  // Generic, firm-agnostic segments the simplified finder sends. These make the
+  // finder work for any building-materials rep firm, not just Compton's lines.
+  'Dealer': [
+    { query: 'building materials distributor', score: 10, category: 'Dealer' },
+    { query: 'building materials wholesale supplier', score: 10, category: 'Dealer' },
+    { query: 'construction materials distributor', score: 9, category: 'Dealer' },
+    { query: 'building products dealer', score: 9, category: 'Dealer' },
+    { query: 'wholesale building supply', score: 8, category: 'Dealer' },
+  ],
+  'Contractor': [
+    { query: 'commercial construction contractor', score: 10, category: 'Contractor' },
+    { query: 'general contractor construction', score: 10, category: 'Contractor' },
+    { query: 'building contractor', score: 9, category: 'Contractor' },
+    { query: 'exterior remodeling contractor', score: 8, category: 'Contractor' },
+    { query: 'construction company', score: 8, category: 'Contractor' },
+  ],
   // Lumberyard / building-supply category — query set is derived from the
   // editable gold-standard anchors config (LUMBER_BUILDING_SUPPLY_EXAMPLES).
   'Lumber / Building Supply': buildLumberSegmentQueries(),
