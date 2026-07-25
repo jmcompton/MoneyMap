@@ -530,6 +530,15 @@ async function initDB() {
       category_hint   TEXT,
       created_at      TIMESTAMPTZ DEFAULT NOW()
     );
+    -- A rep firm declares which manufacturers it represents; the AI lookup fills
+    -- in what each one makes and which business types buy it, which then drives
+    -- the lead finder. company_id scopes lines so firms never see each other's.
+    ALTER TABLE lines ADD COLUMN IF NOT EXISTS company_id       INTEGER;
+    ALTER TABLE lines ADD COLUMN IF NOT EXISTS products         TEXT;
+    ALTER TABLE lines ADD COLUMN IF NOT EXISTS description      TEXT;
+    ALTER TABLE lines ADD COLUMN IF NOT EXISTS target_customers TEXT;
+    ALTER TABLE lines ADD COLUMN IF NOT EXISTS represented      BOOLEAN DEFAULT FALSE;
+    CREATE INDEX IF NOT EXISTS idx_lines_company ON lines(company_id);
 
     CREATE TABLE IF NOT EXISTS account_lines (
       id               SERIAL PRIMARY KEY,
@@ -588,6 +597,33 @@ async function initDB() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS idx_line_aliases_line ON line_aliases(line_id);
+
+    -- ════════════════════════════════════════════════════════════
+    -- TAGS — firm-defined labels for accounts.
+    -- Hardcoded categories only ever fit the firm they were written for, so
+    -- every company defines its own vocabulary here ("North Territory",
+    -- "Key Account", "Slow Pay"). Scoped by company_id, so one firm's labels
+    -- never leak into another's.
+    -- ════════════════════════════════════════════════════════════
+    CREATE TABLE IF NOT EXISTS tags (
+      id         SERIAL PRIMARY KEY,
+      company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE,
+      name       TEXT NOT NULL,
+      color      TEXT DEFAULT 'slate',
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE (company_id, name)
+    );
+
+    CREATE TABLE IF NOT EXISTS account_tags (
+      account_id INTEGER NOT NULL REFERENCES prospects(id) ON DELETE CASCADE,
+      tag_id     INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+      company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY (account_id, tag_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_account_tags_account ON account_tags(account_id);
+    CREATE INDEX IF NOT EXISTS idx_account_tags_tag ON account_tags(tag_id);
+    CREATE INDEX IF NOT EXISTS idx_tags_company ON tags(company_id);
 
     -- ════════════════════════════════════════════════════════════
     -- TENANT STAMP: company_id on every table that holds firm data.

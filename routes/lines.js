@@ -27,13 +27,76 @@ router.get('/', async (req, res) => {
   catch (e) { console.error('[lines]', e.message); res.status(500).json({ error: e.message }); }
 });
 
-// GET /api/lines/catalog — simple {id,name} list for the "add a manufacturer" picker.
+// GET /api/lines/catalog — {id,name} for the picker, scoped to the caller's firm.
 router.get('/catalog', async (req, res) => {
   try {
     const r = await pool.query(
-      `SELECT id, name FROM lines WHERE status IS DISTINCT FROM 'inactive' ORDER BY name ASC`);
+      `SELECT id, name FROM lines
+        WHERE status IS DISTINCT FROM 'inactive'
+          AND (company_id IS NOT DISTINCT FROM $1 OR company_id IS NULL)
+        ORDER BY name ASC`, [req.companyId]);
     res.json(r.rows);
   } catch (e) { console.error('[lines/catalog]', e.message); res.status(500).json({ error: e.message }); }
+});
+
+// GET /api/lines/represented — the manufacturers this firm represents, with the
+// AI profile (products + who buys) that drives the lead finder.
+router.get('/represented', async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT id, name, products, category_hint AS category, target_customers
+         FROM lines
+        WHERE represented = TRUE AND (company_id IS NOT DISTINCT FROM $1)
+        ORDER BY name ASC`, [req.companyId]);
+    res.json(r.rows.map(function(row){
+      let tc = [];
+      try { tc = row.target_customers ? JSON.parse(row.target_customers) : []; } catch(_) {}
+      return { id: row.id, name: row.name, products: row.products || '', category: row.category || '', target_customers: tc };
+    }));
+  } catch (e) { console.error('[lines/represented]', e.message); res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/lines/represent — save a manufacturer the firm represents, together
+// with the AI-found products/category/buyers. Upserts by name within the firm.
+router.post('/represent', async (req, res) => {
+  try {
+    const b = req.body || {};
+    const name = String(b.name || '').trim().slice(0, 120);
+    if (!name) return res.status(400).json({ error: 'A manufacturer name is required.' });
+    const products = String(b.products || '').slice(0, 300);
+    const category = String(b.category || '').slice(0, 60);
+    const targets  = Array.isArray(b.target_customers)
+      ? JSON.stringify(b.target_customers.slice(0, 8).map(function(t){ return String(t).slice(0, 60); }))
+      : '[]';
+    const norm = name.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+
+    const existing = await pool.query(
+      `SELECT id FROM lines WHERE (company_id IS NOT DISTINCT FROM $1) AND normalized_name = $2 LIMIT 1`,
+      [req.companyId, norm]);
+    if (existing.rows.length) {
+      await pool.query(
+        `UPDATE lines SET products=$1, category_hint=$2, target_customers=$3, represented=TRUE, status='active' WHERE id=$4`,
+        [products, category, targets, existing.rows[0].id]);
+      return res.json({ ok: true, id: existing.rows[0].id, updated: true });
+    }
+    const ins = await pool.query(
+      `INSERT INTO lines (name, normalized_name, company_id, products, category_hint, target_customers, represented, status)
+       VALUES ($1,$2,$3,$4,$5,$6,TRUE,'active') RETURNING id`,
+      [name, norm, req.companyId, products, category, targets]);
+    res.json({ ok: true, id: ins.rows[0].id, created: true });
+  } catch (e) { console.error('[lines/represent]', e.message); res.status(500).json({ error: e.message }); }
+});
+
+// DELETE /api/lines/represent/:id — stop representing a manufacturer.
+router.delete('/represent/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (!Number.isFinite(id)) return res.status(400).json({ error: 'Invalid id.' });
+    await pool.query(
+      `UPDATE lines SET represented=FALSE WHERE id=$1 AND (company_id IS NOT DISTINCT FROM $2)`,
+      [id, req.companyId]);
+    res.json({ ok: true });
+  } catch (e) { console.error('[lines/represent DELETE]', e.message); res.status(500).json({ error: e.message }); }
 });
 
 // GET /api/lines/account/:id — the manufacturer lines a given account carries.

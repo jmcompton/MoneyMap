@@ -871,4 +871,46 @@ Return ONLY the JSON array. No explanation, no markdown, no backticks. Make the 
   }
 });
 
+// POST /api/ai/manufacturer-lookup — the engine behind "who do you represent".
+// Given a manufacturer name a rep firm carries, web-search what they make and,
+// crucially, which business TYPES buy it. Those buyer types are what the lead
+// finder then hunts. Firm-agnostic: no hardcoded categories, works for anyone.
+router.post('/manufacturer-lookup', async (req, res) => {
+  try {
+    const name = String((req.body && req.body.name) || '').trim().slice(0, 120);
+    if (!name) return res.status(400).json({ error: 'A manufacturer name is required.' });
+    const hint = String((req.body && req.body.hint) || '').trim().slice(0, 200);
+
+    const prompt =
+      'An outside sales rep firm REPRESENTS the manufacturer "' + name + '".' +
+      (hint ? ' Context from the rep: ' + hint + '.' : '') + '\n' +
+      'Search the web to identify this specific company, then determine:\n' +
+      '1. What products they make (one concise sentence).\n' +
+      '2. One best industry category label (2 to 4 words).\n' +
+      '3. The business types that BUY these products - the rep firm\'s ideal customers. ' +
+      'Give 5 to 8 concrete, searchable business types a rep could look up on Google Maps, ' +
+      'for example "window and door manufacturers", "commercial glazing contractors", "metal service centers".\n\n' +
+      'Return ONLY a JSON object and nothing else:\n' +
+      '{"products":"...","category":"...","target_customers":["...","..."]}';
+
+    const text = await callClaudeWithSearch(prompt);
+    let obj = null;
+    const a = text.indexOf('{'), b = text.lastIndexOf('}');
+    if (a !== -1 && b !== -1 && b > a) { try { obj = JSON.parse(text.substring(a, b + 1)); } catch(_) {} }
+    if (!obj || !Array.isArray(obj.target_customers) || !obj.target_customers.length) {
+      return res.status(502).json({ error: 'Could not confidently identify that manufacturer. Try the full company name, or add a short note on what they make.' });
+    }
+    res.json({
+      ok: true,
+      name: name,
+      products: String(obj.products || '').slice(0, 300),
+      category: String(obj.category || '').slice(0, 60),
+      target_customers: obj.target_customers.slice(0, 8).map(function(t){ return String(t).slice(0, 60); })
+    });
+  } catch (e) {
+    console.error('[manufacturer-lookup]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 module.exports = router;

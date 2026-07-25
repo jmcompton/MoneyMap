@@ -2692,9 +2692,21 @@ window.addEventListener('load', function() {
     <div style="padding:16px">
       <!-- LIST view -->
       <div id="mfr-list-view">
+        <!-- WHO YOU REPRESENT — the firm's identity, and the fuel for the lead finder -->
+        <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:18px;box-shadow:0 1px 3px rgba(15,25,35,.05)">
+          <div style="font-size:15px;font-weight:750;color:var(--navy)">Manufacturers you represent</div>
+          <div style="font-size:12.5px;color:var(--text3);margin:3px 0 14px;max-width:640px">Add a manufacturer and we'll look them up, figure out what they make, and work out which businesses buy it. That's what the lead finder goes and hunts for you.</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input id="rep-mfr-input" type="text" placeholder="Manufacturer name (e.g. SUDAL, Fortress Building Products)" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();lookupManufacturer();}" style="flex:1;min-width:260px;padding:11px 13px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit">
+            <button id="rep-mfr-btn" onclick="lookupManufacturer()" style="padding:11px 22px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Look up</button>
+          </div>
+          <div id="rep-mfr-result" style="margin-top:14px"></div>
+          <div id="rep-mfr-list" style="margin-top:16px"></div>
+        </div>
+
         <div style="margin-bottom:14px">
-          <div style="font-size:15px;font-weight:700;color:var(--navy)">Manufacturers</div>
-          <div style="font-size:12px;color:var(--text3);margin-top:2px">Your lines, ranked by sales. Tap one to see its accounts grouped by territory. Built from confirmed commission data.</div>
+          <div style="font-size:15px;font-weight:700;color:var(--navy)">Lines by sales</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">Ranked by sales, from confirmed commission data. Tap one to see its accounts by territory.</div>
         </div>
         <div id="mfr-cards"></div>
       </div>
@@ -17118,7 +17130,88 @@ function fortressMarkVisited(id, btn){
     .catch(function(){ if (btn) { btn.disabled = false; btn.textContent = 'Mark visited'; } showToast('Save failed'); });
 }
 
+// ── Manufacturers you represent (AI lookup → who buys → feeds the lead finder) ──
+function _mfrEsc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+window._pendingMfr = null;
+
+function lookupManufacturer(){
+  var input = document.getElementById('rep-mfr-input');
+  var btn = document.getElementById('rep-mfr-btn');
+  var out = document.getElementById('rep-mfr-result');
+  if(!input) return;
+  var name = (input.value||'').trim();
+  if(!name){ input.focus(); return; }
+  btn.disabled = true; btn.textContent = 'Looking up…';
+  out.innerHTML = '<div style="font-size:12.5px;color:var(--text3);padding:8px 0">Researching ' + _mfrEsc(name) + ' on the web… this takes a few seconds.</div>';
+  fetch('/api/ai/manufacturer-lookup', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ name: name })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    btn.disabled = false; btn.textContent = 'Look up';
+    if(!d || d.error || !d.target_customers){
+      out.innerHTML = '<div style="font-size:12.5px;color:#b91c1c;padding:8px 0">' + _mfrEsc((d&&d.error)||'Could not identify that manufacturer.') + '</div>';
+      return;
+    }
+    window._pendingMfr = d;
+    var chips = (d.target_customers||[]).map(function(t){
+      return '<span style="display:inline-block;background:#eef1f5;color:var(--navy);font-size:12px;font-weight:600;padding:5px 11px;border-radius:99px;margin:0 6px 6px 0">' + _mfrEsc(t) + '</span>';
+    }).join('');
+    out.innerHTML =
+      '<div style="border:1px solid var(--border);border-radius:10px;padding:14px 16px;background:#fafbfc">'
+        + '<div style="font-size:14px;font-weight:750;color:var(--navy)">' + _mfrEsc(d.name) + (d.category ? ' <span style="font-size:11px;font-weight:600;color:var(--text3)">· ' + _mfrEsc(d.category) + '</span>' : '') + '</div>'
+        + (d.products ? '<div style="font-size:12.5px;color:var(--text2);margin:5px 0 12px">' + _mfrEsc(d.products) + '</div>' : '')
+        + '<div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Who buys this — your lead finder targets</div>'
+        + '<div>' + chips + '</div>'
+        + '<button onclick="saveRepresentedManufacturer()" style="margin-top:12px;padding:9px 18px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Yes, I represent this</button>'
+      + '</div>';
+  }).catch(function(){
+    btn.disabled = false; btn.textContent = 'Look up';
+    out.innerHTML = '<div style="font-size:12.5px;color:#b91c1c;padding:8px 0">Lookup failed. Try again.</div>';
+  });
+}
+
+function saveRepresentedManufacturer(){
+  var d = window._pendingMfr;
+  if(!d) return;
+  fetch('/api/lines/represent', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(d)
+  }).then(function(r){ return r.json(); }).then(function(res){
+    if(res && res.ok){
+      document.getElementById('rep-mfr-input').value = '';
+      document.getElementById('rep-mfr-result').innerHTML = '';
+      window._pendingMfr = null;
+      loadRepresentedManufacturers();
+    } else {
+      alert((res && res.error) || 'Could not save.');
+    }
+  }).catch(function(){ alert('Could not save.'); });
+}
+
+function loadRepresentedManufacturers(){
+  var el = document.getElementById('rep-mfr-list');
+  if(!el) return;
+  fetch('/api/lines/represented').then(function(r){ return r.ok ? r.json() : []; }).then(function(list){
+    list = Array.isArray(list) ? list : [];
+    if(!list.length){ el.innerHTML = ''; return; }
+    el.innerHTML = '<div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">You represent</div>'
+      + list.map(function(m){
+        return '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--border)">'
+          + '<div style="min-width:0"><div style="font-size:13.5px;font-weight:700;color:var(--navy)">' + _mfrEsc(m.name) + '</div>'
+          + '<div style="font-size:11.5px;color:var(--text3);margin-top:1px">' + _mfrEsc((m.target_customers||[]).slice(0,4).join(', ')) + ((m.target_customers||[]).length>4?'…':'') + '</div></div>'
+          + '<button onclick="removeRepresentedManufacturer(' + m.id + ')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;font-weight:600;flex-shrink:0">Remove</button>'
+        + '</div>';
+      }).join('');
+  }).catch(function(){ el.innerHTML=''; });
+}
+
+function removeRepresentedManufacturer(id){
+  fetch('/api/lines/represent/' + id, { method:'DELETE' })
+    .then(function(){ loadRepresentedManufacturers(); }).catch(function(){});
+}
+
 function loadManufacturers() {
+  loadRepresentedManufacturers();
   // Always return to the list view on (re)entry.
   document.getElementById('mfr-detail-view').style.display = 'none';
   document.getElementById('mfr-list-view').style.display = '';
