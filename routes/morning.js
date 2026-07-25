@@ -426,7 +426,9 @@ router.post('/daily-leads', async (req, res) => {
   const brands = Array.isArray(req.body.brands) && req.body.brands.length
     ? req.body.brands
     : [];
-  if (!brands.length) return res.status(400).json({ error: 'Please select at least one brand.' });
+  // Brands are optional context for scoring only; the segment + city drive the
+  // actual search, so a firm with no lines set up can still find leads.
+  const brandsOptional = brands;
   // Translate segment names (sent by UI pills) → Contractor or Dealer
   const SEGMENT_TO_CHANNEL = {
     'Roofing Contractor':    'Contractor',
