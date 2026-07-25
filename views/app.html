@@ -1456,6 +1456,21 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 #page-found-money .rc-act{padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text2);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
 #page-found-money .rc-utils{display:flex;gap:4px;margin-top:7px;border-top:1px solid var(--border);padding-top:8px}
 @media(max-width:640px){#page-found-money .rc-grid{columns:1}#page-found-money .rc-banner{flex-direction:column}#page-found-money .rc-banner-side{border-left:none;border-top:1px solid var(--border)}}
+
+/* ── Home / CRM cockpit ── */
+#page-home .home-stat{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 18px;box-shadow:0 1px 3px rgba(15,25,35,.05)}
+#page-home .home-stat-v{font-size:26px;font-weight:800;color:var(--navy);letter-spacing:-.6px;line-height:1;font-variant-numeric:tabular-nums}
+#page-home .home-stat-l{font-size:11.5px;font-weight:600;color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:.04em}
+#page-home .home-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 18px;box-shadow:0 1px 3px rgba(15,25,35,.05)}
+#page-home .home-card-hdr{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:750;color:var(--navy);margin-bottom:10px}
+#page-home .home-card-link{font-size:12px;font-weight:600;color:var(--accent);cursor:pointer}
+#page-home .home-empty{font-size:12.5px;color:var(--text3);padding:14px 0}
+#page-home .home-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border);cursor:pointer}
+#page-home .home-row:hover{background:#fafbfc}
+#page-home .home-tile{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;font-size:13px;font-weight:650;color:var(--navy);cursor:pointer;box-shadow:0 1px 3px rgba(15,25,35,.05);transition:box-shadow .14s,border-color .14s}
+#page-home .home-tile:hover{box-shadow:0 6px 20px rgba(15,25,35,.08);border-color:#d7dee6}
+#page-home .home-tile-i{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700}
+@media(max-width:760px){#page-home #home-stats{grid-template-columns:1fr 1fr}#page-home #home-cols{grid-template-columns:1fr}}
 </style>
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
@@ -1594,6 +1609,7 @@ window.addEventListener('load', function() {
   <div class="sb-section" data-roles="rep manager">
     <div class="sb-sec-label">Sales</div>
     <button class="sb-item" data-roles="rep manager" onclick="go('reconnect')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 8a6 6 0 0110.5-4M14 8a6 6 0 01-10.5 4"/><path d="M12.5 1.5V4h-2.5M3.5 14.5V12h2.5"/></svg>Reconnect</button>
+    <button class="sb-item" data-roles="rep manager" onclick="go('leads')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="2"/></svg>Lead Finder</button>
     <button class="sb-item" data-roles="rep manager" onclick="go('found-money')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><circle cx="8" cy="8" r="6"/><path d="M8 5v6M6.5 6.5h3M6.5 9.5h3"/></svg>Found Money</button>
     <button class="sb-item" data-roles="rep manager" onclick="go('today')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 7h12M11 1.5v2M5 1.5v2"/><path d="M6.5 10.5l1.25 1.25L10 9"/></svg>Today</button>
     <button class="sb-item" data-roles="rep manager" onclick="go('recap')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M4 1.5h6l3 3V14a.5.5 0 01-.5.5h-9A.5.5 0 013 14V2a.5.5 0 01.5-.5z"/><path d="M9.5 1.5V5h3.5M5.5 8h5M5.5 10.5h5"/></svg>Daily Recap</button>
@@ -1670,6 +1686,93 @@ window.addEventListener('load', function() {
   </div>
 
   <!-- DASHBOARD -->
+  <!-- ═══ LEAD FINDER — its own page ═══ -->
+  <div class="page" id="page-leads" style="overflow-y:auto">
+    <div style="max-width:1100px;margin:0;padding:22px 24px 60px">
+      <div style="font-size:24px;font-weight:800;color:var(--navy);letter-spacing:-.4px">Lead Finder</div>
+      <div style="font-size:12.5px;color:var(--text3);margin:4px 0 20px;max-width:640px">Find real businesses to call. Pick what you're after, enter a city, and we'll pull companies with contact info. New leads land in your Leads list, not your accounts.</div>
+      <!-- Find Today's Leads -->
+      <div id="daily-lead-finder" style="margin-bottom:24px">
+        <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px 20px;box-shadow:0 1px 3px rgba(15,25,35,.05)">
+          <div style="font-size:15px;font-weight:750;color:var(--navy)">Find new leads</div>
+          <div style="font-size:12.5px;color:var(--text3);margin:3px 0 15px">Pick what you're after and enter a city. We'll pull real businesses with contact info you can call today.</div>
+
+          <div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">What are you looking for?</div>
+          <div id="segment-pill-row" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+            <label class="seg-chip"><input type="checkbox" name="seg" value="Dealer" checked> Distributors &amp; Dealers</label>
+            <label class="seg-chip"><input type="checkbox" name="seg" value="Contractor"> Contractors</label>
+            <label class="seg-chip"><input type="checkbox" name="seg" value="Lumber / Building Supply"> Lumber &amp; Building Supply</label>
+          </div>
+
+          <div id="lead-brand-wrap" style="display:none;margin-bottom:16px">
+            <div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Your lines <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">&#183; optional, sharpens the match</span></div>
+            <div id="lead-brand-row" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input id="lead-city-input" readonly onfocus="this.removeAttribute('readonly')" type="text" name="lead_city_search" inputmode="text" placeholder="Enter a city (e.g. Birmingham AL)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" style="flex:1;min-width:220px;padding:11px 13px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit">
+            <button onclick="runDailyLeads()" id="lead-find-btn" style="padding:11px 26px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit">Find leads</button>
+            <button onclick="refreshLeads()" id="lead-refresh-btn" style="display:none;padding:11px 16px;background:var(--surface);color:var(--navy);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit" title="Get 10 new leads">&#8635; 10 more</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading state -->
+      <div id="lead-loading" style="display:none;text-align:center;padding:32px 24px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:24px">
+        <div style="font-size:14px;font-weight:600;color:var(--navy);margin-bottom:8px">Finding leads...</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Searching for distributors, dealer networks, and commercial accounts...</div>
+        <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      </div>
+
+      <!-- Results summary -->
+      <div id="lead-summary" style="display:none;background:#f0f5ff;border:1px solid #c7d7ff;border-radius:8px;padding:12px 16px;margin-bottom:16px">
+        <span id="lead-summary-text" style="font-size:13px;color:var(--navy);font-weight:500"></span>
+      </div>
+
+      <!-- Lead cards grid -->
+      <div id="lead-results" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px"></div>
+    </div>
+  </div>
+
+  <!-- ═══ HOME — the CRM cockpit (accounts, priorities, quick access) ═══ -->
+  <div class="page" id="page-home" style="overflow-y:auto">
+    <div style="max-width:1320px;margin:0;padding:22px 24px 60px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em" id="home-date"></div>
+      <div style="font-size:24px;font-weight:800;color:var(--navy);margin:4px 0 20px;letter-spacing:-.4px" id="home-greeting">Welcome back</div>
+
+      <!-- Headline stats -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px" id="home-stats">
+        <div class="home-stat"><div class="home-stat-v" id="hs-accounts">—</div><div class="home-stat-l">Accounts</div></div>
+        <div class="home-stat"><div class="home-stat-v" style="color:#b91c1c" id="hs-risk">—</div><div class="home-stat-l">Commission at risk</div></div>
+        <div class="home-stat"><div class="home-stat-v" style="color:#b45309" id="hs-found">—</div><div class="home-stat-l">Found money</div></div>
+        <div class="home-stat"><div class="home-stat-v" id="hs-leads">—</div><div class="home-stat-l">New leads</div></div>
+      </div>
+
+      <!-- Two columns: what needs attention + your accounts -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px" id="home-cols">
+        <div class="home-card">
+          <div class="home-card-hdr"><span>Needs attention</span><a onclick="go('reconnect')" class="home-card-link">Reconnect →</a></div>
+          <div id="home-priorities"><div class="home-empty">Loading…</div></div>
+        </div>
+        <div class="home-card">
+          <div class="home-card-hdr"><span>Your accounts</span><a onclick="go('accounts')" class="home-card-link">View all →</a></div>
+          <div id="home-accounts"><div class="home-empty">Loading…</div></div>
+        </div>
+      </div>
+
+      <!-- Quick access -->
+      <div class="home-card-hdr" style="margin-bottom:12px"><span>Jump to</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">
+        <div class="home-tile" onclick="go('accounts')"><div class="home-tile-i" style="background:#eef2ff;color:#4f46e5">◱</div>Accounts</div>
+        <div class="home-tile" onclick="go('reconnect')"><div class="home-tile-i" style="background:#fef2f2;color:#b91c1c">↻</div>Reconnect</div>
+        <div class="home-tile" onclick="go('found-money')"><div class="home-tile-i" style="background:#fffbeb;color:#b45309">$</div>Found Money</div>
+        <div class="home-tile" onclick="go('leads')"><div class="home-tile-i" style="background:#ecfdf5;color:#059669">◎</div>Lead Finder</div>
+        <div class="home-tile" onclick="go('quotes')"><div class="home-tile-i" style="background:#f0f9ff;color:#0369a1">▤</div>Quotes</div>
+        <div class="home-tile" onclick="go('weekly-planner')"><div class="home-tile-i" style="background:#f5f3ff;color:#7c3aed">▦</div>Planner</div>
+      </div>
+    </div>
+  </div>
+
   <div class="page active" id="page-dashboard" style="overflow-y:auto">
     <div style="padding:24px 24px 60px 24px;width:100%;box-sizing:border-box">
 
@@ -1725,46 +1828,8 @@ window.addEventListener('load', function() {
         </div>
       </div>
 
-      <!-- Find Today's Leads -->
-      <div id="daily-lead-finder" style="margin-bottom:24px">
-        <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px 20px;box-shadow:0 1px 3px rgba(15,25,35,.05)">
-          <div style="font-size:15px;font-weight:750;color:var(--navy)">Find new leads</div>
-          <div style="font-size:12.5px;color:var(--text3);margin:3px 0 15px">Pick what you're after and enter a city. We'll pull real businesses with contact info you can call today.</div>
+      <!-- lead finder moved to its own page -->
 
-          <div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">What are you looking for?</div>
-          <div id="segment-pill-row" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-            <label class="seg-chip"><input type="checkbox" name="seg" value="Dealer" checked> Distributors &amp; Dealers</label>
-            <label class="seg-chip"><input type="checkbox" name="seg" value="Contractor"> Contractors</label>
-            <label class="seg-chip"><input type="checkbox" name="seg" value="Lumber / Building Supply"> Lumber &amp; Building Supply</label>
-          </div>
-
-          <div id="lead-brand-wrap" style="display:none;margin-bottom:16px">
-            <div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Your lines <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">&#183; optional, sharpens the match</span></div>
-            <div id="lead-brand-row" style="display:flex;gap:8px;flex-wrap:wrap"></div>
-          </div>
-
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <input id="lead-city-input" readonly onfocus="this.removeAttribute('readonly')" type="text" name="lead_city_search" inputmode="text" placeholder="Enter a city (e.g. Birmingham AL)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" style="flex:1;min-width:220px;padding:11px 13px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit">
-            <button onclick="runDailyLeads()" id="lead-find-btn" style="padding:11px 26px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit">Find leads</button>
-            <button onclick="refreshLeads()" id="lead-refresh-btn" style="display:none;padding:11px 16px;background:var(--surface);color:var(--navy);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit" title="Get 10 new leads">&#8635; 10 more</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Loading state -->
-      <div id="lead-loading" style="display:none;text-align:center;padding:32px 24px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:24px">
-        <div style="font-size:14px;font-weight:600;color:var(--navy);margin-bottom:8px">Finding leads...</div>
-        <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Searching for distributors, dealer networks, and commercial accounts...</div>
-        <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-      </div>
-
-      <!-- Results summary -->
-      <div id="lead-summary" style="display:none;background:#f0f5ff;border:1px solid #c7d7ff;border-radius:8px;padding:12px 16px;margin-bottom:16px">
-        <span id="lead-summary-text" style="font-size:13px;color:var(--navy);font-weight:500"></span>
-      </div>
-
-      <!-- Lead cards grid -->
-      <div id="lead-results" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px"></div>
 
       <!-- Two column: Call List + Route -->
       <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start">
@@ -4031,6 +4096,7 @@ var currentContactType = 'installers';
 
 var pageTitles = {
   'found-money': 'Found Money',
+  home: 'Home', leads: 'Lead Finder',
     reports: 'Reports', analytics: 'Analytics', accounts: 'Accounts',
     forecasts: 'Forecasts', campaigns: 'Campaigns', tasks: 'Tasks',
   dashboard: 'Home', contacts: 'Accounts', record: 'Account Detail', contact: 'Contact',
@@ -4152,7 +4218,7 @@ function goLogCall(prospectId) {
 function go(id) {
   // Home is now the adaptive Today cockpit. Old money-dashboard is retired as a
   // landing surface; both "Home" entry points resolve to the Today cockpit.
-  if (id === 'dashboard' || id === 'home') id = 'today';
+  if (id === 'dashboard') id = 'home';
   if (window._teamViewActive && id !== 'record') {
     var _lb = document.querySelector('[onclick="logCallForRecord()"]');
     var _ob = document.querySelector('[onclick="writeOutreachForRecord()"]');
@@ -4203,6 +4269,7 @@ function go(id) {
   }
   if (id === 'email') loadEmailPage();
   if (id === 'opportunities') loadOpportunities();
+  if (id === 'home') loadHome();
   if (id === 'today') loadToday();
   if (id === 'samples') loadSamples();
   if (id === 'time') loadTimeTracker();
@@ -4215,7 +4282,7 @@ function go(id) {
   if (id === 'fortress') loadFortress();
   if (id === 'recap') loadRecap();
   // Refresh route panel whenever user navigates to home/dashboard
-  if (id === 'dashboard' || id === 'home' || id === 'leads') {
+  if (id === 'leads' || id === 'dashboard') {
     if (typeof window._renderRoutePanel === 'function') {
       setTimeout(function() { window._renderRoutePanel(); }, 50);
     }
@@ -4380,6 +4447,40 @@ function ckManager(stats, panel, opps){
   '</div>';
 }
 
+
+function _hEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function loadHome(){
+  var d=new Date();
+  var de=document.getElementById('home-date'); if(de) de.textContent=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  var g=document.getElementById('home-greeting');
+  if(g){var h=d.getHours();var part=h<12?'Good morning':h<18?'Good afternoon':'Good evening';var nm=(window.currentUser&&window.currentUser.name)?(', '+String(window.currentUser.name).split(' ')[0]):'';g.textContent=part+nm;}
+
+  fetch('/api/prospects').then(function(r){return r.ok?r.json():[];}).then(function(list){
+    list=Array.isArray(list)?list:[];
+    var el=document.getElementById('hs-accounts'); if(el) el.textContent=list.length;
+    var box=document.getElementById('home-accounts');
+    if(box){ box.innerHTML = !list.length ? '<div class="home-empty">No accounts yet.</div>' :
+      list.slice(0,6).map(function(p){return '<div class="home-row" onclick="viewRecord('+p.id+')"><div style="min-width:0"><div style="font-size:13px;font-weight:650;color:var(--navy)">'+_hEsc(p.company)+'</div><div style="font-size:11.5px;color:var(--text3)">'+_hEsc([p.category,p.city].filter(Boolean).join(' \u00b7 '))+'</div></div><div style="color:var(--text3)">\u203a</div></div>';}).join(''); }
+  }).catch(function(){});
+
+  fetch('/api/prospects?view=leads').then(function(r){return r.ok?r.json():[];}).then(function(list){
+    var el=document.getElementById('hs-leads'); if(el) el.textContent=(Array.isArray(list)?list.length:0);
+  }).catch(function(){});
+
+  fetch('/api/reconnect?filter=all').then(function(r){return r.ok?r.json():null;}).then(function(dd){
+    if(!dd) return;
+    var risk=(dd.summary&&dd.summary.total_at_risk)||0;
+    var re=document.getElementById('hs-risk'); if(re) re.textContent='$'+Math.round(risk).toLocaleString();
+    var box=document.getElementById('home-priorities'); var accts=dd.accounts||[];
+    if(box){ box.innerHTML = !accts.length ? '<div class="home-empty">Nothing overdue. You are on top of it.</div>' :
+      accts.slice(0,6).map(function(a){return '<div class="home-row" onclick="viewRecord('+a.id+')"><div style="min-width:0"><div style="font-size:13px;font-weight:650;color:var(--navy)">'+_hEsc(a.company)+'</div><div style="font-size:11.5px;color:var(--text3)">'+(a.days_quiet||0)+' days quiet</div></div><div style="font-size:13px;font-weight:750;color:#b91c1c;font-variant-numeric:tabular-nums">'+(a.trailing_commission?('$'+Math.round(a.trailing_commission).toLocaleString()):'')+'</div></div>';}).join(''); }
+  }).catch(function(){});
+
+  fetch('/api/found-money').then(function(r){return r.ok?r.json():null;}).then(function(dd){
+    if(!dd||!dd.summary) return;
+    var el=document.getElementById('hs-found'); if(el) el.textContent='$'+Math.round(dd.summary.total_found||0).toLocaleString();
+  }).catch(function(){});
+}
 function loadDashboard() {
   // Set greeting and date
   var hours = new Date().getHours();
