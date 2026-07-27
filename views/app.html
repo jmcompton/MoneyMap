@@ -1715,10 +1715,6 @@ window.addEventListener('load', function() {
           </div>
           </div>
 
-          <div id="lead-brand-wrap" style="display:none;margin-bottom:16px">
-            <div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Your lines <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">&#183; optional, sharpens the match</span></div>
-            <div id="lead-brand-row" style="display:flex;gap:8px;flex-wrap:wrap"></div>
-          </div>
 
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <input id="lead-city-input" readonly onfocus="this.removeAttribute('readonly')" type="text" name="lead_city_search" inputmode="text" placeholder="Enter a city (e.g. Birmingham AL)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" style="flex:1;min-width:220px;padding:11px 13px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit">
@@ -10887,6 +10883,34 @@ function selectLeadManufacturer(i){
 }
 window.runDailyLeads = window.runDailyLeads;
 
+
+function _leadEsc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function _weekdayDate(dayNum){
+  var d=new Date(), dow=d.getDay();
+  var monday=new Date(d); monday.setDate(d.getDate()-((dow+6)%7));
+  var t=new Date(monday); t.setDate(monday.getDate()+(parseInt(dayNum)-1));
+  return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+}
+// Add a found lead to the Weekly Planner on the chosen day. Saves it as a hidden
+// lead (source AI, stays out of Accounts until a call), then creates the stop.
+function addLeadToPlanner(i, dayNum){
+  if(!dayNum) return;
+  var lead=(window._dailyLeads||[])[i]; if(!lead) return;
+  var date=_weekdayDate(dayNum);
+  fetch('/api/ai/leads/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({leads:[lead]})})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      var acct=(res&&res.saved&&res.saved[0]&&res.saved[0].id)||(res&&res.ids&&res.ids[0])||null;
+      return fetch('/api/planner/items',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({planned_date:date,item_type:'stop',account_id:acct,title:lead.company,
+          note:[lead.address,lead.phone].filter(Boolean).join(' \u00b7 '),source:'manual'})});
+    })
+    .then(function(r){return r.json();})
+    .then(function(){ if(typeof showToast==='function') showToast(lead.company+' added to your planner'); })
+    .catch(function(){ if(typeof showToast==='function') showToast('Could not add to planner'); });
+}
+window.runDailyLeads = window.runDailyLeads;
+
 window.runDailyLeads = function() {
   var btn = document.getElementById('lead-find-btn');
   var loading = document.getElementById('lead-loading');
@@ -11007,6 +11031,33 @@ window.runDailyLeads = function() {
       if (lead.place_id) window._shownPlaceIds.push(lead.place_id);
       if (lead.company) window._shownNames.push(lead.company.toLowerCase());
     });
+
+    // Clean, actionable results on the Lead Finder page. Found leads are NOT saved
+    // to Accounts — the rep picks a day to drop one onto the Weekly Planner, and it
+    // only becomes an account once a call is logged.
+    var out = document.getElementById('lead-results');
+    if (out) {
+      out.style.display = 'block';
+      out.style.gridTemplateColumns = 'none';
+      out.innerHTML =
+        '<div style="font-size:13px;font-weight:750;color:var(--navy);margin:16px 0 10px">' + leads.length + ' leads found &#183; pick a day to add one to your planner</div>' +
+        leads.map(function(lead, i){
+          var addr = lead.address || lead.city || '';
+          var cat = lead.category || lead.territory || '';
+          var phone = lead.phone || '';
+          return '<div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:13px 15px;margin-bottom:8px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">' +
+            '<div style="flex:1;min-width:220px">' +
+              '<div style="font-size:14px;font-weight:700;color:var(--navy)">' + _leadEsc(lead.company||'') + '</div>' +
+              '<div style="font-size:12px;color:var(--text3);margin-top:2px">' + _leadEsc([cat, addr].filter(Boolean).join(' \u00b7 ')) + '</div>' +
+              (phone ? '<a href="tel:' + phone + '" style="font-size:12px;color:var(--accent);text-decoration:none;font-weight:600">' + _leadEsc(phone) + '</a>' : '') +
+            '</div>' +
+            '<select onchange="addLeadToPlanner(' + i + ',this.value);this.selectedIndex=0" style="padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;font-family:inherit;background:#fff;cursor:pointer">' +
+              '<option value="">+ Add to a day&#8230;</option>' +
+              '<option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option>' +
+            '</select>' +
+          '</div>';
+        }).join('');
+    }
 
     var callList = document.getElementById('morning-call-list');
     var listCount = document.getElementById('list-count-badge');
