@@ -882,30 +882,46 @@ router.post('/manufacturer-lookup', async (req, res) => {
     const hint = String((req.body && req.body.hint) || '').trim().slice(0, 200);
 
     const prompt =
-      'An outside sales rep firm REPRESENTS the manufacturer "' + name + '".' +
-      (hint ? ' Context from the rep: ' + hint + '.' : '') + '\n' +
-      'Search the web to identify this specific company, then determine:\n' +
-      '1. What products they make (one concise sentence).\n' +
-      '2. One best industry category label (2 to 4 words).\n' +
-      '3. The business types that BUY these products - the rep firm\'s ideal customers. ' +
-      'Give 5 to 8 concrete, searchable business types a rep could look up on Google Maps, ' +
-      'for example "window and door manufacturers", "commercial glazing contractors", "metal service centers".\n\n' +
-      'Return ONLY a JSON object and nothing else:\n' +
-      '{"products":"...","category":"...","target_customers":["...","..."]}';
+      'You are a B2B sales-intelligence assistant for a manufacturers rep firm. ' +
+      'The firm represents the manufacturer "' + name + '".' +
+      (hint ? ' The rep adds: ' + hint + '.' : '') + '\n\n' +
+      'Return STRICT JSON only — no markdown, no prose, no code fences — in exactly this shape:\n' +
+      '{"known": true, "products": "one concise sentence on what they manufacture", ' +
+      '"category": "2 to 4 word industry category", ' +
+      '"target_customers": ["business type", "business type", "..."]}\n\n' +
+      'Rules:\n' +
+      '- target_customers: 5 to 8 SPECIFIC, searchable business types that BUY this ' +
+      'manufacturer\'s products — the companies a field rep would actually call. ' +
+      'Use terms you could type into Google Maps, e.g. "commercial roofing contractors", ' +
+      '"lumber yards", "glazing contractors", "fence and deck contractors", "building material distributors".\n' +
+      '- Do NOT list consumer or retail channels. These are B2B trade customers.\n' +
+      '- If you do not recognize the manufacturer, set "known" to false and infer the best ' +
+      'products and target_customers from the name and any hint. Always return target_customers.\n' +
+      'Return ONLY the JSON object.';
 
-    const text = await callClaudeWithSearch(prompt);
-    let obj = null;
-    const a = text.indexOf('{'), b = text.lastIndexOf('}');
-    if (a !== -1 && b !== -1 && b > a) { try { obj = JSON.parse(text.substring(a, b + 1)); } catch(_) {} }
-    if (!obj || !Array.isArray(obj.target_customers) || !obj.target_customers.length) {
-      return res.status(502).json({ error: 'Could not confidently identify that manufacturer. Try the full company name, or add a short note on what they make.' });
+    async function attempt() {
+      const text = await callClaude(prompt);
+      let raw = String(text || '').trim().replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
+      const a = raw.indexOf('{'), b = raw.lastIndexOf('}');
+      if (a === -1 || b === -1 || b <= a) return null;
+      try { return JSON.parse(raw.substring(a, b + 1)); } catch (_) { return null; }
     }
+
+    let obj = await attempt();
+    if (!obj || !Array.isArray(obj.target_customers) || !obj.target_customers.length) {
+      obj = await attempt(); // one retry
+    }
+    if (!obj || !Array.isArray(obj.target_customers) || !obj.target_customers.length) {
+      return res.status(422).json({ error: 'Could not build a buyer profile for "' + name + '". Try the full company name, or add a short note on what they make.' });
+    }
+
     res.json({
       ok: true,
       name: name,
+      known: obj.known !== false,
       products: String(obj.products || '').slice(0, 300),
       category: String(obj.category || '').slice(0, 60),
-      target_customers: obj.target_customers.slice(0, 8).map(function(t){ return String(t).slice(0, 60); })
+      target_customers: obj.target_customers.slice(0, 8).map(t => String(t).slice(0, 60)).filter(Boolean)
     });
   } catch (e) {
     console.error('[manufacturer-lookup]', e.message);
