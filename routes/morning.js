@@ -465,6 +465,39 @@ router.get('/', async (req, res) => {
 });
 
 // ─── DAILY LEAD FINDER (IMPROVED) ────────────────────────────────────────────
+// GET /api/morning/followups — accounts you owe a follow-up: the MOST RECENT call
+// on the account left a next step whose date is due or overdue. Logging a newer
+// call replaces that most-recent call, so the follow-up clears automatically.
+router.get('/followups', async (req, res) => {
+  const uid = req.session.user.id;
+  try {
+    const result = await pool.query(
+      `SELECT p.id, p.company, p.phone, p.city,
+              c.next_step, c.next_step_date,
+              (CURRENT_DATE - c.next_step_date) AS days_overdue
+       FROM prospects p
+       JOIN LATERAL (
+         SELECT next_step, next_step_date
+         FROM calls
+         WHERE prospect_id = p.id
+         ORDER BY call_date DESC, id DESC
+         LIMIT 1
+       ) c ON true
+       WHERE p.user_id = $1
+         AND c.next_step IS NOT NULL AND TRIM(c.next_step) <> ''
+         AND c.next_step_date IS NOT NULL
+         AND c.next_step_date <= CURRENT_DATE
+       ORDER BY c.next_step_date ASC
+       LIMIT 30`,
+      [uid]
+    );
+    res.json(result.rows);
+  } catch (e) {
+    console.error('[followups]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 router.post('/daily-leads', async (req, res) => {
   const uid = req.session.user.id;
   const PLACES_KEY = process.env.GOOGLE_PLACES_API_KEY;
