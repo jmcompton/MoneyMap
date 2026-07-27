@@ -260,8 +260,46 @@ router.get('/anchors', async (req, res) => {
     if (r.error) return res.status(403).json({ error: r.error });
     const weekStart = mondayOf(req.query.week_start);
     const map = await loadManualAnchors(r.repId, weekStart, addDays(weekStart, 4));
-    res.json({ rep_id: r.repId, week_start: weekStart, anchors: map });
+    // Per-day route: where the rep starts and ends, and the times.
+    const rt = await pool.query(
+      `SELECT to_char(anchor_date,'YYYY-MM-DD') AS d, start_point, start_time, end_point, end_time
+       FROM planner_anchors WHERE rep_id=$1 AND anchor_date BETWEEN $2 AND $3`,
+      [r.repId, weekStart, addDays(weekStart, 4)]
+    );
+    const routes = {};
+    rt.rows.forEach(function(row){
+      if (row.start_point || row.end_point || row.start_time || row.end_time)
+        routes[row.d] = { start_point: row.start_point, start_time: row.start_time, end_point: row.end_point, end_time: row.end_time };
+    });
+    res.json({ rep_id: r.repId, week_start: weekStart, anchors: map, routes: routes });
   } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── PUT /api/planner/route ───────────────────────────────────────
+// Save a day's route: where you start and end, and the time on each.
+router.put('/route', async (req, res) => {
+  try {
+    const r = resolveRepId(req);
+    if (r.error) return res.status(403).json({ error: r.error });
+    const date = ymd(req.body.date);
+    if (!date) return res.status(400).json({ error: 'date required' });
+    const sp = (req.body.start_point == null ? '' : String(req.body.start_point)).trim().slice(0, 160);
+    const st = (req.body.start_time  == null ? '' : String(req.body.start_time)).trim().slice(0, 20);
+    const ep = (req.body.end_point   == null ? '' : String(req.body.end_point)).trim().slice(0, 160);
+    const et = (req.body.end_time    == null ? '' : String(req.body.end_time)).trim().slice(0, 20);
+    await pool.query(
+      `INSERT INTO planner_anchors (rep_id, anchor_date, start_point, start_time, end_point, end_time, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,NOW())
+       ON CONFLICT (rep_id, anchor_date) DO UPDATE SET
+         start_point=EXCLUDED.start_point, start_time=EXCLUDED.start_time,
+         end_point=EXCLUDED.end_point, end_time=EXCLUDED.end_time, updated_at=NOW()`,
+      [r.repId, date, sp, st, ep, et]
+    );
+    res.json({ ok: true, date, start_point: sp, start_time: st, end_point: ep, end_time: et });
+  } catch (e) {
+    console.error('[planner route]', e.message);
     res.status(500).json({ error: e.message });
   }
 });

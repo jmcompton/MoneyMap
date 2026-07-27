@@ -3348,6 +3348,30 @@ window.addEventListener('load', function() {
       <div style="display:flex;gap:14px;align-items:flex-start" id="pl-layout">
         <!-- Week grid -->
         <div id="pl-grid" style="flex:1;display:grid;grid-template-columns:repeat(5,1fr);gap:10px;min-width:0"></div>
+        <div id="pl-route-modal" style="display:none;position:fixed;inset:0;background:rgba(10,20,35,.55);z-index:400;align-items:center;justify-content:center;padding:16px">
+          <div style="background:#fff;border-radius:16px;max-width:430px;width:100%;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.3)" onclick="event.stopPropagation()">
+            <div style="font-size:17px;font-weight:800;color:var(--navy)">Route this day</div>
+            <div id="pl-route-sub" style="font-size:12.5px;color:var(--text3);margin:2px 0 16px">Where are you starting and ending?</div>
+            <div style="margin-bottom:13px">
+              <label style="display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">Start from</label>
+              <div style="display:flex;gap:8px">
+                <input id="pl-r-start" type="text" placeholder="Home — Birmingham, or a hotel" style="flex:1;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit">
+                <input id="pl-r-start-time" type="text" placeholder="8:00 AM" style="max-width:110px;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit">
+              </div>
+            </div>
+            <div style="margin-bottom:13px">
+              <label style="display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px">End at</label>
+              <div style="display:flex;gap:8px">
+                <input id="pl-r-end" type="text" placeholder="Home — Birmingham, or a hotel" style="flex:1;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit">
+                <input id="pl-r-end-time" type="text" placeholder="5:00 PM" style="max-width:110px;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit">
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+              <button class="btn btn-secondary btn-sm" onclick="plCloseRoute()">Cancel</button>
+              <button class="btn btn-primary btn-sm" onclick="plSaveRoute()">Route it</button>
+            </div>
+          </div>
+        </div>
 
         <!-- Smart side panel (desktop) -->
         <div id="pl-panel" style="width:280px;flex-shrink:0;background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px;align-self:stretch">
@@ -16326,6 +16350,39 @@ function plWeekShift(dir) {
 // Tap an anchor chip → set/change/clear that day's MANUAL anchor city. Empty
 // input clears it (reverts to auto first-stop behavior). Manual anchors are
 // never overwritten by auto-set.
+
+var _plRouteDate = null;
+function plOpenRoute(date){
+  _plRouteDate = date;
+  var rt = (plState.routes && plState.routes[date]) || {};
+  document.getElementById('pl-route-sub').textContent = plFmtDay(date) + ' ' + plFmtMD(date) + ' — where are you starting and ending?';
+  document.getElementById('pl-r-start').value = rt.start_point || 'Home';
+  document.getElementById('pl-r-end').value = rt.end_point || 'Home';
+  document.getElementById('pl-r-start-time').value = rt.start_time || '8:00 AM';
+  document.getElementById('pl-r-end-time').value = rt.end_time || '5:00 PM';
+  var m = document.getElementById('pl-route-modal'); m.style.display = 'flex';
+}
+function plCloseRoute(){ document.getElementById('pl-route-modal').style.display = 'none'; _plRouteDate = null; }
+function plSaveRoute(){
+  if(!_plRouteDate) return;
+  var body = {
+    rep_id: plState.repId, date: _plRouteDate,
+    start_point: document.getElementById('pl-r-start').value,
+    start_time:  document.getElementById('pl-r-start-time').value,
+    end_point:   document.getElementById('pl-r-end').value,
+    end_time:    document.getElementById('pl-r-end-time').value
+  };
+  fetch('/api/planner/route', { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d && d.error){ showToast(d.error); return; }
+      plState.routes = plState.routes || {};
+      plState.routes[_plRouteDate] = { start_point:body.start_point, start_time:body.start_time, end_point:body.end_point, end_time:body.end_time };
+      plCloseRoute(); plRenderGrid();
+      showToast('Route set');
+    })
+    .catch(function(){ showToast('Could not save route'); });
+}
 function plEditAnchor(date) {
   if (plState.readOnly) return;
   var cur = (plState.anchors && plState.anchors[date] && plState.anchors[date].manual)
@@ -16368,6 +16425,10 @@ function plLoad() {
   fetch('/api/planner?rep_id=' + plState.repId + '&week_start=' + plState.weekStart)
     .then(function(r){ return r.json(); })
     .then(function(d){ plState.items = (d && d.items) || []; plState.anchors = (d && d.anchors) || {}; plRenderGrid(); });
+  fetch('/api/planner/anchors?rep_id=' + plState.repId + '&week_start=' + plState.weekStart)
+    .then(function(r){ return r.json(); })
+    .then(function(d){ plState.routes = (d && d.routes) || {}; plRenderGrid(); })
+    .catch(function(){});
 
   if (!readOnly) plLoadPanel();
   else { document.getElementById('pl-panel').style.display = 'none'; document.getElementById('pl-hint').style.display='none'; }
@@ -16411,6 +16472,11 @@ function plRenderGrid() {
     html += '<span '+(ro?'':'onclick="plEditAnchor(\''+date+'\')" ')+'title="'+(anc.manual?'Manual anchor — tap to change or clear':'Auto anchor (first stop). Tap to set a city.')+'" style="display:inline-block;font-size:10px;font-weight:600;border-radius:10px;padding:2px 8px;'+(ro?'':'cursor:pointer;')+ancStyle+'">'+ancLabel+'</span>';
     html += '</div>';
 
+    // Route this day (start/end + times) + start bar
+    var rt = (plState.routes && plState.routes[date]) || null;
+    if (!ro) html += '<button onclick="plOpenRoute(\''+date+'\')" style="width:100%;font-size:11px;font-weight:700;padding:6px;border-radius:8px;border:1px solid var(--accent);background:'+(rt?'var(--accent)':'#fff')+';color:'+(rt?'#fff':'var(--accent)')+';cursor:pointer;font-family:inherit;margin-bottom:8px">&#128506; '+(rt?'Re-route day':'Route this day')+'</button>';
+    if (rt && (rt.start_point || rt.start_time)) html += '<div style="background:#eef4ff;border:1px solid #c7d2fe;border-radius:7px;padding:5px 9px;margin-bottom:6px;font-size:10.5px;font-weight:600;color:#3730a3;display:flex;justify-content:space-between;gap:6px"><span>&#9654; '+plEsc(rt.start_point||'Start')+'</span><span>'+plEsc(rt.start_time||'')+'</span></div>';
+
     // appointments
     appts.forEach(function(a){
       html += '<div style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:6px;padding:6px 8px;margin-bottom:6px;font-size:11px">';
@@ -16436,6 +16502,8 @@ function plRenderGrid() {
       if (isAi && s.ai_prep) html += '<div style="color:var(--text3);margin-top:3px;font-style:italic">'+plEsc(s.ai_prep)+'</div>';
       html += '</div>';
     });
+
+    if (rt && (rt.end_point || rt.end_time)) html += '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:7px;padding:5px 9px;margin-bottom:6px;font-size:10.5px;font-weight:600;color:#166534;display:flex;justify-content:space-between;gap:6px"><span>&#9632; '+plEsc(rt.end_point||'End')+'</span><span>'+plEsc(rt.end_time||'')+'</span></div>';
 
     // AI suggestions pending review for this day (dashed/badged, NOT yet saved)
     if (!ro && plState.aiSuggestions) {

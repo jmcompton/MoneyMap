@@ -654,6 +654,11 @@ async function initDB() {
     ALTER TABLE line_aliases           ADD COLUMN IF NOT EXISTS company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE;
     ALTER TABLE planner_items          ADD COLUMN IF NOT EXISTS company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE;
     ALTER TABLE planner_anchors        ADD COLUMN IF NOT EXISTS company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE;
+    ALTER TABLE planner_anchors        ALTER COLUMN city DROP NOT NULL;
+    ALTER TABLE planner_anchors        ADD COLUMN IF NOT EXISTS start_point TEXT;
+    ALTER TABLE planner_anchors        ADD COLUMN IF NOT EXISTS start_time  TEXT;
+    ALTER TABLE planner_anchors        ADD COLUMN IF NOT EXISTS end_point   TEXT;
+    ALTER TABLE planner_anchors        ADD COLUMN IF NOT EXISTS end_time    TEXT;
     ALTER TABLE contacts               ADD COLUMN IF NOT EXISTS company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE;
 
     CREATE INDEX IF NOT EXISTS idx_users_company        ON users(company_id);
