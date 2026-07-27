@@ -1425,7 +1425,7 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 
 .seg-chip{display:inline-flex;align-items:center;gap:0;cursor:pointer;background:#fff;border:1.5px solid var(--border);border-radius:99px;padding:9px 15px;font-size:13px;font-weight:600;color:var(--text2);user-select:none;transition:background .12s,border-color .12s,color .12s}
 .seg-chip:hover{border-color:var(--text3)}
-.seg-chip:has(input:checked){background:var(--navy);border-color:var(--navy);color:#fff}
+.seg-chip:has(input:checked),.seg-chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
 .seg-chip input{position:absolute;opacity:0;width:0;height:0;margin:0}
 .lead-brand-pill.on{border-color:var(--navy)!important;box-shadow:inset 0 0 0 1px var(--navy)}
 
@@ -1687,8 +1687,8 @@ window.addEventListener('load', function() {
 
   <!-- DASHBOARD -->
   <!-- ═══ LEAD FINDER — its own page ═══ -->
-  <div class="page" id="page-leads" style="overflow-y:auto">
-    <div style="max-width:1100px;margin:0;padding:22px 24px 60px">
+  <div class="page" id="page-leads" style="overflow-y:auto;padding-bottom:90px">
+    <div style="max-width:1100px;margin:0 auto;padding:22px 24px 60px;width:100%;box-sizing:border-box">
       <div style="font-size:24px;font-weight:800;color:var(--navy);letter-spacing:-.4px">Lead Finder</div>
       <div style="font-size:12.5px;color:var(--text3);margin:4px 0 20px;max-width:640px">Find real businesses to call. Pick what you're after, enter a city, and we'll pull companies with contact info. New leads land in your Leads list, not your accounts.</div>
       <!-- Find Today's Leads -->
@@ -1697,11 +1697,18 @@ window.addEventListener('load', function() {
           <div style="font-size:15px;font-weight:750;color:var(--navy)">Find new leads</div>
           <div style="font-size:12.5px;color:var(--text3);margin:3px 0 15px">Pick what you're after and enter a city. We'll pull real businesses with contact info you can call today.</div>
 
+          <div id="lead-mfr-section" style="display:none;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+            <div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Search by a line you represent</div>
+            <div id="lead-mfr-row" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+            <div id="lead-mfr-detail" style="display:none;font-size:11.5px;color:var(--text2);margin-top:10px;line-height:1.5"></div>
+          </div>
+          <div id="lead-generic-section">
           <div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">What are you looking for?</div>
           <div id="segment-pill-row" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
             <label class="seg-chip"><input type="checkbox" name="seg" value="Dealer" checked> Distributors &amp; Dealers</label>
             <label class="seg-chip"><input type="checkbox" name="seg" value="Contractor"> Contractors</label>
             <label class="seg-chip"><input type="checkbox" name="seg" value="Lumber / Building Supply"> Lumber &amp; Building Supply</label>
+          </div>
           </div>
 
           <div id="lead-brand-wrap" style="display:none;margin-bottom:16px">
@@ -4282,6 +4289,7 @@ function go(id) {
   if (id === 'fortress') loadFortress();
   if (id === 'recap') loadRecap();
   // Refresh route panel whenever user navigates to home/dashboard
+  if (id === 'leads') { if (typeof loadLeadManufacturers==='function') loadLeadManufacturers(); }
   if (id === 'leads' || id === 'dashboard') {
     if (typeof window._renderRoutePanel === 'function') {
       setTimeout(function() { window._renderRoutePanel(); }, 50);
@@ -10842,6 +10850,40 @@ window.getSelectedBrands = function() {
 window._shownPlaceIds = [];
 window._shownNames = [];
 
+
+// Lead Finder driven by who the firm represents: each manufacturer carries the
+// AI list of businesses that buy it, and selecting one hunts exactly those.
+function loadLeadManufacturers(){
+  var sec=document.getElementById('lead-mfr-section'), row=document.getElementById('lead-mfr-row');
+  if(!row) return;
+  fetch('/api/lines/represented').then(function(r){return r.ok?r.json():[];}).then(function(list){
+    list=Array.isArray(list)?list:[];
+    window._repManufacturers=list;
+    if(!list.length){ if(sec) sec.style.display='none'; window._activeManufacturer=null; return; }
+    row.innerHTML = list.map(function(m,i){ return '<button type="button" class="seg-chip" data-mfr="'+i+'" onclick="selectLeadManufacturer('+i+')">'+_mfrEsc(m.name)+'</button>'; }).join('')
+      + '<button type="button" class="seg-chip" data-mfr="none" onclick="selectLeadManufacturer(-1)">Any business type</button>';
+    if(sec) sec.style.display='';
+    selectLeadManufacturer(0);
+  }).catch(function(){ if(sec) sec.style.display='none'; });
+}
+function selectLeadManufacturer(i){
+  var list=window._repManufacturers||[], detail=document.getElementById('lead-mfr-detail'), generic=document.getElementById('lead-generic-section');
+  document.querySelectorAll('#lead-mfr-row .seg-chip').forEach(function(b){ b.classList.remove('on'); });
+  if(i<0){
+    window._activeManufacturer=null;
+    var n=document.querySelector('#lead-mfr-row [data-mfr="none"]'); if(n) n.classList.add('on');
+    if(detail) detail.style.display='none';
+    if(generic) generic.style.display='';
+    return;
+  }
+  var m=list[i]; if(!m) return;
+  window._activeManufacturer={ name:m.name, target_customers:m.target_customers||[] };
+  var b=document.querySelector('#lead-mfr-row [data-mfr="'+i+'"]'); if(b) b.classList.add('on');
+  if(detail){ detail.style.display=''; detail.innerHTML='Hunting who buys <b>'+_mfrEsc(m.name)+'</b>: '+_mfrEsc((m.target_customers||[]).join(', ')); }
+  if(generic) generic.style.display='none';
+}
+window.runDailyLeads = window.runDailyLeads;
+
 window.runDailyLeads = function() {
   var btn = document.getElementById('lead-find-btn');
   var loading = document.getElementById('lead-loading');
@@ -10851,8 +10893,9 @@ window.runDailyLeads = function() {
 
   if (!city) { alert('Please enter a city first (e.g. Norcross GA)'); return; }
 
-  var segments = getSelectedSegments();
-  if (!segments.length) { alert('Please select at least one segment.'); return; }
+  var mfr = window._activeManufacturer || null;   // {name, target_customers}
+  var segments = mfr ? [mfr.name] : getSelectedSegments();
+  if (!segments.length) { alert('Please pick what you are looking for.'); return; }
 
   btn.disabled = true;
   btn.textContent = 'Searching...';
@@ -10869,16 +10912,21 @@ window.runDailyLeads = function() {
       finalize();
       return;
     }
+    var bodyObj = {
+      city: city,
+      brands: getSelectedBrands(),
+      channel: segments[idx],
+      shown_place_ids: Array.from(seenIds),
+      shown_names: window._shownNames || []
+    };
+    // Manufacturer-driven: hunt the exact business types that buy this line.
+    if (mfr && Array.isArray(mfr.target_customers) && mfr.target_customers.length) {
+      bodyObj.targetCustomers = mfr.target_customers;
+    }
     fetch('/api/morning/daily-leads', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        city: city,
-        brands: getSelectedBrands(),
-        channel: segments[idx],
-        shown_place_ids: Array.from(seenIds),
-        shown_names: window._shownNames || []
-      })
+      body: JSON.stringify(bodyObj)
     })
     .then(function(r) { return r.json(); })
     .then(function(data) {
