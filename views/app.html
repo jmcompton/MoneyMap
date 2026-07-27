@@ -5006,7 +5006,7 @@ function renderProspects() {
       '<td>' + catBadge(p.category) + '</td>' +
       '<td style="color:var(--text3)">' + (p.city||'—') + '</td>' +
       '<td>' + (p.contact||'—') + '</td>' +
-      '<td style="color:var(--text3)">' + (p.phone||'—') + '</td>' +
+      '<td style="color:var(--text3)">' + fmtPhone(p.phone) + '</td>' +
       '<td><span class="badge b-' + (p.status||'new').toLowerCase() + '">' + (p.status||'New') + '</span></td>' +
       '<td>' + dsBadge + csBadge + '</td>' +
       '<td>' + routeBtn + '</td>' +
@@ -5084,6 +5084,7 @@ function clearContactSelection() {
 
 function _actEsc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function _actDate(d){ if(!d) return '\u2014'; try{ return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }catch(e){ return String(d); } }
+function fmtPhone(p){ if(!p) return '\u2014'; var d=String(p).replace(/\D/g,''); if(d.length===11&&d.charAt(0)==='1') d=d.slice(1); if(d.length===10) return '('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6); return String(p); }
 function _timeAgo(d){ if(!d) return '\u2014'; var t=new Date(d).getTime(); if(!t) return '\u2014'; var days=Math.floor((Date.now()-t)/86400000); if(days<=0) return 'Today'; if(days===1) return 'Yesterday'; if(days<30) return days+' days ago'; if(days<60) return '1 month ago'; return Math.floor(days/30)+' months ago'; }
 function loadAccountActivities(id, companyName){
   var el=document.getElementById('rec-timeline'); if(!el) return;
@@ -5128,7 +5129,7 @@ function viewRecord(id) {
       document.getElementById('rec-subtitle').textContent = p.category || '';
       document.getElementById('rec-last-update').textContent = 'Last Update: ' + (p.created_at ? new Date(p.created_at).toLocaleDateString() : '—');
       document.getElementById('rq-email').innerHTML = p.email ? '<a href="mailto:' + p.email + '">' + p.email + '</a>' : '—';
-      document.getElementById('rq-phone').textContent = p.phone || '—';
+      document.getElementById('rq-phone').textContent = fmtPhone(p.phone);
       document.getElementById('rq-status').innerHTML = '<span class="badge b-' + (p.status||'new').toLowerCase() + '">' + (p.status||'New') + '</span>';
       // data_status and company_type for detail view
       var dsRec = p.data_status || 'Unvetted';
@@ -5155,7 +5156,7 @@ function viewRecord(id) {
       var fields = [
         ['Contact Owner',_ownerNm],['Company Type',ctRecBadge],
         ['Account Name',p.company],
-        ['Business Phone',p.phone||'—'],
+        ['Business Phone',fmtPhone(p.phone)],
         ['City',p.city||'—'],['State',p.state||'GA'],
         ['Address',p.address||'—'],['Zip',p.zip||'—'],
         ['Website',p.website ? '<a href="' + p.website + '" target="_blank">Website</a>' : '—'],
@@ -11096,7 +11097,7 @@ window.runDailyLeads = function() {
             '<div style="flex:1;min-width:220px">' +
               '<div style="font-size:14px;font-weight:700;color:var(--navy)">' + _leadEsc(lead.company||'') + '</div>' +
               '<div style="font-size:12px;color:var(--text3);margin-top:2px">' + _leadEsc([cat, addr].filter(Boolean).join(' \u00b7 ')) + '</div>' +
-              (phone ? '<a href="tel:' + phone + '" style="font-size:12px;color:var(--accent);text-decoration:none;font-weight:600">' + _leadEsc(phone) + '</a>' : '') +
+              (phone ? '<a href="tel:' + phone + '" style="font-size:12px;color:var(--accent);text-decoration:none;font-weight:600">' + _leadEsc(fmtPhone(phone)) + '</a>' : '') +
             '</div>' +
             '<select onchange="addLeadToPlanner(' + i + ',this.value);this.selectedIndex=0" style="padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;font-family:inherit;background:#fff;cursor:pointer">' +
               '<option value="">+ Add to a day&#8230;</option>' +
@@ -11659,7 +11660,7 @@ function renderTeamContacts(rows, search) {
       '<td>' + repBadge + '</td>' +
       '<td><span class="pill-cat">' + (r.category||'—') + '</span></td>' +
       '<td>' + (r.city||'—') + '</td>' +
-      '<td>' + (r.phone ? '<a href="tel:' + r.phone + '" onclick="event.stopPropagation()" style="color:var(--accent);font-size:12px;font-weight:600;text-decoration:none">' + r.phone + '</a>' : '—') + '</td>' +
+      '<td>' + (r.phone ? '<a href="tel:' + r.phone + '" onclick="event.stopPropagation()" style="color:var(--accent);font-size:12px;font-weight:600;text-decoration:none">' + fmtPhone(r.phone) + '</a>' : '—') + '</td>' +
       '<td style="text-align:center">' + contactedBadge + '</td>' +
       '<td>' + statusBadge + '</td>' +
       '<td>' + routeBtn + '</td>' +
