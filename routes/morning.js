@@ -511,7 +511,7 @@ router.post('/daily-leads', async (req, res) => {
     let centerCoords = null;
     try {
       const geoRes = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(city)}&key=${PLACES_KEY}`
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(city)}&components=country:US&region=us&key=${PLACES_KEY}`
       );
       const geoData = await geoRes.json();
       if (geoData.results && geoData.results[0]) {
@@ -566,14 +566,15 @@ router.post('/daily-leads', async (req, res) => {
     let skippedResidential = 0, skippedJunk = 0;
 
     for (const config of uniqueConfigs) {
-      if (allLeads.length >= 25) break; // Collect 25, return top 10 (more headroom for refresh)
+      if (allLeads.length >= 45) break; // Collect 45, return top 20
 
       try {
         // Embed city directly in query — NO locationBias
         // locationBias with radius >50km causes 400 errors from Google Places API
         const searchBody = {
           textQuery: `${config.query} ${city}`,
-          maxResultCount: 20
+          maxResultCount: 20,
+          regionCode: 'US'
         };
 
         const placesRes = await fetch('https://places.googleapis.com/v1/places:searchText', {
@@ -604,7 +605,7 @@ router.post('/daily-leads', async (req, res) => {
         const places = data.places || [];
 
         for (const place of places) {
-          if (allLeads.length >= 25) break;
+          if (allLeads.length >= 45) break;
 
           const company = place.displayName?.text || '';
           const placeId = place.id || '';
@@ -744,7 +745,7 @@ router.post('/daily-leads', async (req, res) => {
       return da - db;
     });
 
-    const topLeads = allLeads.slice(0, 10);
+    const topLeads = allLeads.slice(0, 20);
 
     res.json({
       ok: true,

@@ -11000,7 +11000,7 @@ window.runDailyLeads = function() {
       var residentialBlock = ['handyman','landscaping','lawn care','pressure wash','gutter clean','house clean'];
       if (residentialBlock.some(function(w){ return name.includes(w); })) return false;
       return true;
-    }).slice(0, 10);
+    }).slice(0, 20);
 
     var flaggedLeads = allLeads.filter(function(lead) { return lead.already_contacted; });
 
