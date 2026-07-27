@@ -17357,16 +17357,23 @@ function _mfrRenderResult(d){
       + '</div>'
       + '<button onclick="refineMfrProducts()" style="margin-bottom:14px;padding:7px 14px;background:#fff;border:1px solid var(--border);border-radius:7px;font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;font-family:inherit">&#8635; Update buyers for what I carry</button>'
     : '';
-  var chips=(d.target_customers||[]).map(function(t){ return '<span style="display:inline-block;background:#eef1f5;color:var(--navy);font-size:12px;font-weight:600;padding:5px 11px;border-radius:99px;margin:0 6px 6px 0">'+_mfrEsc(t)+'</span>'; }).join('');
   out.innerHTML='<div style="border:1px solid var(--border);border-radius:10px;padding:14px 16px;background:#fafbfc">'
     + '<div style="font-size:14px;font-weight:750;color:var(--navy)">'+_mfrEsc(d.name)+(d.category?' <span style="font-size:11px;font-weight:600;color:var(--text3)">&#183; '+_mfrEsc(d.category)+'</span>':'')+'</div>'
     + (d.products?'<div style="font-size:12.5px;color:var(--text2);margin:5px 0 12px">'+_mfrEsc(d.products)+'</div>':'')
     + prodBox
-    + '<div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Who buys this &#8212; your lead finder targets</div>'
-    + '<div>'+chips+'</div>'
-    + '<button onclick="saveRepresentedManufacturer()" style="margin-top:12px;padding:9px 18px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Yes, I represent this</button>'
+    + '<div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Who buys this &#8212; remove any you don\'t sell to, or add your own</div>'
+    + '<div id="mfr-buyer-chips"></div>'
+    + '<button onclick="saveRepresentedManufacturer()" style="margin-top:14px;padding:9px 18px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Yes, I represent this</button>'
   + '</div>';
+  renderBuyerChips();
 }
+function renderBuyerChips(){
+  var d=window._pendingMfr, box=document.getElementById('mfr-buyer-chips'); if(!box||!d) return;
+  var chips=(d.target_customers||[]).map(function(t,i){ return '<span style="display:inline-flex;align-items:center;gap:6px;background:#eef1f5;color:var(--navy);font-size:12px;font-weight:600;padding:5px 8px 5px 11px;border-radius:99px;margin:0 6px 6px 0">'+_mfrEsc(t)+'<button onclick="removeBuyerChip('+i+')" title="Remove" style="border:none;background:rgba(0,0,0,.1);color:var(--navy);width:16px;height:16px;border-radius:50%;cursor:pointer;font-size:12px;line-height:1;display:inline-flex;align-items:center;justify-content:center;font-family:inherit">&times;</button></span>'; }).join('');
+  box.innerHTML=chips+'<div style="display:flex;gap:6px;margin-top:8px;max-width:440px"><input id="mfr-add-buyer" type="text" placeholder="Add a buyer type you sell to&#8230;" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addBuyerChip();}" style="flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit"><button onclick="addBuyerChip()" style="padding:7px 14px;background:#fff;border:1px solid var(--border);border-radius:7px;font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;font-family:inherit">Add</button></div>';
+}
+function removeBuyerChip(i){ var d=window._pendingMfr; if(!d||!d.target_customers) return; d.target_customers.splice(i,1); renderBuyerChips(); }
+function addBuyerChip(){ var d=window._pendingMfr; if(!d) return; var inp=document.getElementById('mfr-add-buyer'); if(!inp) return; var v=(inp.value||'').trim(); if(!v) return; d.target_customers=d.target_customers||[]; d.target_customers.push(v.slice(0,60)); renderBuyerChips(); var n=document.getElementById('mfr-add-buyer'); if(n) n.focus(); }
 function lookupManufacturer(){
   var input=document.getElementById('rep-mfr-input'), btn=document.getElementById('rep-mfr-btn'), out=document.getElementById('rep-mfr-result');
   if(!input) return;
