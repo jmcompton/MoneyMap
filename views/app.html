@@ -1475,6 +1475,10 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 #page-home .home-tile:hover{box-shadow:0 6px 20px rgba(15,25,35,.08);border-color:#d7dee6}
 #page-home .home-tile-i{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700}
 @media(max-width:760px){#page-home #home-stats{grid-template-columns:1fr 1fr}#page-home #home-cols{grid-template-columns:1fr}}
+
+.mfr-prod{display:inline-flex;align-items:center;cursor:pointer;background:#fff;border:1.5px solid var(--border);border-radius:99px;padding:6px 13px;font-size:12px;font-weight:600;color:var(--text2);user-select:none}
+.mfr-prod:has(input:checked){background:var(--navy);border-color:var(--navy);color:#fff}
+.mfr-prod input{position:absolute;opacity:0;width:0;height:0;margin:0}
 </style>
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
@@ -17337,58 +17341,66 @@ function fortressMarkVisited(id, btn){
 function _mfrEsc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 window._pendingMfr = null;
 
-function lookupManufacturer(){
-  var input = document.getElementById('rep-mfr-input');
-  var btn = document.getElementById('rep-mfr-btn');
-  var out = document.getElementById('rep-mfr-result');
-  if(!input) return;
-  var name = (input.value||'').trim();
-  if(!name){ input.focus(); return; }
-  btn.disabled = true; btn.textContent = 'Looking up…';
-  out.innerHTML = '<div style="font-size:12.5px;color:var(--text3);padding:8px 0">Researching ' + _mfrEsc(name) + ' on the web… this takes a few seconds.</div>';
-  fetch('/api/ai/manufacturer-lookup', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ name: name })
-  }).then(function(r){ return r.json(); }).then(function(d){
-    btn.disabled = false; btn.textContent = 'Look up';
-    if(!d || d.error || !d.target_customers){
-      out.innerHTML = '<div style="font-size:12.5px;color:#b91c1c;padding:8px 0">' + _mfrEsc((d&&d.error)||'Could not identify that manufacturer.') + '</div>';
-      return;
-    }
-    window._pendingMfr = d;
-    var chips = (d.target_customers||[]).map(function(t){
-      return '<span style="display:inline-block;background:#eef1f5;color:var(--navy);font-size:12px;font-weight:600;padding:5px 11px;border-radius:99px;margin:0 6px 6px 0">' + _mfrEsc(t) + '</span>';
-    }).join('');
-    out.innerHTML =
-      '<div style="border:1px solid var(--border);border-radius:10px;padding:14px 16px;background:#fafbfc">'
-        + '<div style="font-size:14px;font-weight:750;color:var(--navy)">' + _mfrEsc(d.name) + (d.category ? ' <span style="font-size:11px;font-weight:600;color:var(--text3)">· ' + _mfrEsc(d.category) + '</span>' : '') + '</div>'
-        + (d.products ? '<div style="font-size:12.5px;color:var(--text2);margin:5px 0 12px">' + _mfrEsc(d.products) + '</div>' : '')
-        + '<div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Who buys this — your lead finder targets</div>'
-        + '<div>' + chips + '</div>'
-        + '<button onclick="saveRepresentedManufacturer()" style="margin-top:12px;padding:9px 18px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Yes, I represent this</button>'
-      + '</div>';
-  }).catch(function(){
-    btn.disabled = false; btn.textContent = 'Look up';
-    out.innerHTML = '<div style="font-size:12.5px;color:#b91c1c;padding:8px 0">Lookup failed. Try again.</div>';
-  });
+function _mfrSelectedProducts(){
+  var arr=[]; document.querySelectorAll('#mfr-product-row input[type="checkbox"]:checked').forEach(function(b){ arr.push(b.value); }); return arr;
 }
-
+function _mfrRenderResult(d){
+  var out=document.getElementById('rep-mfr-result');
+  window._pendingMfr=d;
+  var lines=d.product_lines||[];
+  var carried=(d.scoped_products&&d.scoped_products.length)?d.scoped_products:lines;
+  var carriedLower=carried.map(function(x){return String(x).toLowerCase();});
+  var prodBox = lines.length
+    ? '<div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin:4px 0 8px">Which lines do you carry? <span style="font-weight:400;text-transform:none;letter-spacing:0">(all checked = full range)</span></div>'
+      + '<div id="mfr-product-row" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:9px">'
+      + lines.map(function(pl){ var on=carriedLower.indexOf(String(pl).toLowerCase())>-1; return '<label class="mfr-prod"><input type="checkbox" value="'+_mfrEsc(pl)+'"'+(on?' checked':'')+'> '+_mfrEsc(pl)+'</label>'; }).join('')
+      + '</div>'
+      + '<button onclick="refineMfrProducts()" style="margin-bottom:14px;padding:7px 14px;background:#fff;border:1px solid var(--border);border-radius:7px;font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;font-family:inherit">&#8635; Update buyers for what I carry</button>'
+    : '';
+  var chips=(d.target_customers||[]).map(function(t){ return '<span style="display:inline-block;background:#eef1f5;color:var(--navy);font-size:12px;font-weight:600;padding:5px 11px;border-radius:99px;margin:0 6px 6px 0">'+_mfrEsc(t)+'</span>'; }).join('');
+  out.innerHTML='<div style="border:1px solid var(--border);border-radius:10px;padding:14px 16px;background:#fafbfc">'
+    + '<div style="font-size:14px;font-weight:750;color:var(--navy)">'+_mfrEsc(d.name)+(d.category?' <span style="font-size:11px;font-weight:600;color:var(--text3)">&#183; '+_mfrEsc(d.category)+'</span>':'')+'</div>'
+    + (d.products?'<div style="font-size:12.5px;color:var(--text2);margin:5px 0 12px">'+_mfrEsc(d.products)+'</div>':'')
+    + prodBox
+    + '<div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Who buys this &#8212; your lead finder targets</div>'
+    + '<div>'+chips+'</div>'
+    + '<button onclick="saveRepresentedManufacturer()" style="margin-top:12px;padding:9px 18px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Yes, I represent this</button>'
+  + '</div>';
+}
+function lookupManufacturer(){
+  var input=document.getElementById('rep-mfr-input'), btn=document.getElementById('rep-mfr-btn'), out=document.getElementById('rep-mfr-result');
+  if(!input) return;
+  var name=(input.value||'').trim(); if(!name){ input.focus(); return; }
+  btn.disabled=true; btn.textContent='Researching…';
+  out.innerHTML='<div style="font-size:12.5px;color:var(--text3);padding:8px 0">Researching '+_mfrEsc(name)+' and its market… a few seconds.</div>';
+  fetch('/api/ai/manufacturer-lookup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name})})
+    .then(function(r){return r.json();}).then(function(d){
+      btn.disabled=false; btn.textContent='Look up';
+      if(!d||d.error||!d.target_customers){ out.innerHTML='<div style="font-size:12.5px;color:#b91c1c;padding:8px 0">'+_mfrEsc((d&&d.error)||'Could not identify that manufacturer.')+'</div>'; return; }
+      _mfrRenderResult(d);
+    }).catch(function(){ btn.disabled=false; btn.textContent='Look up'; out.innerHTML='<div style="font-size:12.5px;color:#b91c1c;padding:8px 0">Lookup failed. Try again.</div>'; });
+}
+function refineMfrProducts(){
+  var d=window._pendingMfr; if(!d) return;
+  var products=_mfrSelectedProducts();
+  if(!products.length){ alert('Pick at least one line, or leave all checked for the full range.'); return; }
+  var out=document.getElementById('rep-mfr-result');
+  out.innerHTML='<div style="font-size:12.5px;color:var(--text3);padding:8px 0">Re-scoping buyers for '+_mfrEsc(products.join(', '))+'…</div>';
+  fetch('/api/ai/manufacturer-lookup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:d.name,products:products})})
+    .then(function(r){return r.json();}).then(function(nd){
+      if(!nd||nd.error||!nd.target_customers){ _mfrRenderResult(d); return; }
+      if((!nd.product_lines||!nd.product_lines.length)&&d.product_lines) nd.product_lines=d.product_lines;
+      _mfrRenderResult(nd);
+    }).catch(function(){ _mfrRenderResult(d); });
+}
 function saveRepresentedManufacturer(){
-  var d = window._pendingMfr;
-  if(!d) return;
-  fetch('/api/lines/represent', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(d)
-  }).then(function(r){ return r.json(); }).then(function(res){
-    if(res && res.ok){
-      document.getElementById('rep-mfr-input').value = '';
-      document.getElementById('rep-mfr-result').innerHTML = '';
-      window._pendingMfr = null;
-      loadRepresentedManufacturers();
-    } else {
-      alert((res && res.error) || 'Could not save.');
-    }
-  }).catch(function(){ alert('Could not save.'); });
+  var d=window._pendingMfr; if(!d) return;
+  var payload={ name:d.name, products:d.products, category:d.category, target_customers:d.target_customers, carried_products:_mfrSelectedProducts() };
+  fetch('/api/lines/represent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(function(r){return r.json();}).then(function(res){
+      if(res&&res.ok){ document.getElementById('rep-mfr-input').value=''; document.getElementById('rep-mfr-result').innerHTML=''; window._pendingMfr=null; loadRepresentedManufacturers(); }
+      else alert((res&&res.error)||'Could not save.');
+    }).catch(function(){ alert('Could not save.'); });
 }
 
 function loadRepresentedManufacturers(){

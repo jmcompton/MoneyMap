@@ -880,23 +880,39 @@ router.post('/manufacturer-lookup', async (req, res) => {
     const name = String((req.body && req.body.name) || '').trim().slice(0, 120);
     if (!name) return res.status(400).json({ error: 'A manufacturer name is required.' });
     const hint = String((req.body && req.body.hint) || '').trim().slice(0, 200);
+    // Optional: the specific product lines the firm actually carries. When set,
+    // everything (products summary + buyer chain) is scoped to just these.
+    const products = Array.isArray(req.body && req.body.products)
+      ? req.body.products.map(x => String(x).slice(0, 80)).filter(Boolean).slice(0, 12)
+      : [];
+
+    const scopeLine = products.length
+      ? '\nIMPORTANT: The firm carries ONLY these product lines from this manufacturer: ' +
+        products.join(', ') + '. Scope the products summary AND the entire buyer chain to ONLY these lines.'
+      : '';
 
     const prompt =
-      'You are a B2B sales-intelligence assistant for a manufacturers rep firm. ' +
-      'The firm represents the manufacturer "' + name + '".' +
-      (hint ? ' The rep adds: ' + hint + '.' : '') + '\n\n' +
-      'Return STRICT JSON only — no markdown, no prose, no code fences — in exactly this shape:\n' +
-      '{"known": true, "products": "one concise sentence on what they manufacture", ' +
+      'You are a B2B sales-intelligence assistant for a manufacturers rep firm that represents "' + name + '".' +
+      (hint ? ' The rep adds: ' + hint + '.' : '') + scopeLine + '\n\n' +
+      'Research this manufacturer — their website, catalog, and the market they sell into. ' +
+      'Return STRICT JSON only (no markdown, no prose, no code fences):\n' +
+      '{"known": true, "products": "one concise sentence on what they make' +
+      (products.length ? ' (scoped to the carried lines)' : '') + '", ' +
       '"category": "2 to 4 word industry category", ' +
-      '"target_customers": ["business type", "business type", "..."]}\n\n' +
+      '"product_lines": ["distinct product line", "..."], ' +
+      '"target_customers": ["business type", "..."]}\n\n' +
       'Rules:\n' +
-      '- target_customers: 5 to 8 SPECIFIC, searchable business types that BUY this ' +
-      'manufacturer\'s products — the companies a field rep would actually call. ' +
-      'Use terms you could type into Google Maps, e.g. "commercial roofing contractors", ' +
-      '"lumber yards", "glazing contractors", "fence and deck contractors", "building material distributors".\n' +
-      '- Do NOT list consumer or retail channels. These are B2B trade customers.\n' +
-      '- If you do not recognize the manufacturer, set "known" to false and infer the best ' +
-      'products and target_customers from the name and any hint. Always return target_customers.\n' +
+      '- product_lines: 4 to 8 of this manufacturer\'s DISTINCT product lines (e.g. for Soudal: ' +
+      '"roofing sealants", "window & door foams", "construction adhesives", "firestop sealants"). ' +
+      'These are for the rep to pick which they carry.\n' +
+      '- target_customers: think in the FULL DISTRIBUTION CHAIN, not just direct buyers. Include BOTH ' +
+      '(a) the distributors and wholesalers who STOCK these products, AND (b) the end-user businesses — ' +
+      'contractors, installers, fabricators — who BUY and USE them, even when they buy through a distributor. ' +
+      '6 to 10 specific, Google-Maps-searchable business types spanning that chain. ' +
+      'Example for roofing sealants: "roofing distributors", "commercial roofing contractors", ' +
+      '"building material distributors", "waterproofing contractors", "commercial building contractors".\n' +
+      '- Do NOT list consumer/retail channels. B2B trade only.\n' +
+      '- If you do not recognize the manufacturer, set "known" to false and infer from the name/hint. Always return target_customers.\n' +
       'Return ONLY the JSON object.';
 
     async function attempt() {
@@ -908,9 +924,7 @@ router.post('/manufacturer-lookup', async (req, res) => {
     }
 
     let obj = await attempt();
-    if (!obj || !Array.isArray(obj.target_customers) || !obj.target_customers.length) {
-      obj = await attempt(); // one retry
-    }
+    if (!obj || !Array.isArray(obj.target_customers) || !obj.target_customers.length) obj = await attempt();
     if (!obj || !Array.isArray(obj.target_customers) || !obj.target_customers.length) {
       return res.status(422).json({ error: 'Could not build a buyer profile for "' + name + '". Try the full company name, or add a short note on what they make.' });
     }
@@ -921,7 +935,9 @@ router.post('/manufacturer-lookup', async (req, res) => {
       known: obj.known !== false,
       products: String(obj.products || '').slice(0, 300),
       category: String(obj.category || '').slice(0, 60),
-      target_customers: obj.target_customers.slice(0, 8).map(t => String(t).slice(0, 60)).filter(Boolean)
+      product_lines: Array.isArray(obj.product_lines) ? obj.product_lines.slice(0, 8).map(t => String(t).slice(0, 60)).filter(Boolean) : [],
+      target_customers: obj.target_customers.slice(0, 10).map(t => String(t).slice(0, 60)).filter(Boolean),
+      scoped_products: products
     });
   } catch (e) {
     console.error('[manufacturer-lookup]', e.message);
