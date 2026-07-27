@@ -133,6 +133,13 @@ const SEGMENT_SEARCH_CONFIG = {
     { query: 'building products dealer', score: 9, category: 'Dealer' },
     { query: 'wholesale building supply', score: 8, category: 'Dealer' },
   ],
+  'Dealer / Installer': [
+    { query: 'siding company', score: 10, category: 'Dealer-Installer' },
+    { query: 'roofing company', score: 10, category: 'Dealer-Installer' },
+    { query: 'window and door company', score: 9, category: 'Dealer-Installer' },
+    { query: 'fence company', score: 8, category: 'Dealer-Installer' },
+    { query: 'home improvement contractor', score: 8, category: 'Dealer-Installer' },
+  ],
   'Contractor': [
     { query: 'commercial construction contractor', score: 10, category: 'Contractor' },
     { query: 'general contractor construction', score: 10, category: 'Contractor' },
@@ -487,6 +494,7 @@ router.post('/daily-leads', async (req, res) => {
     'Lumber / Building Supply': 'Dealer',
     'Contractor':            'Contractor',
     'Dealer':                'Dealer',
+    'Dealer / Installer':    'Dealer',
   };
   const rawChannel = (req.body.channel || 'Contractor').trim();
   const channel = SEGMENT_TO_CHANNEL[rawChannel] || 'Contractor';
@@ -496,7 +504,9 @@ router.post('/daily-leads', async (req, res) => {
   try {
     // Get existing prospects to avoid duplicates
     const existing = await pool.query(
-      'SELECT LOWER(company) as company, google_place_id FROM prospects WHERE user_id=$1', [uid]
+      `SELECT LOWER(company) as company, google_place_id FROM prospects
+         WHERE user_id=$1 OR (company_id IS NOT NULL AND company_id IS NOT DISTINCT FROM $2)`,
+      [uid, req.companyId || null]
     );
     const existingNames = new Set(existing.rows.map(r => r.company).filter(Boolean));
     const existingPlaceIds = new Set(existing.rows.map(r => r.google_place_id).filter(Boolean));
@@ -551,6 +561,17 @@ router.post('/daily-leads', async (req, res) => {
       }
       searchConfigs = segmentQueries.map(sc => ({ ...sc, brand: brands[0] || rawChannel }));
       console.log(`[daily-leads] segment="${rawChannel}" → ${searchConfigs.length} queries for city="${city}"`);
+    }
+
+    // Commercial vs residential focus (default: both). When set, prepend the word
+    // to each search so Google returns commercial (or residential) businesses,
+    // cutting the home-based/handyman noise the field review flagged.
+    const market = String(req.body.market || 'both').toLowerCase();
+    if (market === 'commercial' || market === 'residential') {
+      searchConfigs = searchConfigs.map(sc => {
+        const q = String(sc.query || '');
+        return q.toLowerCase().indexOf(market) === -1 ? Object.assign({}, sc, { query: market + ' ' + q }) : sc;
+      });
     }
 
     // Deduplicate search queries (same query from multiple brands)

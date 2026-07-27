@@ -1715,10 +1715,17 @@ window.addEventListener('load', function() {
           <div id="segment-pill-row" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
             <label class="seg-chip"><input type="checkbox" name="seg" value="Dealer" checked> Distributors &amp; Dealers</label>
             <label class="seg-chip"><input type="checkbox" name="seg" value="Contractor"> Contractors</label>
+            <label class="seg-chip"><input type="checkbox" name="seg" value="Dealer / Installer"> Dealers &amp; Installers</label>
             <label class="seg-chip"><input type="checkbox" name="seg" value="Lumber / Building Supply"> Lumber &amp; Building Supply</label>
           </div>
           </div>
 
+          <div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px">Focus</div>
+          <div id="lead-market-row" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+            <button type="button" class="seg-chip on" data-market="both" onclick="selectLeadMarket('both')">Both</button>
+            <button type="button" class="seg-chip" data-market="commercial" onclick="selectLeadMarket('commercial')">Commercial</button>
+            <button type="button" class="seg-chip" data-market="residential" onclick="selectLeadMarket('residential')">Residential</button>
+          </div>
 
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <input id="lead-city-input" readonly onfocus="this.removeAttribute('readonly')" type="text" name="lead_city_search" inputmode="text" placeholder="Enter a city (e.g. Birmingham AL)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" style="flex:1;min-width:220px;padding:11px 13px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit">
@@ -10856,6 +10863,12 @@ window._shownNames = [];
 
 // Lead Finder driven by who the firm represents: each manufacturer carries the
 // AI list of businesses that buy it, and selecting one hunts exactly those.
+
+window._leadMarket = 'both';
+function selectLeadMarket(m){
+  window._leadMarket = m;
+  document.querySelectorAll('#lead-market-row .seg-chip').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-market')===m); });
+}
 function loadLeadManufacturers(){
   var sec=document.getElementById('lead-mfr-section'), row=document.getElementById('lead-mfr-row');
   if(!row) return;
@@ -10947,6 +10960,7 @@ window.runDailyLeads = function() {
       city: city,
       brands: getSelectedBrands(),
       channel: segments[idx],
+      market: window._leadMarket || 'both',
       shown_place_ids: Array.from(seenIds),
       shown_names: window._shownNames || []
     };
