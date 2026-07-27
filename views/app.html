@@ -16378,8 +16378,9 @@ function plSaveRoute(){
       if(d && d.error){ showToast(d.error); return; }
       plState.routes = plState.routes || {};
       plState.routes[_plRouteDate] = { start_point:body.start_point, start_time:body.start_time, end_point:body.end_point, end_time:body.end_time };
-      plCloseRoute(); plRenderGrid();
-      showToast('Route set');
+      plCloseRoute();
+      showToast(d.optimized ? ('Routed ' + d.optimized + ' stops by mileage') : 'Route saved');
+      plLoad();
     })
     .catch(function(){ showToast('Could not save route'); });
 }
@@ -16488,12 +16489,13 @@ function plRenderGrid() {
     });
 
     // stops
-    stops.forEach(function(s){
+    stops.forEach(function(s, idx){
       var label = plEsc(s.account_company || s.title || 'Stop');
+      var routeNum = rt ? '<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--navy);color:#fff;font-size:9px;font-weight:700;margin-right:5px;flex-shrink:0">'+(idx+1)+'</span>' : '';
       var isAi = s.source === 'ai';
       html += '<div draggable="'+(ro?'false':'true')+'" ondragstart="plItemDragStart(event,'+s.id+')" style="background:'+(s.visited?'#dcfce7':'#f8fafc')+';border:1px solid '+(s.visited?'#86efac':'var(--border)')+';border-radius:6px;padding:6px 8px;margin-bottom:6px;font-size:11px;cursor:'+(ro?'default':'grab')+'">';
       html += '<div style="display:flex;justify-content:space-between;gap:4px;align-items:center">';
-      html += '<span style="font-weight:600;color:var(--navy)">'+(s.visited?'&#10003; ':'')+label+(isAi?' <span style="font-size:9px;font-weight:700;color:#7c3aed;background:#ede9fe;padding:1px 5px;border-radius:8px;vertical-align:middle">AI</span>':'')+'</span>';
+      html += '<span style="font-weight:600;color:var(--navy);display:inline-flex;align-items:center">'+routeNum+(s.visited?'&#10003; ':'')+label+(isAi?' <span style="font-size:9px;font-weight:700;color:#7c3aed;background:#ede9fe;padding:1px 5px;border-radius:8px;vertical-align:middle">AI</span>':'')+'</span>';
       if (!ro) html += '<span style="cursor:pointer;color:#94a3b8" onclick="plDeleteItem('+s.id+')">&times;</span>';
       html += '</div>';
       if (s.visited && s.visit_outcome) html += '<div style="color:#16a34a;margin-top:2px;font-weight:600">'+plEsc(s.visit_outcome)+'</div>';

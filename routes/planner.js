@@ -297,7 +297,49 @@ router.put('/route', async (req, res) => {
          end_point=EXCLUDED.end_point, end_time=EXCLUDED.end_time, updated_at=NOW()`,
       [r.repId, date, sp, st, ep, et]
     );
-    res.json({ ok: true, date, start_point: sp, start_time: st, end_point: ep, end_time: et });
+
+    // ── Optimize: order the day's stops by mileage, nearest-neighbor from the
+    //    start point. Uses the same geocode + distance helpers as build-week.
+    let optimized = 0;
+    try {
+      const stopsRes = await pool.query(
+        `SELECT pi.id, p.city AS city, p.state AS state
+           FROM planner_items pi JOIN prospects p ON pi.account_id = p.id
+          WHERE pi.rep_id=$1 AND pi.planned_date=$2 AND pi.item_type='stop'
+          ORDER BY pi.sort_order ASC, pi.id ASC`,
+        [r.repId, date]
+      );
+      const stops = stopsRes.rows;
+      if (stops.length > 1) {
+        const geoPart = (v) => String(v || '').split(/—|,|\|/).pop().trim();
+        const startCoord = sp ? await geocodeCity(geoPart(sp)) : null;
+        const cache = {};
+        for (const s of stops) {
+          const key = (s.city || '') + '|' + (s.state || '');
+          if (!(key in cache)) cache[key] = s.city ? await geocodeCity(s.city + (s.state ? (' ' + s.state) : '')) : null;
+          s.coords = cache[key];
+        }
+        let cur = startCoord || (stops.find(s => s.coords) || {}).coords || null;
+        const remaining = stops.slice(), ordered = [];
+        while (remaining.length) {
+          let bi = 0, bd = Infinity;
+          for (let i = 0; i < remaining.length; i++) {
+            const c = remaining[i].coords;
+            const d = (cur && c) ? distanceMiles(cur.lat, cur.lng, c.lat, c.lng) : (c ? 0 : 99999);
+            if (d < bd) { bd = d; bi = i; }
+          }
+          const nxt = remaining.splice(bi, 1)[0];
+          ordered.push(nxt);
+          if (nxt.coords) cur = nxt.coords;
+        }
+        for (let i = 0; i < ordered.length; i++) {
+          await pool.query('UPDATE planner_items SET sort_order=$1 WHERE id=$2', [i + 1, ordered[i].id]);
+        }
+        optimized = ordered.length;
+      }
+    } catch (optErr) { console.error('[route optimize]', optErr.message); }
+
+    res.json({ ok: true, date, start_point: sp, start_time: st, end_point: ep, end_time: et, optimized });
   } catch (e) {
     console.error('[planner route]', e.message);
     res.status(500).json({ error: e.message });
