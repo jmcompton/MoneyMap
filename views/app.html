@@ -4194,8 +4194,8 @@ window.addEventListener('load', function() {
         // "search bounces me to Today" bug on slower loads).
         var _role = applyRoleNav(u.role);
         if (!window._userNavigated) {
-          // Home for everyone is the adaptive Today cockpit.
-          go('today');
+          // Land on the CRM Home cockpit.
+          go('home');
           setActiveNav('bn-home');
         }
       } else {
@@ -5484,11 +5484,10 @@ function _todayBtn(label, attrs, icon) {
 // The Daily Lead Finder is the SAME DOM node relocated into #today-finder-slot,
 // so all its existing handlers/IDs keep working untouched.
 
-// Move the live Daily Lead Finder node into the Today finder slot (once).
+// The Lead Finder now lives on its own page. Do NOT relocate it into Today —
+// that stole the node off the Lead Finder page and left that page empty.
 function moveFinderIntoToday() {
-  var slot = document.getElementById('today-finder-slot');
-  var finder = document.getElementById('daily-lead-finder');
-  if (slot && finder && finder.parentNode !== slot) slot.appendChild(finder);
+  return; // no-op: finder stays on the Lead Finder page
 }
 
 // "Today's working city": city of the earliest appointment/stop today, else the
