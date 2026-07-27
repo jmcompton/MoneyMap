@@ -963,31 +963,46 @@ router.post('/build-week', async (req, res) => {
       }
     }
 
-    // ── Pass 2: build the REST of the week. Cluster the remaining ranked accounts
-    //    by city and drop one city-cluster onto each still-open day, so every day
-    //    is a coherent geographic trip and the whole week fills — not just the one
-    //    anchored day. Highest-value clusters land first.
-    const clusters = {};
-    candidates.forEach(function(c, idx){
-      if (used.has(c.account_id) || !c.area) return;
-      const key = normCity(c.area);
-      if (!clusters[key]) clusters[key] = { city: c.area, items: [], bestRank: idx };
-      clusters[key].items.push(c);
-      if (idx < clusters[key].bestRank) clusters[key].bestRank = idx;
-    });
-    const clusterList = Object.keys(clusters).map(function(k){ return clusters[k]; })
-      .sort(function(a, b){ return a.bestRank - b.bestRank; });   // city with the best account first
-    let ci = 0;
+    // ── Pass 2: give every still-open day ONE anchor account to build around —
+    //    the next-highest reconnect/going-quiet account, each in a DIFFERENT city
+    //    so the week spreads out. Each anchor carries the buyer types of the line
+    //    it represents, so the lead finder can later fill the day around it.
+    const usedCities = new Set();
+    // cities already anchored by Pass 1 (existing/manual) shouldn't repeat
+    for (const day of dayList) {
+      const ac = manualAnchors[day] || autoCityByDay[day];
+      if (ac) usedCities.add(normCity(ac));
+    }
+    async function buyerTypesForAccount(accountId) {
+      try {
+        const rows = (await pool.query(
+          `SELECT l.target_customers FROM account_lines al JOIN lines l ON al.line_id = l.id
+            WHERE al.account_id = $1 AND l.target_customers IS NOT NULL`, [accountId]
+        )).rows;
+        const out = [];
+        for (const row of rows) {
+          try { (JSON.parse(row.target_customers) || []).forEach(function(t){ if (t && out.indexOf(t) < 0) out.push(String(t)); }); } catch (_) {}
+        }
+        return out.slice(0, 8);
+      } catch (_) { return []; }
+    }
     for (const day of dayList) {
       if (dayRemaining[day] <= 0) continue;
-      if (ci >= clusterList.length) break;
-      const cl = clusterList[ci++];
-      for (const c of cl.items) {
-        if (dayRemaining[day] <= 0) break;
-        if (used.has(c.account_id)) continue;
-        used.add(c.account_id); dayRemaining[day]--;
-        suggestions.push({ account_id: c.account_id, day, name: c.name, area: c.area, reason: c.reason_hint, prep: c.prep || null });
-      }
+      // one anchor per open day, from a city we haven't anchored yet
+      const anchor = candidates.find(function(c){
+        return !used.has(c.account_id) && c.area && !usedCities.has(normCity(c.area));
+      });
+      if (!anchor) continue;
+      used.add(anchor.account_id);
+      usedCities.add(normCity(anchor.area));
+      dayRemaining[day]--;
+      suggestions.push({
+        account_id: anchor.account_id, day, name: anchor.name, area: anchor.area,
+        reason: anchor.reason_hint, prep: anchor.prep || null,
+        is_anchor: true,
+        search_city: anchor.area,
+        buyer_types: await buyerTypesForAccount(anchor.account_id)
+      });
     }
 
     // Only flag a shortfall if the WHOLE week came up light — not day-by-day noise.
