@@ -939,40 +939,8 @@ router.post('/build-week', async (req, res) => {
     const used = new Set();
     const suggestions = [];
     const messages = [];
-    const dayRemaining = {};
-    dayList.forEach(function(day){ dayRemaining[day] = Math.max(0, goal - (dayCounts[day] || 0)); });
-
-    // ── Pass 1: days with a REAL anchor (manual, or an existing first stop) get
-    //    filled with the highest-ranked candidates within radius of that anchor.
-    for (const day of dayList) {
-      if (dayRemaining[day] <= 0) continue;
-      const city = manualAnchors[day] || autoCityByDay[day];
-      if (!city) continue;                                 // unanchored → Pass 2
-      let coords = await geocodeCity(city);
-      if (!coords && ures.home_base_lat && ures.home_base_lng) {
-        coords = { lat: parseFloat(ures.home_base_lat), lng: parseFloat(ures.home_base_lng) };
-      }
-      const anchor = { cityKey: normCity(city), coords };
-      if (!anchor.cityKey && !anchor.coords) continue;
-      for (const c of candidates) {
-        if (dayRemaining[day] <= 0) break;
-        if (used.has(c.account_id) || !c.area) continue;
-        if (!withinRadius(anchor, c, radius)) continue;
-        used.add(c.account_id); dayRemaining[day]--;
-        suggestions.push({ account_id: c.account_id, day, name: c.name, area: c.area, reason: c.reason_hint, prep: c.prep || null });
-      }
-    }
-
-    // ── Pass 2: give every still-open day ONE anchor account to build around —
-    //    the next-highest reconnect/going-quiet account, each in a DIFFERENT city
-    //    so the week spreads out. Each anchor carries the buyer types of the line
-    //    it represents, so the lead finder can later fill the day around it.
     const usedCities = new Set();
-    // cities already anchored by Pass 1 (existing/manual) shouldn't repeat
-    for (const day of dayList) {
-      const ac = manualAnchors[day] || autoCityByDay[day];
-      if (ac) usedCities.add(normCity(ac));
-    }
+
     async function buyerTypesForAccount(accountId) {
       try {
         const rows = (await pool.query(
@@ -986,27 +954,39 @@ router.post('/build-week', async (req, res) => {
         return out.slice(0, 8);
       } catch (_) { return []; }
     }
+
+    // ── One anchor per day. Each day gets a SINGLE reconnect/going-quiet account
+    //    to build around — a reason to be in that city — and the lead finder fills
+    //    the rest of the day around it later. Days that already have stops are left
+    //    alone (build around what's there). Cities never repeat across the week.
     for (const day of dayList) {
-      if (dayRemaining[day] <= 0) continue;
-      // one anchor per open day, from a city we haven't anchored yet
-      const anchor = candidates.find(function(c){
-        return !used.has(c.account_id) && c.area && !usedCities.has(normCity(c.area));
-      });
+      // Already has real stops → build around them, add nothing.
+      if ((dayCounts[day] || 0) > 0) {
+        if (autoCityByDay[day]) usedCities.add(normCity(autoCityByDay[day]));
+        continue;
+      }
+      const manualCity = manualAnchors[day] ? normCity(manualAnchors[day]) : null;
+      let anchor = null;
+      // If the rep pinned an anchor city, prefer a reconnect account IN that city.
+      if (manualCity && !usedCities.has(manualCity)) {
+        anchor = candidates.find(function(c){ return !used.has(c.account_id) && c.area && normCity(c.area) === manualCity; });
+      }
+      // Otherwise the next top reconnect account in a city we haven't used yet.
+      if (!anchor) {
+        anchor = candidates.find(function(c){ return !used.has(c.account_id) && c.area && !usedCities.has(normCity(c.area)); });
+      }
       if (!anchor) continue;
       used.add(anchor.account_id);
       usedCities.add(normCity(anchor.area));
-      dayRemaining[day]--;
       suggestions.push({
         account_id: anchor.account_id, day, name: anchor.name, area: anchor.area,
         reason: anchor.reason_hint, prep: anchor.prep || null,
-        is_anchor: true,
-        search_city: anchor.area,
+        is_anchor: true, search_city: anchor.area,
         buyer_types: await buyerTypesForAccount(anchor.account_id)
       });
     }
 
-    // Only flag a shortfall if the WHOLE week came up light — not day-by-day noise.
-    if (!suggestions.length) messages.push('No nearby accounts to plan. Try a wider radius or set anchor cities.');
+    if (!suggestions.length) messages.push('No going-quiet accounts to anchor the week. Set anchor cities or add accounts to work.');
 
     // Candidates with no usable location — surfaced so the rep can drag manually.
     const couldnt_place = candidates
