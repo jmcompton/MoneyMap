@@ -290,6 +290,35 @@ function isHeavyEquipmentBlocked(name, types) {
   return HEAVY_EQUIPMENT_KEYWORDS.some(kw => combined.includes(kw));
 }
 
+// ── Universal junk filter ────────────────────────────────────────────────────
+// Broad "distributor / supplier / dealer" searches on Google Places drag in
+// businesses that are never a building-products rep target — beer and food
+// distributors, consumer retail, restaurants, healthcare. This is the negative-
+// keyword guardrail from the field review (the "beer distributor" problem). It
+// filters on both the business name and Google's own place types, so it catches
+// junk even when the name is ambiguous. Kept to categories that are never B2B
+// targets in this space; genuine building/industrial results are untouched.
+const JUNK_NAME_KEYWORDS = [
+  'beer','wine','liquor','spirits','beverage','brewery','brewing','brewer','distillery','winery','bottling','soda',
+  'anheuser','busch','budweiser','coors','molson','pepsi','coca-cola','pepsico','dr pepper','red bull','gatorade',
+  'monster energy','keurig','constellation brands','heineken','corona ','modelo','yuengling',
+  'food ','foods','produce','seafood','meat ','poultry','dairy','grocery','catering','vending','snack','coffee','candy',
+  'pharmac','medical','dental','hospital','clinic','veterinar','optical',
+  'apparel','clothing','fashion','footwear','shoe ','jewelry','cosmetic','salon','barber','florist','flowers',
+  'restaurant','cafe','bakery','pizza','deli ','tavern','bar & grill'
+];
+const JUNK_PLACE_TYPES = new Set([
+  'liquor_store','food','meal_delivery','meal_takeaway','restaurant','cafe','bakery','bar','grocery_or_supermarket',
+  'supermarket','convenience_store','pharmacy','drugstore','hospital','doctor','dentist','veterinary_care',
+  'clothing_store','shoe_store','jewelry_store','beauty_salon','hair_care','florist','pet_store','gas_station'
+]);
+function isJunkBlocked(name, types) {
+  const lower = (name || '').toLowerCase();
+  if (JUNK_NAME_KEYWORDS.some(kw => lower.includes(kw))) return true;
+  if (Array.isArray(types) && types.some(t => JUNK_PLACE_TYPES.has(t))) return true;
+  return false;
+}
+
 // ── Home-Based Business Detection ────────────────────────────────────────────
 // Primary signal: residential street suffix + no suite/unit + no corporate entity in name
 // Secondary signal: no website + no specific Google type (only generic establishment types)
@@ -501,14 +530,28 @@ router.post('/daily-leads', async (req, res) => {
       return res.status(500).json({ error: `Could not locate city: ${city}. Please check the city name.` });
     }
 
-    // Build search queries from segment config directly — segment pill = exact query set
-    // rawChannel is the segment name from the UI pill (e.g. 'Roofing Contractor', 'Window/Door Installer')
-    const segmentQueries = SEGMENT_SEARCH_CONFIG[rawChannel];
-    if (!segmentQueries || !segmentQueries.length) {
-      return res.status(400).json({ error: `Unknown segment: "${rawChannel}". Please select a valid segment.` });
+    // Build search queries. If the caller passed explicit target-customer types
+    // — the "who buys this" list from a manufacturer's AI lookup — search those
+    // directly. This is what makes the finder hunt the RIGHT businesses for a
+    // firm's actual lines. Otherwise fall back to the generic segment pills.
+    let searchConfigs;
+    const targetCustomers = Array.isArray(req.body.targetCustomers)
+      ? req.body.targetCustomers.map(t => String(t).slice(0, 80)).filter(Boolean).slice(0, 8)
+      : [];
+    if (targetCustomers.length) {
+      searchConfigs = targetCustomers.map((t, i) => ({
+        query: t, score: 10 - i, category: rawChannel || 'Target',
+        brand: brands[0] || rawChannel || 'Target'
+      }));
+      console.log(`[daily-leads] manufacturer-driven → ${searchConfigs.length} target-customer queries for city="${city}"`);
+    } else {
+      const segmentQueries = SEGMENT_SEARCH_CONFIG[rawChannel];
+      if (!segmentQueries || !segmentQueries.length) {
+        return res.status(400).json({ error: `Unknown segment: "${rawChannel}". Please select a valid segment.` });
+      }
+      searchConfigs = segmentQueries.map(sc => ({ ...sc, brand: brands[0] || rawChannel }));
+      console.log(`[daily-leads] segment="${rawChannel}" → ${searchConfigs.length} queries for city="${city}"`);
     }
-    const searchConfigs = segmentQueries.map(sc => ({ ...sc, brand: brands[0] || rawChannel }));
-    console.log(`[daily-leads] segment="${rawChannel}" → ${searchConfigs.length} queries for city="${city}"`);
 
     // Deduplicate search queries (same query from multiple brands)
     const seenQueries = new Set();
@@ -520,6 +563,7 @@ router.post('/daily-leads', async (req, res) => {
 
     const allLeads = [];
     const sessionSeen = new Set();
+    let skippedResidential = 0, skippedJunk = 0;
 
     for (const config of uniqueConfigs) {
       if (allLeads.length >= 25) break; // Collect 25, return top 10 (more headroom for refresh)
@@ -584,6 +628,9 @@ router.post('/daily-leads', async (req, res) => {
           if (isResidentialRooferBlocked(company, rawChannel)) continue;
           // Hard block — never return heavy equipment / construction machinery companies
           if (isHeavyEquipmentBlocked(company, place.types || [])) continue;
+          // Hard block — universal junk (beer/food distributors, retail, restaurants,
+          // healthcare) that Google drags into broad distributor/supplier searches.
+          if (isJunkBlocked(company, place.types || [])) { skippedJunk++; continue; }
           sessionSeen.add(placeId || companyLower);
 
           // Distance filter — use the rep's actual radius
