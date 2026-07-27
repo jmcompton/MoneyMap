@@ -11,7 +11,7 @@
 <link rel="manifest" href="/manifest.json"/>
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <link rel="icon" type="image/svg+xml" href="/icons/icon-192.svg"/>
-<title>RepRoute CRM</title>
+<title>RepRoute</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <style>
 :root{--sw:220px;--navy:#0f1923;--accent:#1d6aff;--accent2:#0d4fd4;--blue:#1d6aff;--blue-lt:#e8f0ff;--white:#ffffff;--bg:#f7f8fa;--surface:#ffffff;--border:#e2e5ea;--border2:#d0d4db;--text:#0f1923;--text2:#4a5568;--text3:#8a95a3;--green:#0a7c52;--green-lt:#edf7f3;--amber:#92600a;--amber-lt:#fef6e4;--red:#c0392b;--red-lt:#fdf0ef;--purple:#5b21b6;--purple-lt:#ede9fe;--r:6px;--r2:8px;--shadow:0 1px 2px rgba(15,25,35,.06),0 1px 3px rgba(15,25,35,.04);--shadow-md:0 2px 4px rgba(15,25,35,.06),0 4px 12px rgba(15,25,35,.06)}
@@ -64,6 +64,10 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 .mod-tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
 .page{display:none;flex:1;flex-direction:column;overflow-y:auto;min-height:0}
 .page.active{display:flex;position:absolute;top:50px;left:var(--sw);right:0;bottom:0;overflow-y:auto}
+/* Custom full-length pages: scroll as a normal block so tall content keeps its
+   natural height instead of being crushed by the fixed-height flex column
+   (same root-cause fix already used for Quotes). */
+#page-leads.page.active,#page-home.page.active{display:block !important}
 .list-bar{background:var(--white);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .list-count{font-size:12px;color:var(--text3)}
 .sb-in{flex:1;max-width:280px;display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:5px 10px}
@@ -1422,6 +1426,79 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
   .page.active { padding-bottom:calc(62px + env(safe-area-inset-bottom, 0px)) !important; }
   #pwa-install-banner { bottom:calc(80px + env(safe-area-inset-bottom, 0px)) !important; }
 }
+
+.seg-chip{display:inline-flex;align-items:center;gap:0;cursor:pointer;background:#fff;border:1.5px solid var(--border);border-radius:99px;padding:9px 15px;font-size:13px;font-weight:600;color:var(--text2);user-select:none;transition:background .12s,border-color .12s,color .12s}
+.seg-chip:hover{border-color:var(--text3)}
+.seg-chip:has(input:checked),.seg-chip.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.seg-chip input{position:absolute;opacity:0;width:0;height:0;margin:0}
+.lead-brand-pill.on{border-color:var(--navy)!important;box-shadow:inset 0 0 0 1px var(--navy)}
+
+/* ── Found Money (scoped to its own page; cannot affect RepRoute Reconnect) ── */
+#page-found-money .rc-wrap{max-width:1320px;margin:0;padding:16px 22px 48px}
+#page-found-money .pg-head{margin-bottom:15px}
+#page-found-money .pg-h1{font-size:19px;font-weight:800;color:var(--navy);letter-spacing:-.45px;line-height:1.15}
+#page-found-money .pg-sub{font-size:12.5px;color:var(--text3);margin-top:3px;max-width:640px}
+#page-found-money .rc-grid{columns:400px 3;column-gap:12px}
+#page-found-money .rc-grid > *{break-inside:avoid;-webkit-column-break-inside:avoid;margin-bottom:12px;width:100%}
+#page-found-money .rc-card{position:relative;background:#fff;border:1px solid var(--border);border-radius:12px;padding:15px 16px 13px 19px;box-shadow:0 1px 3px rgba(15,25,35,.05)}
+#page-found-money .rc-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:12px 0 0 12px;background:var(--rc-accent,#a16207)}
+#page-found-money .rc-money{font-size:25px;font-weight:800;color:var(--navy);letter-spacing:-.6px;line-height:1;font-variant-numeric:tabular-nums}
+#page-found-money .rc-money-sub{font-size:10.5px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+#page-found-money .rc-name{font-size:15px;font-weight:800;color:var(--navy);line-height:1.25;letter-spacing:-.2px}
+#page-found-money .rc-meta{font-size:12px;color:var(--text3);margin-top:2px}
+#page-found-money .rc-silence{position:relative;height:5px;border-radius:99px;background:#eef1f5;margin-top:11px}
+#page-found-money .rc-silence-fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px}
+#page-found-money .rc-banner{display:flex;align-items:stretch;background:#fff;border:1px solid var(--border);border-left:5px solid #b91c1c;border-radius:12px;overflow:hidden;margin-bottom:14px}
+#page-found-money .rc-banner-main{padding:15px 22px;flex-shrink:0}
+#page-found-money .rc-banner-fig{font-size:34px;font-weight:800;color:#b91c1c;letter-spacing:-1.2px;line-height:1;font-variant-numeric:tabular-nums}
+#page-found-money .rc-banner-lbl{font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-top:5px}
+#page-found-money .rc-banner-side{padding:15px 22px;border-left:1px solid var(--border);display:flex;flex-direction:column;justify-content:center}
+#page-found-money .rc-banner-side .v{font-size:20px;font-weight:800;color:var(--navy);line-height:1;font-variant-numeric:tabular-nums}
+#page-found-money .rc-actions{display:flex;gap:6px;margin-top:12px}
+#page-found-money .rc-call{flex:1.4;padding:10px 8px;border-radius:8px;border:none;background:var(--navy);color:#fff;font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:5px}
+#page-found-money .rc-call.rc-dim{background:#e8ecf0;color:var(--text3);cursor:default}
+#page-found-money .rc-act{padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text2);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+#page-found-money .rc-utils{display:flex;gap:4px;margin-top:7px;border-top:1px solid var(--border);padding-top:8px}
+@media(max-width:640px){#page-found-money .rc-grid{columns:1}#page-found-money .rc-banner{flex-direction:column}#page-found-money .rc-banner-side{border-left:none;border-top:1px solid var(--border)}}
+
+/* ── Home / CRM cockpit ── */
+#page-home .home-stat{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 18px;box-shadow:0 1px 3px rgba(15,25,35,.05)}
+#page-home .home-stat-v{font-size:26px;font-weight:800;color:var(--navy);letter-spacing:-.6px;line-height:1;font-variant-numeric:tabular-nums}
+#page-home .home-stat-l{font-size:11.5px;font-weight:600;color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:.04em}
+#page-home .home-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 18px;box-shadow:0 1px 3px rgba(15,25,35,.05)}
+#page-home .home-card-hdr{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:750;color:var(--navy);margin-bottom:10px}
+#page-home .home-card-link{font-size:12px;font-weight:600;color:var(--accent);cursor:pointer}
+#page-home .home-empty{font-size:12.5px;color:var(--text3);padding:14px 0}
+#page-home .home-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border);cursor:pointer}
+#page-home .home-row:hover{background:#fafbfc}
+#page-home .home-tile{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;font-size:13px;font-weight:650;color:var(--navy);cursor:pointer;box-shadow:0 1px 3px rgba(15,25,35,.05);transition:box-shadow .14s,border-color .14s}
+#page-home .home-tile:hover{box-shadow:0 6px 20px rgba(15,25,35,.08);border-color:#d7dee6}
+#page-home .home-tile-i{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700}
+@media(max-width:760px){#page-home #home-stats{grid-template-columns:1fr 1fr}#page-home #home-cols{grid-template-columns:1fr}}
+
+.mfr-prod{display:inline-flex;align-items:center;cursor:pointer;background:#fff;border:1.5px solid var(--border);border-radius:99px;padding:6px 13px;font-size:12px;font-weight:600;color:var(--text2);user-select:none}
+.mfr-prod:has(input:checked){background:var(--navy);border-color:var(--navy);color:#fff}
+.mfr-prod input{position:absolute;opacity:0;width:0;height:0;margin:0}
+
+/* Account detail — softer, card-based look (moves away from the blocky grid) */
+#page-record .rec-body{max-width:1120px;margin:0 auto;padding:18px 22px 60px}
+#page-record .rec-sec{background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:0 1px 3px rgba(15,25,35,.05);margin-bottom:14px;overflow:hidden}
+#page-record .rec-sec-hdr{padding:14px 18px;border-bottom:1px solid var(--border);font-weight:750;color:var(--navy);display:flex;align-items:center;justify-content:space-between}
+#page-record .rec-sec-body{padding:6px 18px 12px}
+#page-record .frow{padding:11px 0;border-bottom:1px solid #eef1f5}
+#page-record .rec-tabs{padding:0 22px;gap:4px}
+#page-record .rec-tabs .rt{padding:13px 4px;margin-right:18px;font-weight:600;color:var(--text3);border-bottom:2px solid transparent}
+#page-record .rec-tabs .rt.active{color:var(--navy);border-bottom-color:var(--accent,#2f6df6)}
+#page-record .rec-hdr{max-width:1120px;margin:0 auto;padding:20px 22px 6px}
+#page-record .rec-name{font-size:20px;font-weight:800;letter-spacing:-.3px}
+#page-record .rec-av{background:linear-gradient(135deg,var(--navy),#22364f);color:#fff;border-radius:12px}
+#page-record .rec-quick{max-width:1120px;margin:0 auto;padding:6px 22px 16px}
+
+#page-record .rec-kpis{max-width:1120px;margin:0 auto;padding:8px 22px 10px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+#page-record .rec-kpi{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(15,25,35,.05)}
+#page-record .rec-kpi-v{font-size:19px;font-weight:800;letter-spacing:-.3px;color:var(--navy);font-variant-numeric:tabular-nums}
+#page-record .rec-kpi-l{font-size:10.5px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-top:4px}
+@media(max-width:640px){#page-record .rec-kpis{gap:8px;padding:8px 14px}#page-record .rec-kpi{padding:10px 12px}#page-record .rec-kpi-v{font-size:15px}}
 </style>
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
@@ -1523,15 +1600,15 @@ window.addEventListener('load', function() {
 
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 <nav class="bottom-nav">
-  <button class="bn-item active" id="bn-home" data-roles="rep intern manager" onclick="go('dashboard');setActiveNav('bn-home')">
+  <button class="bn-item active" id="bn-home" data-roles="rep manager" onclick="go('dashboard');setActiveNav('bn-home')">
     <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     <span>Home</span>
   </button>
-  <button class="bn-item" id="bn-today" data-roles="rep intern" onclick="go('today');setActiveNav('bn-today')">
+  <button class="bn-item" id="bn-today" data-roles="rep" onclick="go('today');setActiveNav('bn-today')">
     <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 10h18M16 2v4M8 2v4"/><path d="M9 15.5l1.75 1.75L14.5 13.5"/></svg>
     <span>Today</span>
   </button>
-  <button class="bn-item" id="bn-contacts" data-roles="rep intern manager" onclick="go('contacts');setActiveNav('bn-contacts')">
+  <button class="bn-item" id="bn-contacts" data-roles="rep manager" onclick="go('contacts');setActiveNav('bn-contacts')">
     <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     <span>Accounts</span>
   </button>
@@ -1539,11 +1616,11 @@ window.addEventListener('load', function() {
     <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.58 3.38 2 2 0 0 1 3.55 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.5a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
     <span>Calls</span>
   </button>
-  <button class="bn-item" id="bn-reconnect" data-roles="rep intern manager" onclick="go('reconnect');setActiveNav('bn-reconnect')">
+  <button class="bn-item" id="bn-reconnect" data-roles="rep manager" onclick="go('reconnect');setActiveNav('bn-reconnect')">
     <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0115.5-6M21 12a9 9 0 01-15.5 6"/><polyline points="18 2 18 6 14 6"/><polyline points="6 22 6 18 10 18"/></svg>
     <span>Reconnect</span>
   </button>
-  <button class="bn-item" id="bn-more" data-roles="rep intern manager" onclick="openMobileMenu()">
+  <button class="bn-item" id="bn-more" data-roles="rep manager" onclick="openMobileMenu()">
     <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
     <span>More</span>
   </button>
@@ -1551,31 +1628,29 @@ window.addEventListener('load', function() {
 <aside class="sidebar">
   <div class="sb-brand">
     <div class="sb-logo"><svg viewBox="0 0 17 17" fill="none"><circle cx="8.5" cy="8.5" r="3" fill="white"/><path d="M8.5 1v3M8.5 13v3M1 8.5h3M13 8.5h3" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg></div>
-    <div><div class="sb-name">RepRoute</div><div class="sb-sub">Compton Group LLC</div></div>
+    <div><div class="sb-name">RepRoute</div><div class="sb-sub">Field Sales CRM</div></div>
   </div>
-  <div class="sb-search-wrap"><div class="sb-search"><svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;flex-shrink:0;opacity:.3"><circle cx="7" cy="7" r="4"/><path d="M10.5 10.5l2.5 2.5"/></svg><input id="sb-search-input" placeholder="Search accounts..." oninput="globalSearch(this.value)" onkeydown="if(event.key==='Escape')this.value=''" /></div></div>
-  <div class="sb-section" data-roles="intern manager">
-    <button class="sb-item active" data-roles="intern manager" onclick="go('dashboard')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 6l6-4 6 4v8H2V6z"/><path d="M6 14v-4h4v4"/></svg>Home</button>
+  <div class="sb-search-wrap"><div class="sb-search"><svg viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px;flex-shrink:0;opacity:.3"><circle cx="7" cy="7" r="4"/><path d="M10.5 10.5l2.5 2.5"/></svg><input id="sb-search-input" readonly onfocus="this.removeAttribute('readonly')" type="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" name="acct_search_sb" placeholder="Search accounts..." oninput="globalSearch(this.value)" onkeydown="if(event.key==='Escape')this.value=''" /></div></div>
+  <div class="sb-section" data-roles="manager">
+    <button class="sb-item active" data-roles="manager" onclick="go('dashboard')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 6l6-4 6 4v8H2V6z"/><path d="M6 14v-4h4v4"/></svg>Home</button>
   </div>
-  <div class="sb-section" data-roles="rep intern manager">
+  <div class="sb-section" data-roles="rep manager">
     <div class="sb-sec-label">Sales</div>
-    <button class="sb-item" data-roles="rep intern manager" onclick="go('reconnect')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 8a6 6 0 0110.5-4M14 8a6 6 0 01-10.5 4"/><path d="M12.5 1.5V4h-2.5M3.5 14.5V12h2.5"/></svg>Reconnect</button>
-    <button class="sb-item" data-roles="rep intern manager" onclick="go('today')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 7h12M11 1.5v2M5 1.5v2"/><path d="M6.5 10.5l1.25 1.25L10 9"/></svg>Today</button>
-    <button class="sb-item" data-roles="rep intern manager" onclick="go('recap')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M4 1.5h6l3 3V14a.5.5 0 01-.5.5h-9A.5.5 0 013 14V2a.5.5 0 01.5-.5z"/><path d="M9.5 1.5V5h3.5M5.5 8h5M5.5 10.5h5"/></svg>Daily Recap</button>
-    <button class="sb-item" data-roles="rep intern manager" onclick="go('contacts')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>Accounts</button>
-
-    <button class="sb-item" data-roles="rep intern manager" onclick="go('deals')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 4h12M2 8h9M2 12h6"/></svg>Deal Pipeline</button>
+    <button class="sb-item" data-roles="rep manager" onclick="go('reconnect')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 8a6 6 0 0110.5-4M14 8a6 6 0 01-10.5 4"/><path d="M12.5 1.5V4h-2.5M3.5 14.5V12h2.5"/></svg>Reconnect</button>
+    <button class="sb-item" data-roles="rep manager" onclick="go('leads')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="2"/></svg>Lead Finder</button>
+    <button class="sb-item" data-roles="rep manager" onclick="go('found-money')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><circle cx="8" cy="8" r="6"/><path d="M8 5v6M6.5 6.5h3M6.5 9.5h3"/></svg>Found Money</button>
+    <button class="sb-item" data-roles="rep manager" onclick="go('today')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 7h12M11 1.5v2M5 1.5v2"/><path d="M6.5 10.5l1.25 1.25L10 9"/></svg>Today</button>
+    <button class="sb-item" data-roles="rep manager" onclick="go('contacts')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>Accounts</button>
     <button class="sb-item" data-roles="rep manager" onclick="go('quotes')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><path d="M3 2h10a1 1 0 011 1v11a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zM5 7h6M5 9.5h4"/></svg>Quotes</button>
-    <button class="sb-item" data-roles="rep manager" onclick="go('opportunities')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M8 1l2 4.5 4.9.4-3.7 3.2 1.1 4.8L8 11.5 3.7 13.9l1.1-4.8L1.1 5.9 6 5.5z"/></svg>Opportunities</button>
-    <button class="sb-item" data-roles="rep intern manager" onclick="go('manufacturers')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 14V6l4-2v3l4-2v3l4-2v8z"/><path d="M2 14h12"/></svg>Manufacturers</button>
-    <button class="sb-item" data-roles="rep intern manager" onclick="go('fortress')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 14V5l3-2 3 2 3-2 3 2v9z"/><path d="M5 14V8M11 14V8M2 11h12"/></svg>Fortress Promo</button>
+    <button class="sb-item" data-roles="rep manager" onclick="go('manufacturers')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 14V6l4-2v3l4-2v3l4-2v8z"/><path d="M2 14h12"/></svg>Manufacturers</button>
+    <button class="sb-item" data-roles="rep manager" onclick="go('fortress')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 14V5l3-2 3 2 3-2 3 2v9z"/><path d="M5 14V8M11 14V8M2 11h12"/></svg>Fortress Promo</button>
   </div>
-  <div class="sb-section" data-roles="rep intern manager">
+  <div class="sb-section" data-roles="rep manager">
     <div class="sb-sec-label">Activities</div>
     <button class="sb-item" data-roles="manager" onclick="go('calendar')" style="padding-left:18px"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M5 2v2M11 2v2M2 7h12"/></svg>Team Calendar</button>
     <button class="sb-item" data-roles="manager" onclick="go('email')" style="padding-left:18px"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><rect x="1" y="3" width="14" height="10" rx="1"/><path d="M1 4l7 5 7-5"/></svg>Email</button>
     <button class="sb-item" data-roles="rep manager" onclick="go('weekly-planner')" style="padding-left:18px"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><rect x="2" y="3" width="12" height="11" rx="1"/><path d="M2 6h12M6 3v11"/></svg>Weekly Planner</button>
-    <button class="sb-item" data-roles="rep intern manager" onclick="go('weekly-report')" style="padding-left:18px"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 14V2M2 14h12M5 11V7M8 11V4M11 11V9"/></svg>Weekly Report</button>
+    <button class="sb-item" data-roles="manager" onclick="go('weekly-report')" style="padding-left:18px"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 14V2M2 14h12M5 11V7M8 11V4M11 11V9"/></svg>Weekly Report</button>
     <button class="sb-item" data-roles="manager" onclick="go('command')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><path d="M9 2L7 14M3 6l-2 2 2 2M13 6l2 2-2 2"/></svg>AI Command</button>
     <button class="sb-item" data-roles="manager" onclick="go('bulk')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 2h5v5H2z"/><path d="M9 2h5v5H9z"/><path d="M2 9h5v5H2z"/><path d="M9 9h5v5H9z"/></svg>Bulk Import</button>
     <button class="sb-item" data-roles="manager" onclick="window.location.href='/zoho-import'"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M8 2v8M5 7l3 3 3-3"/><path d="M3 12h10"/></svg>Zoho Import</button>
@@ -1635,6 +1710,106 @@ window.addEventListener('load', function() {
   </div>
 
   <!-- DASHBOARD -->
+  <!-- ═══ LEAD FINDER — its own page ═══ -->
+  <div class="page" id="page-leads" style="overflow-y:auto;padding-bottom:90px">
+    <div style="max-width:1100px;margin:0 auto;padding:22px 24px 60px;width:100%;box-sizing:border-box">
+      <div style="font-size:24px;font-weight:800;color:var(--navy);letter-spacing:-.4px">Lead Finder</div>
+      <div style="font-size:12.5px;color:var(--text3);margin:4px 0 20px;max-width:640px">Find real businesses to call. Pick what you're after, enter a city, and we'll pull companies with contact info. New leads land in your Leads list, not your accounts.</div>
+      <!-- Find Today's Leads -->
+      <div id="daily-lead-finder" style="margin-bottom:24px">
+        <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px 20px;box-shadow:0 1px 3px rgba(15,25,35,.05)">
+          <div style="font-size:15px;font-weight:750;color:var(--navy)">Find new leads</div>
+          <div style="font-size:12.5px;color:var(--text3);margin:3px 0 15px">Pick what you're after and enter a city. We'll pull real businesses with contact info you can call today.</div>
+
+          <div id="lead-mfr-section" style="display:none;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+            <div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Search by a line you represent</div>
+            <div id="lead-mfr-row" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+            <div id="lead-mfr-detail" style="display:none;font-size:11.5px;color:var(--text2);margin-top:10px;line-height:1.5"></div>
+          </div>
+          <div id="lead-generic-section">
+          <div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">What are you looking for?</div>
+          <div id="segment-pill-row" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+            <label class="seg-chip"><input type="checkbox" name="seg" value="Dealer" checked> Distributors &amp; Dealers</label>
+            <label class="seg-chip"><input type="checkbox" name="seg" value="Contractor"> Contractors</label>
+            <label class="seg-chip"><input type="checkbox" name="seg" value="Dealer / Installer"> Dealers &amp; Installers</label>
+            <label class="seg-chip"><input type="checkbox" name="seg" value="Lumber / Building Supply"> Lumber &amp; Building Supply</label>
+          </div>
+          </div>
+
+          <div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px">Focus</div>
+          <div id="lead-market-row" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+            <button type="button" class="seg-chip on" data-market="both" onclick="selectLeadMarket('both')">Both</button>
+            <button type="button" class="seg-chip" data-market="commercial" onclick="selectLeadMarket('commercial')">Commercial</button>
+            <button type="button" class="seg-chip" data-market="residential" onclick="selectLeadMarket('residential')">Residential</button>
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input id="lead-city-input" readonly onfocus="this.removeAttribute('readonly')" type="text" name="lead_city_search" inputmode="text" placeholder="Enter a city (e.g. Birmingham AL)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" style="flex:1;min-width:220px;padding:11px 13px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit">
+            <button onclick="runDailyLeads()" id="lead-find-btn" style="padding:11px 26px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit">Find leads</button>
+            <button onclick="refreshLeads()" id="lead-refresh-btn" style="display:none;padding:11px 16px;background:var(--surface);color:var(--navy);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit" title="Get 10 new leads">&#8635; 10 more</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading state -->
+      <div id="lead-loading" style="display:none;text-align:center;padding:32px 24px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:24px">
+        <div style="font-size:14px;font-weight:600;color:var(--navy);margin-bottom:8px">Finding leads...</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Searching for distributors, dealer networks, and commercial accounts...</div>
+        <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      </div>
+
+      <!-- Results summary -->
+      <div id="lead-summary" style="display:none;background:#f0f5ff;border:1px solid #c7d7ff;border-radius:8px;padding:12px 16px;margin-bottom:16px">
+        <span id="lead-summary-text" style="font-size:13px;color:var(--navy);font-weight:500"></span>
+      </div>
+
+      <!-- Lead cards grid -->
+      <div id="lead-results" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px"></div>
+    </div>
+  </div>
+
+  <!-- ═══ HOME — the CRM cockpit (accounts, priorities, quick access) ═══ -->
+  <div class="page" id="page-home" style="overflow-y:auto">
+    <div style="max-width:1320px;margin:0;padding:22px 24px 60px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em" id="home-date"></div>
+      <div style="font-size:24px;font-weight:800;color:var(--navy);margin:4px 0 20px;letter-spacing:-.4px" id="home-greeting">Welcome back</div>
+
+      <!-- Follow-ups you owe (due or overdue) -->
+      <div id="home-followups" style="margin-bottom:22px"></div>
+
+      <!-- Headline stats -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px" id="home-stats">
+        <div class="home-stat"><div class="home-stat-v" id="hs-accounts">—</div><div class="home-stat-l">Accounts</div></div>
+        <div class="home-stat"><div class="home-stat-v" style="color:#b91c1c" id="hs-risk">—</div><div class="home-stat-l">Commission at risk</div></div>
+        <div class="home-stat"><div class="home-stat-v" style="color:#b45309" id="hs-found">—</div><div class="home-stat-l">Found money</div></div>
+        <div class="home-stat"><div class="home-stat-v" id="hs-leads">—</div><div class="home-stat-l">New leads</div></div>
+      </div>
+
+      <!-- Two columns: what needs attention + your accounts -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px" id="home-cols">
+        <div class="home-card">
+          <div class="home-card-hdr"><span>Needs attention</span><a onclick="go('reconnect')" class="home-card-link">Reconnect →</a></div>
+          <div id="home-priorities"><div class="home-empty">Loading…</div></div>
+        </div>
+        <div class="home-card">
+          <div class="home-card-hdr"><span>Your accounts</span><a onclick="go('accounts')" class="home-card-link">View all →</a></div>
+          <div id="home-accounts"><div class="home-empty">Loading…</div></div>
+        </div>
+      </div>
+
+      <!-- Quick access -->
+      <div class="home-card-hdr" style="margin-bottom:12px"><span>Jump to</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">
+        <div class="home-tile" onclick="go('accounts')"><div class="home-tile-i" style="background:#eef2ff;color:#4f46e5">◱</div>Accounts</div>
+        <div class="home-tile" onclick="go('reconnect')"><div class="home-tile-i" style="background:#fef2f2;color:#b91c1c">↻</div>Reconnect</div>
+        <div class="home-tile" onclick="go('found-money')"><div class="home-tile-i" style="background:#fffbeb;color:#b45309">$</div>Found Money</div>
+        <div class="home-tile" onclick="go('leads')"><div class="home-tile-i" style="background:#ecfdf5;color:#059669">◎</div>Lead Finder</div>
+        <div class="home-tile" onclick="go('quotes')"><div class="home-tile-i" style="background:#f0f9ff;color:#0369a1">▤</div>Quotes</div>
+        <div class="home-tile" onclick="go('weekly-planner')"><div class="home-tile-i" style="background:#f5f3ff;color:#7c3aed">▦</div>Planner</div>
+      </div>
+    </div>
+  </div>
+
   <div class="page active" id="page-dashboard" style="overflow-y:auto">
     <div style="padding:24px 24px 60px 24px;width:100%;box-sizing:border-box">
 
@@ -1690,87 +1865,8 @@ window.addEventListener('load', function() {
         </div>
       </div>
 
-      <!-- Find Today's Leads -->
-      <div id="daily-lead-finder">
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px 20px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
-        <div style="flex:1;min-width:200px">
-          <div style="font-size:14px;font-weight:700;color:var(--navy);margin-bottom:3px">Find Today's Leads</div>
-          <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Pick your brands and channel, then enter a city</div>
+      <!-- lead finder moved to its own page -->
 
-          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Brands</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="lead-brand-row">
-            <label class="lead-brand-pill" data-brand="BOSS Products" style="cursor:pointer;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:flex;align-items:center;gap:5px;border:2px solid transparent">
-              <input type="checkbox" value="BOSS Products" style="margin:0;accent-color:#b91c1c"> BOSS
-            </label>
-            <label class="lead-brand-pill" data-brand="ShurTape" style="cursor:pointer;background:#dbeafe;color:#1d4ed8;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:flex;align-items:center;gap:5px;border:2px solid transparent">
-              <input type="checkbox" value="ShurTape" style="margin:0;accent-color:#1d4ed8"> ShurTape
-            </label>
-            <label class="lead-brand-pill" data-brand="Alum-A-Pole" style="cursor:pointer;background:#d1fae5;color:#065f46;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:flex;align-items:center;gap:5px;border:2px solid transparent">
-              <input type="checkbox" value="Alum-A-Pole" style="margin:0;accent-color:#065f46"> Alum-A-Pole
-            </label>
-          </div>
-
-          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Segments <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#059669">&#9650; Distributors &amp; Dealers prioritized</span></div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px" id="segment-pill-row">
-            <label style="cursor:pointer;background:#ede9fe;color:#6d28d9;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;user-select:none;border:1.5px solid #c4b5fd">
-              <input type="checkbox" name="seg" value="Window/Door Installer" style="margin:0;accent-color:#6d28d9"> Window / Door
-            </label>
-            <label style="cursor:pointer;background:#fef3c7;color:#92400e;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;user-select:none;border:1.5px solid #fcd34d">
-              <input type="checkbox" name="seg" value="Deck Contractor" style="margin:0;accent-color:#92400e"> Deck Contractors
-            </label>
-            <label style="cursor:pointer;background:#fff7ed;color:#c2410c;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;user-select:none;border:1.5px solid #fdba74">
-              <input type="checkbox" name="seg" value="Deck Distributor/Dealer" checked style="margin:0;accent-color:#c2410c"> Deck Distributors
-            </label>
-            <label style="cursor:pointer;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;user-select:none;border:1.5px solid #fca5a5">
-              <input type="checkbox" name="seg" value="Roofing Contractor" style="margin:0;accent-color:#b91c1c"> Commercial Roofing Contractors
-            </label>
-            <label style="cursor:pointer;background:#ffedd5;color:#c2410c;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;user-select:none;border:1.5px solid #fdba74">
-              <input type="checkbox" name="seg" value="Roofing Distributor" checked style="margin:0;accent-color:#c2410c"> Commercial Roofing Distributors
-            </label>
-            <label style="cursor:pointer;background:#dbeafe;color:#1d4ed8;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;user-select:none;border:1.5px solid #93c5fd">
-              <input type="checkbox" name="seg" value="Siding Contractor" style="margin:0;accent-color:#1d4ed8"> Siding Contractors
-            </label>
-            <label style="cursor:pointer;background:#bfdbfe;color:#1e40af;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;user-select:none;border:1.5px solid #60a5fa">
-              <input type="checkbox" name="seg" value="Siding Distributor" checked style="margin:0;accent-color:#1e40af"> Siding Distributors
-            </label>
-            <label style="cursor:pointer;background:#ccfbf1;color:#0f766e;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;user-select:none;border:1.5px solid #5eead4">
-              <input type="checkbox" name="seg" value="Cornice Contractor" style="margin:0;accent-color:#0f766e"> Cornice Contractors
-            </label>
-            <label style="cursor:pointer;background:#d1fae5;color:#065f46;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;user-select:none;border:1.5px solid #6ee7b7">
-              <input type="checkbox" name="seg" value="Construction Fasteners" style="margin:0;accent-color:#065f46"> Construction Fasteners
-            </label>
-            <label style="cursor:pointer;background:#fef9c3;color:#854d0e;font-size:11px;font-weight:600;padding:5px 11px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;user-select:none;border:1.5px solid #fde047">
-              <input type="checkbox" name="seg" value="Lumber / Building Supply" style="margin:0;accent-color:#854d0e"> Lumber / Building Supply
-            </label>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <input id="lead-city-input" type="text" name="lead_city_search" inputmode="text" placeholder="Enter city (e.g. Norcross GA)" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other">
-          <div style="display:flex;gap:8px;align-items:center">
-            <button onclick="runDailyLeads()" id="lead-find-btn" style="padding:10px 22px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">
-              Find Today's Leads
-            </button>
-            <button onclick="refreshLeads()" id="lead-refresh-btn" style="display:none;padding:10px 14px;background:var(--surface);color:var(--navy);border:1px solid var(--border);border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap" title="Get 10 new leads">
-              ↻ Refresh
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Loading state -->
-      <div id="lead-loading" style="display:none;text-align:center;padding:32px 24px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:24px">
-        <div style="font-size:14px;font-weight:600;color:var(--navy);margin-bottom:8px">Finding leads...</div>
-        <div style="font-size:12px;color:var(--text3);margin-bottom:16px">Searching for distributors, dealer networks, and commercial accounts...</div>
-        <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-      </div>
-
-      <!-- Results summary -->
-      <div id="lead-summary" style="display:none;background:#f0f5ff;border:1px solid #c7d7ff;border-radius:8px;padding:12px 16px;margin-bottom:16px">
-        <span id="lead-summary-text" style="font-size:13px;color:var(--navy);font-weight:500"></span>
-      </div>
-
-      <!-- Lead cards grid -->
-      <div id="lead-results" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px"></div>
 
       <!-- Two column: Call List + Route -->
       <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start">
@@ -1868,7 +1964,7 @@ window.addEventListener('load', function() {
     </div>
     <div class="list-bar" style="flex-wrap:wrap;gap:6px">
       <span class="list-count" id="list-count">0 records</span>
-      <div class="sb-in"><span style="font-size:12px;color:var(--text3)">&#128269;</span><input id="p-search" placeholder="Search accounts..." oninput="handleContactSearch()" onkeydown="if(event.key==='Enter'){event.preventDefault();handleContactSearch();}" /></div>
+      <div class="sb-in"><span style="font-size:12px;color:var(--text3)">&#128269;</span><input id="p-search" readonly onfocus="this.removeAttribute('readonly')" type="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" name="acct_search_p" placeholder="Search accounts..." oninput="handleContactSearch()" onkeydown="if(event.key==='Enter'){event.preventDefault();handleContactSearch();}" /></div>
       <select id="filter-company-type" onchange="handleContactSearch()" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;background:#fff;color:var(--navy)">
         <option value="All">All Types</option>
         <option value="Distributor">Distributor</option>
@@ -1922,7 +2018,9 @@ window.addEventListener('load', function() {
 
     <!-- TEAM CONTACTS tab -->
     <div id="contact-tab-team" class="list-wrap" style="display:none">
-      <div style="padding:10px 16px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap" id="team-rep-filters"></div>
+      <div id="team-rep-picker" style="display:none;padding:14px 16px"></div>
+      <div id="team-back-bar" style="display:none;padding:10px 16px 0"><button onclick="backToRepPicker()" style="background:none;border:none;color:var(--accent);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;padding:0">&#8592; All reps</button> <span id="team-current-rep" style="font-size:13px;font-weight:700;color:var(--navy);margin-left:8px"></span></div>
+      <div style="padding:10px 16px 0;display:none;align-items:center;gap:10px;flex-wrap:wrap" id="team-rep-filters"></div>
       <!-- Activity summary strip — visible when a specific rep is selected -->
       <div id="team-activity-strip" style="display:none;padding:8px 16px;background:#f0f7ff;border-bottom:1px solid var(--border);gap:10px;align-items:center;flex-wrap:wrap"></div>
       <!-- Type filter row -->
@@ -1974,7 +2072,7 @@ window.addEventListener('load', function() {
           </div>
         </div>
       </div>
-      <table class="ltable">
+      <table class="ltable" id="team-ltable" style="display:none">
         <thead><tr><th></th><th>Company Name</th><th>Rep</th><th onclick="cycleTeamCategorySort()" style="cursor:pointer;user-select:none" title="Click to sort by category">Category <span id="team-category-sort-indicator" style="font-size:10px;color:var(--accent)"></span></th><th onclick="cycleCitySort()" style="cursor:pointer;user-select:none" title="Click to sort by city">City <span id="team-city-sort-indicator" style="font-size:10px;color:var(--accent)"></span></th><th>Phone</th><th onclick="cycleContactedSort()" style="cursor:pointer;user-select:none" title="Click to sort by contacted status">Contacted <span id="team-contacted-sort-indicator" style="font-size:10px;color:var(--text3)">⇅</span></th><th>Status</th><th>Route</th></tr></thead>
         <tbody id="team-prospects-tbody"></tbody>
       </table>
@@ -1999,19 +2097,6 @@ window.addEventListener('load', function() {
   <!-- RECORD DETAIL -->
   <div class="page" id="page-record">
     <div class="rec-layout">
-      <div class="rec-left">
-        <div class="rl-title">Related List</div>
-        <div class="rl-item active" onclick="setRecTab('notes',this)">Notes</div>
-        <div class="rl-item" onclick="setRecTab('overview',this)">Connected Records</div>
-        <div class="rl-item" onclick="setRecTab('overview',this)">Attachments</div>
-        <div class="rl-item" onclick="setRecTab('deals',this)">Deals</div>
-        <div class="rl-item" onclick="setRecTab('contacts',this)">Contacts <span class="rl-cnt" id="rec-contacts-count">0</span></div>
-        <div class="rl-item" onclick="setRecTab('quotes',this)">Quotes <span class="rl-cnt" id="rec-quote-count">0</span></div>
-        <div class="rl-item" onclick="setRecTab('calls',this)">Open Activities <span class="rl-cnt" id="rec-call-count">0</span></div>
-        <div class="rl-item" onclick="setRecTab('calls',this)">Closed Activities</div>
-        <div class="rl-item" onclick="setRecTab('outreach',this)">Emails</div>
-        <div class="rl-item" onclick="setRecTab('ai',this)">AI Intel</div>
-      </div>
       <div class="rec-main">
         <div class="rec-hdr">
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
@@ -2029,20 +2114,21 @@ window.addEventListener('load', function() {
             <button class="btn btn-secondary btn-sm" onclick="recGoBack()">✕ Close</button>
           </div>
         </div>
+        <div class="rec-kpis" id="rec-kpis">
+          <div class="rec-kpi"><div class="rec-kpi-v" id="rec-kpi-comm" style="color:#0f9d58">—</div><div class="rec-kpi-l">Commission</div></div>
+          <div class="rec-kpi"><div class="rec-kpi-v" id="rec-kpi-lines">—</div><div class="rec-kpi-l">Lines carried</div></div>
+          <div class="rec-kpi"><div class="rec-kpi-v" id="rec-kpi-touch">—</div><div class="rec-kpi-l">Last touch</div></div>
+        </div>
         <div class="rec-tabs">
-          <div class="rt active" onclick="setRecTab('overview',this)">Overview</div>
-          <div class="rt" onclick="setRecTab('calls',this)">Timeline</div>
-          <div class="rt" onclick="setRecTab('ai',this)">AI Intel</div>
+          <div class="rt active" data-tab="overview" onclick="setRecTab('overview',this)">Overview</div>
+          <div class="rt" data-tab="contacts" onclick="setRecTab('contacts',this)">Contacts <span class="rl-cnt" id="rec-contacts-count">0</span></div>
+          <div class="rt" data-tab="quotes" onclick="setRecTab('quotes',this)">Quotes <span class="rl-cnt" id="rec-quote-count">0</span></div>
+          <div class="rt" data-tab="notes" onclick="setRecTab('notes',this)">Notes</div>
+          <div class="rt" data-tab="ai" onclick="setRecTab('ai',this)">AI Intel</div>
+          <span id="rec-call-count" style="display:none">0</span>
           <div style="margin-left:auto;font-size:11px;color:var(--text3)" id="rec-last-update"></div>
         </div>
-        <!-- Mobile-only extra tab row — mirrors the left sidebar items hidden on small screens -->
-        <div id="rec-mobile-extra-tabs" style="display:none">
-          <div class="rl-item" onclick="setRecTab('notes',this)">Notes</div>
-          <div class="rl-item" onclick="setRecTab('contacts',this)">Contacts <span class="rl-cnt" id="rec-contacts-count-mob"><!-- synced by JS --></span></div>
-          <div class="rl-item" onclick="setRecTab('quotes',this)">Quotes <span class="rl-cnt" id="rec-quote-count-mob"><!-- synced by JS --></span></div>
-          <div class="rl-item" onclick="setRecTab('deals',this)">Deals</div>
-          <div class="rl-item" onclick="setRecTab('outreach',this)">Emails</div>
-        </div>
+
         <div class="rec-quick">
           <div><div class="rq-label">Contact Owner</div><div class="rq-val">You</div></div>
           <div><div class="rq-label">Email</div><div class="rq-val" id="rq-email">—</div></div>
@@ -2052,11 +2138,12 @@ window.addEventListener('load', function() {
         <div class="rec-body">
           <div id="rec-tab-overview">
             <div class="rec-sec">
-              <div class="rec-sec-hdr"><span class="rec-sec-title">Contact Information</span><span style="font-size:11.5px;color:var(--blue);cursor:pointer">Edit</span></div>
+              <div class="rec-sec-hdr"><span class="rec-sec-title">Contact Information</span><span onclick="openEditContact(currentRecord)" style="font-size:11.5px;color:var(--blue);cursor:pointer">Edit</span></div>
               <div class="rec-sec-body" id="rec-fields"></div>
+              <div id="rec-tags" style="padding:0 16px 14px"></div>
             </div>
             <div class="rec-sec">
-              <div class="rec-sec-hdr"><span class="rec-sec-title">Products & Territory</span><span style="font-size:11.5px;color:var(--blue);cursor:pointer">Edit</span></div>
+              <div class="rec-sec-hdr"><span class="rec-sec-title">Products & Territory</span><span onclick="openEditContact(currentRecord)" style="font-size:11.5px;color:var(--blue);cursor:pointer">Edit</span></div>
               <div class="rec-sec-body" id="rec-prod-fields"></div>
             </div>
             <!-- Lines this account buys — built from confirmed commission data -->
@@ -2093,13 +2180,12 @@ window.addEventListener('load', function() {
                 </div>
               </div>
             </div>
+              <div class="rec-sec" style="margin-top:14px">
+                <div class="rec-sec-hdr"><span class="rec-sec-title" id="rec-timeline-title">Activity Timeline</span><button class="btn btn-primary btn-sm" onclick="logCallForRecord()">+ Log Activity</button></div>
+                <div class="rec-sec-body" id="rec-timeline"></div>
+              </div>
           </div>
-          <div id="rec-tab-calls" style="display:none">
-            <div class="rec-sec">
-              <div class="rec-sec-hdr"><span class="rec-sec-title" id="rec-timeline-title">Activity Timeline</span><button class="btn btn-primary btn-sm" onclick="logCallForRecord()">+ Log Activity</button></div>
-              <div class="rec-sec-body" id="rec-timeline"></div>
-            </div>
-          </div>
+          <div id="rec-tab-calls" style="display:none"></div>
           <div id="rec-tab-outreach" style="display:none"><div id="rec-outreach-body"></div></div>
 <div id="rec-tab-notes" style="display:none"><div style="padding:16px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:var(--navy)">Notes</div><button onclick="saveNote()" style="padding:6px 14px;background:var(--blue);color:#fff;border:none;border-radius:40px;font-size:11px;font-weight:700;cursor:pointer">+ Add Note</button></div><textarea id="note-input" placeholder="Write a note..." style="width:100%;height:80px;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12px;font-family:inherit;resize:vertical;margin-bottom:12px;box-sizing:border-box"></textarea><div id="notes-list"></div></div></div>
 <div id="rec-tab-deals" style="display:none"><div style="padding:16px"><div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:12px">Deals</div><div id="rec-deals-list"><div style="font-size:12px;color:var(--text3);text-align:center;padding:20px">No deals linked yet</div></div></div></div>
@@ -2170,7 +2256,7 @@ window.addEventListener('load', function() {
     <!-- Tab bar -->
     <div id="cd-tabs">
       <div class="cd-tab active" onclick="setContactTab('overview',this)" data-tab="overview">Overview</div>
-      <div class="cd-tab" onclick="setContactTab('timeline',this)" data-tab="timeline">Timeline</div>
+      <div class="cd-tab" onclick="setContactTab('timeline',this)" data-tab="timeline">Activities</div>
       <div class="cd-tab" onclick="setContactTab('bcard',this)" data-tab="bcard">Business Card</div>
     </div>
 
@@ -2593,7 +2679,7 @@ window.addEventListener('load', function() {
       <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:14px">
         <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)">Generate 30-Day Onboarding Plan</div>
         <div class="g2">
-          <div class="fg"><label>Rep Name *</label><input type="text" id="ob-name" placeholder="e.g. Daniel Compton" /></div>
+          <div class="fg"><label>Rep Name *</label><input type="text" id="ob-name" placeholder="e.g. Jane Smith" /></div>
           <div class="fg"><label>Territory</label><input type="text" id="ob-territory" placeholder="Southeast" /></div>
         </div>
         <div class="fg"><label>Start Date</label><input type="date" id="ob-start" style="width:200px" /></div>
@@ -2697,9 +2783,21 @@ window.addEventListener('load', function() {
     <div style="padding:16px">
       <!-- LIST view -->
       <div id="mfr-list-view">
+        <!-- WHO YOU REPRESENT — the firm's identity, and the fuel for the lead finder -->
+        <div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:18px;box-shadow:0 1px 3px rgba(15,25,35,.05)">
+          <div style="font-size:15px;font-weight:750;color:var(--navy)">Manufacturers you represent</div>
+          <div style="font-size:12.5px;color:var(--text3);margin:3px 0 14px;max-width:640px">Add a manufacturer and we'll look them up, figure out what they make, and work out which businesses buy it. That's what the lead finder goes and hunts for you.</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input id="rep-mfr-input" type="text" placeholder="Manufacturer name (e.g. SUDAL, Fortress Building Products)" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();lookupManufacturer();}" style="flex:1;min-width:260px;padding:11px 13px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit">
+            <button id="rep-mfr-btn" onclick="lookupManufacturer()" style="padding:11px 22px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Look up</button>
+          </div>
+          <div id="rep-mfr-result" style="margin-top:14px"></div>
+          <div id="rep-mfr-list" style="margin-top:16px"></div>
+        </div>
+
         <div style="margin-bottom:14px">
-          <div style="font-size:15px;font-weight:700;color:var(--navy)">Manufacturers</div>
-          <div style="font-size:12px;color:var(--text3);margin-top:2px">Your lines, ranked by sales. Tap one to see its accounts grouped by territory. Built from confirmed commission data.</div>
+          <div style="font-size:15px;font-weight:700;color:var(--navy)">Lines by sales</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">Ranked by sales, from confirmed commission data. Tap one to see its accounts by territory.</div>
         </div>
         <div id="mfr-cards"></div>
       </div>
@@ -2712,6 +2810,17 @@ window.addEventListener('load', function() {
   </div>
 
   <!-- RECONNECT PAGE — lapsed accounts, value-ranked -->
+  <div class="page" id="page-found-money" style="overflow-y:auto;padding-bottom:90px">
+    <div class="rc-wrap">
+      <div class="pg-head">
+        <div class="pg-h1">Found Money</div>
+        <div class="pg-sub">Accounts buying less than they used to, measured against their own history. Every dollar here is business you already had.</div>
+      </div>
+      <div id="fm-summary" style="display:flex;gap:10px;margin-bottom:12px"></div>
+      <div id="fm-list" class="rc-grid"><div style="font-size:12px;color:var(--text3);padding:20px">Loading…</div></div>
+    </div>
+  </div>
+
   <div class="page" id="page-reconnect" style="overflow-y:auto;padding-bottom:90px">
     <div style="max-width:760px;margin:0 auto;padding:14px 14px 40px">
       <div style="margin-bottom:12px">
@@ -2749,18 +2858,6 @@ window.addEventListener('load', function() {
       <div id="fortress-reptoggle" style="display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px"></div>
       <!-- Progress -->
       <div id="fortress-progress" style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px"></div>
-      <!-- Distributor report (collapsed by default; reps mostly want the stop list) -->
-      <div style="margin-bottom:12px">
-        <button id="fortress-report-toggle" onclick="fortressToggleReport()"
-          style="min-height:40px;padding:0 14px;background:var(--white);border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;color:var(--navy);cursor:pointer;font-family:inherit">
-          Show distributor report
-        </button>
-        <a href="/api/fortress/report.xlsx" download
-          style="display:inline-flex;align-items:center;min-height:40px;padding:0 14px;margin-left:8px;background:var(--navy);border:1px solid var(--navy);border-radius:8px;font-size:13px;font-weight:700;color:#fff;text-decoration:none;font-family:inherit">
-          Download Excel
-        </a>
-        <div id="fortress-report" style="display:none;margin-top:12px"></div>
-      </div>
       <!-- Day-grouped stop list -->
       <div id="fortress-list"><div style="font-size:13px;color:var(--text3);text-align:center;padding:24px">Loading…</div></div>
     </div>
@@ -3649,7 +3746,7 @@ window.addEventListener('load', function() {
 <div class="mo" id="modal-apple-cal">
   <div class="mb">
     <h2>Apple Calendar Sync</h2>
-    <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Subscribe to your personal iCal feed to see all Compton Sales events in Apple Calendar. It stays live — new events appear automatically.</p>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Subscribe to your personal iCal feed to see all your firm events in Apple Calendar. It stays live — new events appear automatically.</p>
     <div class="fg">
       <label>Your iCal Feed URL</label>
       <div style="display:flex;gap:8px">
@@ -4024,6 +4121,8 @@ var selectedLeads = new Set();
 var currentContactType = 'installers';
 
 var pageTitles = {
+  'found-money': 'Found Money',
+  home: 'Home', leads: 'Lead Finder',
     reports: 'Reports', analytics: 'Analytics', accounts: 'Accounts',
     forecasts: 'Forecasts', campaigns: 'Campaigns', tasks: 'Tasks',
   dashboard: 'Home', contacts: 'Accounts', record: 'Account Detail', contact: 'Contact',
@@ -4047,7 +4146,7 @@ var pageTitles = {
 
 // Role-based nav visibility. Returns the normalized role used.
 function applyRoleNav(role) {
-  role = (role === 'manager' || role === 'intern') ? role : 'rep';
+  role = (role === 'manager') ? role : 'rep';
   function allowed(el) {
     var dr = el.getAttribute('data-roles');
     return !dr || dr.split(/\s+/).indexOf(role) !== -1;
@@ -4094,7 +4193,7 @@ window.addEventListener('load', function() {
         var initials = u.name ? u.name.split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().slice(0,2) : 'JM';
         document.getElementById('s-av').textContent = initials;
         document.getElementById('s-name').textContent = u.name || 'Rep';
-        document.getElementById('s-role').textContent = u.role === 'manager' ? 'Manager' : (u.role === 'intern' ? 'Intern' : 'Sales Rep');
+        document.getElementById('s-role').textContent = u.role === 'manager' ? 'Manager' : 'Sales Rep';
         if (u.role === 'manager') {
           document.querySelectorAll('.manager-only').forEach(function(el) { el.style.display = ''; });
         }
@@ -4110,8 +4209,8 @@ window.addEventListener('load', function() {
         // "search bounces me to Today" bug on slower loads).
         var _role = applyRoleNav(u.role);
         if (!window._userNavigated) {
-          // Home for everyone is the adaptive Today cockpit.
-          go('today');
+          // Land on the CRM Home cockpit.
+          go('home');
           setActiveNav('bn-home');
         }
       } else {
@@ -4145,7 +4244,7 @@ function goLogCall(prospectId) {
 function go(id) {
   // Home is now the adaptive Today cockpit. Old money-dashboard is retired as a
   // landing surface; both "Home" entry points resolve to the Today cockpit.
-  if (id === 'dashboard' || id === 'home') id = 'today';
+  if (id === 'dashboard') id = 'home';
   if (window._teamViewActive && id !== 'record') {
     var _lb = document.querySelector('[onclick="logCallForRecord()"]');
     var _ob = document.querySelector('[onclick="writeOutreachForRecord()"]');
@@ -4196,6 +4295,7 @@ function go(id) {
   }
   if (id === 'email') loadEmailPage();
   if (id === 'opportunities') loadOpportunities();
+  if (id === 'home') loadHome();
   if (id === 'today') loadToday();
   if (id === 'samples') loadSamples();
   if (id === 'time') loadTimeTracker();
@@ -4204,13 +4304,16 @@ function go(id) {
   if (id === 'commissions') loadCommissions();
   if (id === 'manufacturers') loadManufacturers();
   if (id === 'reconnect') loadReconnect();
+  if (id === 'found-money') loadFoundMoney();
   if (id === 'fortress') loadFortress();
   if (id === 'recap') loadRecap();
   // Refresh route panel whenever user navigates to home/dashboard
-  if (id === 'dashboard' || id === 'home') {
+  if (id === 'leads') { if (typeof loadLeadManufacturers==='function') loadLeadManufacturers(); }
+  if (id === 'leads' || id === 'dashboard') {
     if (typeof window._renderRoutePanel === 'function') {
       setTimeout(function() { window._renderRoutePanel(); }, 50);
     }
+    if (typeof loadLeadBrands === 'function') loadLeadBrands();
   }
 }
 
@@ -4371,6 +4474,61 @@ function ckManager(stats, panel, opps){
   '</div>';
 }
 
+
+function _hEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function loadFollowups(){
+  var el=document.getElementById('home-followups'); if(!el) return;
+  fetch('/api/morning/followups').then(function(r){return r.ok?r.json():[];}).then(function(rows){
+    if(!Array.isArray(rows)||!rows.length){ el.innerHTML=''; return; }
+    el.innerHTML='<div class="home-card" style="border-left:3px solid #b91c1c">'
+      +'<div class="home-card-hdr"><span>You owe '+rows.length+' follow-up'+(rows.length!==1?'s':'')+'</span></div>'
+      +'<div>'+rows.map(function(r){
+        var days=parseInt(r.days_overdue)||0;
+        var due=days>0?'<span style="color:#b91c1c;font-weight:700">'+days+' day'+(days!==1?'s':'')+' overdue</span>':'<span style="color:#b45309;font-weight:700">Due today</span>';
+        return '<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)">'
+          +'<div style="flex:1;min-width:0;cursor:pointer" onclick="viewRecord('+r.id+')">'
+            +'<div style="font-size:13.5px;font-weight:700;color:var(--navy)">'+_actEsc(r.company)+'</div>'
+            +'<div style="font-size:12.5px;color:var(--text2);margin-top:2px">'+_actEsc(r.next_step)+'</div>'
+            +'<div style="font-size:11px;margin-top:3px">'+due+'</div></div>'
+          +(r.phone?'<a href="tel:'+r.phone+'" onclick="event.stopPropagation()" style="font-size:12px;font-weight:600;color:var(--accent);text-decoration:none;padding:7px 13px;border:1px solid var(--border);border-radius:8px">Call</a>':'')
+          +'<button onclick="viewRecord('+r.id+')" style="font-size:12px;font-weight:600;color:#fff;background:var(--navy);border:none;border-radius:8px;padding:8px 14px;cursor:pointer;font-family:inherit">Log</button>'
+        +'</div>';
+      }).join('')+'</div></div>';
+  }).catch(function(){ el.innerHTML=''; });
+}
+function loadHome(){
+  if(typeof loadFollowups==='function') loadFollowups();
+  var d=new Date();
+  var de=document.getElementById('home-date'); if(de) de.textContent=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  var g=document.getElementById('home-greeting');
+  if(g){var h=d.getHours();var part=h<12?'Good morning':h<18?'Good afternoon':'Good evening';var nm=(window.currentUser&&window.currentUser.name)?(', '+String(window.currentUser.name).split(' ')[0]):'';g.textContent=part+nm;}
+
+  fetch('/api/prospects').then(function(r){return r.ok?r.json():[];}).then(function(list){
+    list=Array.isArray(list)?list:[];
+    var el=document.getElementById('hs-accounts'); if(el) el.textContent=list.length;
+    var box=document.getElementById('home-accounts');
+    if(box){ box.innerHTML = !list.length ? '<div class="home-empty">No accounts yet.</div>' :
+      list.slice(0,6).map(function(p){return '<div class="home-row" onclick="viewRecord('+p.id+')"><div style="min-width:0"><div style="font-size:13px;font-weight:650;color:var(--navy)">'+_hEsc(p.company)+'</div><div style="font-size:11.5px;color:var(--text3)">'+_hEsc([p.category,p.city].filter(Boolean).join(' \u00b7 '))+'</div></div><div style="color:var(--text3)">\u203a</div></div>';}).join(''); }
+  }).catch(function(){});
+
+  fetch('/api/prospects?view=leads').then(function(r){return r.ok?r.json():[];}).then(function(list){
+    var el=document.getElementById('hs-leads'); if(el) el.textContent=(Array.isArray(list)?list.length:0);
+  }).catch(function(){});
+
+  fetch('/api/reconnect?filter=all').then(function(r){return r.ok?r.json():null;}).then(function(dd){
+    if(!dd) return;
+    var risk=(dd.summary&&dd.summary.total_at_risk)||0;
+    var re=document.getElementById('hs-risk'); if(re) re.textContent='$'+Math.round(risk).toLocaleString();
+    var box=document.getElementById('home-priorities'); var accts=dd.accounts||[];
+    if(box){ box.innerHTML = !accts.length ? '<div class="home-empty">Nothing overdue. You are on top of it.</div>' :
+      accts.slice(0,6).map(function(a){return '<div class="home-row" onclick="viewRecord('+a.id+')"><div style="min-width:0"><div style="font-size:13px;font-weight:650;color:var(--navy)">'+_hEsc(a.company)+'</div><div style="font-size:11.5px;color:var(--text3)">'+(a.days_quiet||0)+' days quiet</div></div><div style="font-size:13px;font-weight:750;color:#b91c1c;font-variant-numeric:tabular-nums">'+(a.trailing_commission?('$'+Math.round(a.trailing_commission).toLocaleString()):'')+'</div></div>';}).join(''); }
+  }).catch(function(){});
+
+  fetch('/api/found-money').then(function(r){return r.ok?r.json():null;}).then(function(dd){
+    if(!dd||!dd.summary) return;
+    var el=document.getElementById('hs-found'); if(el) el.textContent='$'+Math.round(dd.summary.total_found||0).toLocaleString();
+  }).catch(function(){});
+}
 function loadDashboard() {
   // Set greeting and date
   var hours = new Date().getHours();
@@ -4874,7 +5032,7 @@ function renderProspects() {
       '<td>' + catBadge(p.category) + '</td>' +
       '<td style="color:var(--text3)">' + (p.city||'—') + '</td>' +
       '<td>' + (p.contact||'—') + '</td>' +
-      '<td style="color:var(--text3)">' + (p.phone||'—') + '</td>' +
+      '<td style="color:var(--text3)">' + fmtPhone(p.phone) + '</td>' +
       '<td><span class="badge b-' + (p.status||'new').toLowerCase() + '">' + (p.status||'New') + '</span></td>' +
       '<td>' + dsBadge + csBadge + '</td>' +
       '<td>' + routeBtn + '</td>' +
@@ -4949,6 +5107,40 @@ function clearContactSelection() {
   if (aside) aside.style.display = 'none';
 }
 
+
+function _actEsc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function _actDate(d){ if(!d) return '\u2014'; try{ return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }catch(e){ return String(d); } }
+function fmtPhone(p){ if(!p) return '\u2014'; var d=String(p).replace(/\D/g,''); if(d.length===11&&d.charAt(0)==='1') d=d.slice(1); if(d.length===10) return '('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6); return String(p); }
+function _timeAgo(d){ if(!d) return '\u2014'; var t=new Date(d).getTime(); if(!t) return '\u2014'; var days=Math.floor((Date.now()-t)/86400000); if(days<=0) return 'Today'; if(days===1) return 'Yesterday'; if(days<30) return days+' days ago'; if(days<60) return '1 month ago'; return Math.floor(days/30)+' months ago'; }
+function loadAccountActivities(id, companyName){
+  var el=document.getElementById('rec-timeline'); if(!el) return;
+  el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">Loading activity\u2026</div>';
+  var acctName=(companyName||'').toLowerCase().trim();
+  Promise.all([
+    fetch('/api/calls').then(function(r){return r.ok?r.json():[];}).catch(function(){return [];}),
+    fetch('/api/quotes').then(function(r){return r.ok?r.json():{};}).catch(function(){return {};})
+  ]).then(function(res){
+    var calls=(Array.isArray(res[0])?res[0]:[]).filter(function(c){return c.prospect_id===id;});
+    var quotes=((res[1]&&res[1].quotes)||[]).filter(function(q){return (q.account_name||'').toLowerCase().trim()===acctName;});
+    var items=[];
+    calls.forEach(function(c){ items.push({ type:'call', date:c.call_date, title:(c.call_type||'Call')+' \u2014 '+(c.outcome||'logged'), desc:[c.products_discussed?('Products: '+c.products_discussed):'', c.notes||''].filter(Boolean).join(' \u00b7 '), next:c.next_step, nextDate:c.next_step_date, who:c.rep_name||'' }); });
+    quotes.forEach(function(q){ items.push({ type:'quote', date:q.quote_date||q.created_at, title:'Quote'+(q.quote_number?(' #'+q.quote_number):'')+(q.status?(' \u2014 '+q.status):''), desc:(q.total?('$'+Number(q.total).toLocaleString()):''), who:q.rep_name||'' }); });
+    items.sort(function(a,b){ return new Date(b.date||0)-new Date(a.date||0); });
+    var cc=document.getElementById('rec-call-count'); if(cc) cc.textContent=calls.length;
+    if(!items.length){ el.innerHTML='<div style="text-align:center;padding:24px;color:var(--text3)">No activity yet. Log a call to get started.</div>'; return; }
+    var ICO={call:['#dbeafe','#1d4ed8','\ud83d\udcde'],quote:['#dcfce7','#15803d','$'],task:['#fef3c7','#b45309','\u2713'],note:['#ede9fe','#6d28d9','\u270e']};
+    el.innerHTML=items.map(function(it){ var ic=ICO[it.type]||ICO.note;
+      return '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">'
+        +'<div style="width:30px;height:30px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;background:'+ic[0]+';color:'+ic[1]+'">'+ic[2]+'</div>'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:13.5px;font-weight:650;color:var(--navy)">'+_actEsc(it.title)+'</div>'
+          +(it.desc?'<div style="font-size:12.5px;color:var(--text2);margin-top:2px;line-height:1.45">'+_actEsc(it.desc)+'</div>':'')
+          +(it.next?'<div style="margin-top:4px;font-size:11.5px;color:var(--blue);font-weight:600">\u2192 Next: '+_actEsc(it.next)+(it.nextDate?(' ('+_actEsc(it.nextDate)+')'):'')+'</div>':'')
+          +'<div style="font-size:11px;color:var(--text3);margin-top:4px">'+(it.who?('<b>'+_actEsc(it.who)+'</b> \u00b7 '):'')+_actEsc(_actDate(it.date))+'</div>'
+        +'</div></div>';
+    }).join('');
+  }).catch(function(){ el.innerHTML='<div style="text-align:center;padding:24px;color:var(--text3)">Could not load activity.</div>'; });
+}
 function viewRecord(id) {
   fetch('/api/prospects')
     .then(function(r) { return r.json(); })
@@ -4963,7 +5155,7 @@ function viewRecord(id) {
       document.getElementById('rec-subtitle').textContent = p.category || '';
       document.getElementById('rec-last-update').textContent = 'Last Update: ' + (p.created_at ? new Date(p.created_at).toLocaleDateString() : '—');
       document.getElementById('rq-email').innerHTML = p.email ? '<a href="mailto:' + p.email + '">' + p.email + '</a>' : '—';
-      document.getElementById('rq-phone').textContent = p.phone || '—';
+      document.getElementById('rq-phone').textContent = fmtPhone(p.phone);
       document.getElementById('rq-status').innerHTML = '<span class="badge b-' + (p.status||'new').toLowerCase() + '">' + (p.status||'New') + '</span>';
       // data_status and company_type for detail view
       var dsRec = p.data_status || 'Unvetted';
@@ -4986,10 +5178,11 @@ function viewRecord(id) {
       // People (contact name/title/email/mobile) now live in the Contacts tab,
       // sourced from the contacts table — they are NOT repeated in this business
       // grid so the same person isn't shown twice. Business facts stay here.
+      var _ownerNm = p.owner_name || (window.currentUser && window.currentUser.name) || 'You';
       var fields = [
-        ['Contact Owner','You'],['Company Type',ctRecBadge],
+        ['Contact Owner',_ownerNm],['Company Type',ctRecBadge],
         ['Account Name',p.company],
-        ['Business Phone',p.phone||'—'],
+        ['Business Phone',fmtPhone(p.phone)],
         ['City',p.city||'—'],['State',p.state||'GA'],
         ['Address',p.address||'—'],['Zip',p.zip||'—'],
         ['Website',p.website ? '<a href="' + p.website + '" target="_blank">Website</a>' : '—'],
@@ -5001,13 +5194,14 @@ function viewRecord(id) {
       document.getElementById('rec-fields').innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0">' +
         fields.map(function(f) { return '<div class="frow"><div class="flabel">' + f[0] + '</div><div class="fval' + (f[1]==='—'?' empty':'') + '">' + f[1] + '</div></div>'; }).join('') + '</div>';
       var pf = [
-        ['Products',p.products||'—'],['Territory','Atlanta Metro, GA'],
+        ['Products',p.products||'—'],['Territory',[p.city,p.state].filter(Boolean).join(', ')||'—'],
         ['Priority',p.priority||'Medium'],['Source',p.source||'Manual']
       ];
       document.getElementById('rec-prod-fields').innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0">' +
         pf.map(function(f) { return '<div class="frow"><div class="flabel">' + f[0] + '</div><div class="fval' + (f[1]==='—'?' empty':'') + '">' + f[1] + '</div></div>'; }).join('') + '</div>';
       // Lines this account buys (from confirmed commission data)
       loadAccountLines(p.id);
+      if (typeof loadAccountTags === 'function') loadAccountTags(p.id);
       // Cross-sell opportunities for this account
       loadCrossSell(p.id);
       // Business card image section
@@ -5022,21 +5216,8 @@ function viewRecord(id) {
           bcardImg.src = '';
         }
       }
-      fetch('/api/calls')
-        .then(function(r) { return r.json(); })
-        .then(function(calls) {
-          var rc = calls.filter(function(c) { return c.prospect_id === id; });
-          document.getElementById('rec-call-count').textContent = rc.length;
-          document.getElementById('rec-timeline').innerHTML = rc.length ?
-            rc.map(function(c) {
-              return '<div class="tl-item"><div class="tl-ico">' + (c.call_type && (c.call_type.indexOf('Person')!==-1||c.call_type.indexOf('Jobsite')!==-1) ? '' : '') + '</div>' +
-                '<div class="tl-body"><div class="tl-title">' + (c.call_type||'Call') + ' — ' + (c.outcome||'—') + '</div>' +
-                '<div class="tl-meta">' + (c.call_date||'—') + ' · Products: ' + (c.products_discussed||'—') + '</div>' +
-                (c.notes ? '<div class="tl-note">' + c.notes + '</div>' : '') +
-                (c.next_step ? '<div style="margin-top:5px;font-size:11px;color:var(--blue);font-weight:600">→ Next: ' + c.next_step + (c.next_step_date ? ' (' + c.next_step_date + ')' : '') + '</div>' : '') +
-                '</div></div>';
-            }).join('') : '<div style="text-align:center;padding:24px;color:var(--text3)">No activities logged yet.</div>';
-        });
+      loadAccountActivities(id, p.company);
+      var _tk=document.getElementById('rec-kpi-touch'); if(_tk) _tk.textContent=_timeAgo(p.last_activity_at||p.created_at);
       // Load quotes for this account
       fetch('/api/quotes')
         .then(function(r) { return r.json(); })
@@ -5205,12 +5386,16 @@ function loadAccountLines(accountId) {
     .then(function(lines){
       if (!Array.isArray(lines) || !lines.length) {
         body.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:14px 16px">No commission lines linked to this account yet.</div>';
+        var _kc=document.getElementById('rec-kpi-comm'); if(_kc) _kc.textContent='$0';
+        var _kl=document.getElementById('rec-kpi-lines'); if(_kl) _kl.textContent='0';
         return;
       }
       var money = function(n){ return '$' + (Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); };
       var totSales = lines.reduce(function(s,l){ return s + (Number(l.total_sales)||0); }, 0);
       var totComm  = lines.reduce(function(s,l){ return s + (Number(l.total_commission)||0); }, 0);
-      if (summary) summary.textContent = lines.length + ' line' + (lines.length!==1?'s':'') + ' · ' + money(totSales);
+      if (summary) summary.textContent = lines.length + ' line' + (lines.length!==1?'s':'') + ' \u00b7 ' + money(totSales);
+      var _kc=document.getElementById('rec-kpi-comm'); if(_kc) _kc.textContent='$'+Math.round(totComm).toLocaleString();
+      var _kl=document.getElementById('rec-kpi-lines'); if(_kl) _kl.textContent=lines.length;
       body.innerHTML = '<div style="padding:6px 16px 14px">' + lines.map(function(l){
         return '<div class="frow" style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)">' +
             '<div style="min-width:0"><div style="font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (l.name||'—') + '</div>' +
@@ -5361,11 +5546,10 @@ function _todayBtn(label, attrs, icon) {
 // The Daily Lead Finder is the SAME DOM node relocated into #today-finder-slot,
 // so all its existing handlers/IDs keep working untouched.
 
-// Move the live Daily Lead Finder node into the Today finder slot (once).
+// The Lead Finder now lives on its own page. Do NOT relocate it into Today —
+// that stole the node off the Lead Finder page and left that page empty.
 function moveFinderIntoToday() {
-  var slot = document.getElementById('today-finder-slot');
-  var finder = document.getElementById('daily-lead-finder');
-  if (slot && finder && finder.parentNode !== slot) slot.appendChild(finder);
+  return; // no-op: finder stays on the Lead Finder page
 }
 
 // "Today's working city": city of the earliest appointment/stop today, else the
@@ -5751,6 +5935,7 @@ function setRecTab(tab, el) {
   });
   document.querySelectorAll('.rl-item, .rt').forEach(function(i) { i.classList.remove('active'); });
   if (el) el.classList.add('active');
+  else { var _m = document.querySelector('.rt[data-tab="'+tab+'"]'); if (_m) _m.classList.add('active'); }
   if (tab === 'notes') loadNotes();
   if (tab === 'deals') loadRecordDeals();
 }
@@ -6249,7 +6434,7 @@ function runRecordAI() {
   var resp = document.getElementById('rec-ai-resp');
   resp.className = 'ai-resp vis';
   resp.innerHTML = '<div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
-  var prompt = "I'm a manufacturer's rep at Compton Group LLC in Atlanta. Give me a specific sales strategy for " + currentRecord.company + ", a " + currentRecord.category + " in " + (currentRecord.city||'Atlanta') + ". Products: " + (currentRecord.products||'TBD') + ". Status: " + currentRecord.status + ". Priority: " + currentRecord.priority + ". Notes: " + (currentRecord.notes||'none') + ". Give 3 talking points, 2 objection handlers, and a suggested next action.";
+  var prompt = "I'm a manufacturer's rep at Field Sales CRM in Atlanta. Give me a specific sales strategy for " + currentRecord.company + ", a " + currentRecord.category + " in " + (currentRecord.city||'Atlanta') + ". Products: " + (currentRecord.products||'TBD') + ". Status: " + currentRecord.status + ". Priority: " + currentRecord.priority + ". Notes: " + (currentRecord.notes||'none') + ". Give 3 talking points, 2 objection handlers, and a suggested next action.";
   fetch('/api/ai/command', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({prompt:prompt}) })
     .then(function(r) { return r.json(); })
     .then(function(d) { resp.innerHTML = (d.response||d.error||'').replace(/\n/g,'<br/>'); });
@@ -6911,7 +7096,11 @@ function addCityToRoute(cityName) {
 
   // Refresh route buttons in whichever table is currently visible
   if (window._contactTab === 'team') {
-    renderTeamContacts(window._teamContactsCache || [], (document.getElementById('p-search') || {value:''}).value);
+    if (window._activeRepFilter && window._activeRepFilter !== 'all') {
+      renderTeamContacts(window._teamContactsCache || [], (document.getElementById('p-search') || {value:''}).value);
+    } else {
+      renderTeamRepPicker(window._teamContactsCache || []);
+    }
   } else {
     renderProspects();
   }
@@ -10688,12 +10877,33 @@ function optimizeRouteOrder(stops) {
 
 
 // getSelectedSegments — reads checked boxes from the segment pill row
+
+// The lead finder's brand chips come from the firm's OWN manufacturer lines,
+// not a hardcoded list. Any rep group sees their own brands; a brand-new firm
+// with no lines yet sees no brand row at all, keeping the form clean.
+function loadLeadBrands(){
+  var wrap = document.getElementById('lead-brand-wrap');
+  var row = document.getElementById('lead-brand-row');
+  if(!row) return;
+  fetch('/api/lines/catalog').then(function(r){ return r.ok ? r.json() : []; }).then(function(list){
+    list = Array.isArray(list) ? list : [];
+    if(!list.length){ if(wrap) wrap.style.display='none'; return; }
+    row.innerHTML = list.slice(0,12).map(function(l){
+      var n = String(l.name||'').replace(/"/g,'&quot;');
+      return '<label class="lead-brand-pill" data-brand="'+n+'" style="cursor:pointer;background:#fff;border:1.5px solid var(--border);border-radius:99px;padding:7px 13px;font-size:12px;font-weight:600;color:var(--text2);display:inline-flex;align-items:center;gap:6px;user-select:none">'
+        + '<input type="checkbox" value="'+n+'" style="margin:0" onchange="this.closest(\'.lead-brand-pill\').classList.toggle(\'on\', this.checked)"> '+n+'</label>';
+    }).join('');
+    if(wrap) wrap.style.display='';
+  }).catch(function(){ if(wrap) wrap.style.display='none'; });
+}
+window.getSelectedSegments = window.getSelectedSegments;
+
 window.getSelectedSegments = function() {
   var checked = [];
   document.querySelectorAll('#segment-pill-row input[type="checkbox"]:checked').forEach(function(cb) {
     checked.push(cb.value);
   });
-  return checked.length ? checked : ['Roofing Contractor'];
+  return checked.length ? checked : ['Dealer'];
 };
 
 window.getSelectedBrands = function() {
@@ -10701,7 +10911,7 @@ window.getSelectedBrands = function() {
   document.querySelectorAll('#lead-brand-row input[type="checkbox"]:checked').forEach(function(cb) {
     checked.push(cb.value);
   });
-  return checked.length ? checked : ['BOSS Products', 'ShurTape', 'Alum-A-Pole'];
+  return checked;   // brands optional; drawn from the firm's own lines
 };
 
 
@@ -10709,6 +10919,74 @@ window.getSelectedBrands = function() {
 // Track all place IDs and names shown this session — used for refresh dedup
 window._shownPlaceIds = [];
 window._shownNames = [];
+
+
+// Lead Finder driven by who the firm represents: each manufacturer carries the
+// AI list of businesses that buy it, and selecting one hunts exactly those.
+
+window._leadMarket = 'both';
+function selectLeadMarket(m){
+  window._leadMarket = m;
+  document.querySelectorAll('#lead-market-row .seg-chip').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-market')===m); });
+}
+function loadLeadManufacturers(){
+  var sec=document.getElementById('lead-mfr-section'), row=document.getElementById('lead-mfr-row');
+  if(!row) return;
+  fetch('/api/lines/represented').then(function(r){return r.ok?r.json():[];}).then(function(list){
+    list=Array.isArray(list)?list:[];
+    window._repManufacturers=list;
+    if(!list.length){ if(sec) sec.style.display='none'; window._activeManufacturer=null; return; }
+    row.innerHTML = list.map(function(m,i){ return '<button type="button" class="seg-chip" data-mfr="'+i+'" onclick="selectLeadManufacturer('+i+')">'+_mfrEsc(m.name)+'</button>'; }).join('')
+      + '<button type="button" class="seg-chip" data-mfr="none" onclick="selectLeadManufacturer(-1)">Any business type</button>';
+    if(sec) sec.style.display='';
+    selectLeadManufacturer(0);
+  }).catch(function(){ if(sec) sec.style.display='none'; });
+}
+function selectLeadManufacturer(i){
+  var list=window._repManufacturers||[], detail=document.getElementById('lead-mfr-detail'), generic=document.getElementById('lead-generic-section');
+  document.querySelectorAll('#lead-mfr-row .seg-chip').forEach(function(b){ b.classList.remove('on'); });
+  if(i<0){
+    window._activeManufacturer=null;
+    var n=document.querySelector('#lead-mfr-row [data-mfr="none"]'); if(n) n.classList.add('on');
+    if(detail) detail.style.display='none';
+    if(generic) generic.style.display='';
+    return;
+  }
+  var m=list[i]; if(!m) return;
+  window._activeManufacturer={ name:m.name, target_customers:m.target_customers||[] };
+  var b=document.querySelector('#lead-mfr-row [data-mfr="'+i+'"]'); if(b) b.classList.add('on');
+  if(detail){ detail.style.display=''; detail.innerHTML='Hunting who buys <b>'+_mfrEsc(m.name)+'</b>: '+_mfrEsc((m.target_customers||[]).join(', ')); }
+  if(generic) generic.style.display='none';
+}
+window.runDailyLeads = window.runDailyLeads;
+
+
+function _leadEsc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function _weekdayDate(dayNum){
+  var d=new Date(), dow=d.getDay();
+  var monday=new Date(d); monday.setDate(d.getDate()-((dow+6)%7));
+  var t=new Date(monday); t.setDate(monday.getDate()+(parseInt(dayNum)-1));
+  return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+}
+// Add a found lead to the Weekly Planner on the chosen day. Saves it as a hidden
+// lead (source AI, stays out of Accounts until a call), then creates the stop.
+function addLeadToPlanner(i, dayNum){
+  if(!dayNum) return;
+  var lead=(window._dailyLeads||[])[i]; if(!lead) return;
+  var date=_weekdayDate(dayNum);
+  fetch('/api/ai/leads/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({leads:[lead]})})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      var acct=(res&&res.saved&&res.saved[0]&&res.saved[0].id)||(res&&res.ids&&res.ids[0])||null;
+      return fetch('/api/planner/items',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({planned_date:date,item_type:'stop',account_id:acct,title:lead.company,
+          note:[lead.address,lead.phone].filter(Boolean).join(' \u00b7 '),source:'manual'})});
+    })
+    .then(function(r){return r.json();})
+    .then(function(){ if(typeof showToast==='function') showToast(lead.company+' added to your planner'); })
+    .catch(function(){ if(typeof showToast==='function') showToast('Could not add to planner'); });
+}
+window.runDailyLeads = window.runDailyLeads;
 
 window.runDailyLeads = function() {
   var btn = document.getElementById('lead-find-btn');
@@ -10719,8 +10997,9 @@ window.runDailyLeads = function() {
 
   if (!city) { alert('Please enter a city first (e.g. Norcross GA)'); return; }
 
-  var segments = getSelectedSegments();
-  if (!segments.length) { alert('Please select at least one segment.'); return; }
+  var mfr = window._activeManufacturer || null;   // {name, target_customers}
+  var segments = mfr ? [mfr.name] : getSelectedSegments();
+  if (!segments.length) { alert('Please pick what you are looking for.'); return; }
 
   btn.disabled = true;
   btn.textContent = 'Searching...';
@@ -10737,16 +11016,22 @@ window.runDailyLeads = function() {
       finalize();
       return;
     }
+    var bodyObj = {
+      city: city,
+      brands: getSelectedBrands(),
+      channel: segments[idx],
+      market: window._leadMarket || 'both',
+      shown_place_ids: Array.from(seenIds),
+      shown_names: window._shownNames || []
+    };
+    // Manufacturer-driven: hunt the exact business types that buy this line.
+    if (mfr && Array.isArray(mfr.target_customers) && mfr.target_customers.length) {
+      bodyObj.targetCustomers = mfr.target_customers;
+    }
     fetch('/api/morning/daily-leads', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        city: city,
-        brands: getSelectedBrands(),
-        channel: segments[idx],
-        shown_place_ids: Array.from(seenIds),
-        shown_names: window._shownNames || []
-      })
+      body: JSON.stringify(bodyObj)
     })
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -10793,7 +11078,7 @@ window.runDailyLeads = function() {
       var residentialBlock = ['handyman','landscaping','lawn care','pressure wash','gutter clean','house clean'];
       if (residentialBlock.some(function(w){ return name.includes(w); })) return false;
       return true;
-    }).slice(0, 10);
+    }).slice(0, 20);
 
     var flaggedLeads = allLeads.filter(function(lead) { return lead.already_contacted; });
 
@@ -10824,6 +11109,33 @@ window.runDailyLeads = function() {
       if (lead.place_id) window._shownPlaceIds.push(lead.place_id);
       if (lead.company) window._shownNames.push(lead.company.toLowerCase());
     });
+
+    // Clean, actionable results on the Lead Finder page. Found leads are NOT saved
+    // to Accounts — the rep picks a day to drop one onto the Weekly Planner, and it
+    // only becomes an account once a call is logged.
+    var out = document.getElementById('lead-results');
+    if (out) {
+      out.style.display = 'block';
+      out.style.gridTemplateColumns = 'none';
+      out.innerHTML =
+        '<div style="font-size:13px;font-weight:750;color:var(--navy);margin:16px 0 10px">' + leads.length + ' leads found &#183; pick a day to add one to your planner</div>' +
+        leads.map(function(lead, i){
+          var addr = lead.address || lead.city || '';
+          var cat = lead.category || lead.territory || '';
+          var phone = lead.phone || '';
+          return '<div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:13px 15px;margin-bottom:8px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">' +
+            '<div style="flex:1;min-width:220px">' +
+              '<div style="font-size:14px;font-weight:700;color:var(--navy)">' + _leadEsc(lead.company||'') + '</div>' +
+              '<div style="font-size:12px;color:var(--text3);margin-top:2px">' + _leadEsc([cat, addr].filter(Boolean).join(' \u00b7 ')) + '</div>' +
+              (phone ? '<a href="tel:' + phone + '" style="font-size:12px;color:var(--accent);text-decoration:none;font-weight:600">' + _leadEsc(fmtPhone(phone)) + '</a>' : '') +
+            '</div>' +
+            '<select onchange="addLeadToPlanner(' + i + ',this.value);this.selectedIndex=0" style="padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;font-family:inherit;background:#fff;cursor:pointer">' +
+              '<option value="">+ Add to a day&#8230;</option>' +
+              '<option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option>' +
+            '</select>' +
+          '</div>';
+        }).join('');
+    }
 
     var callList = document.getElementById('morning-call-list');
     var listCount = document.getElementById('list-count-badge');
@@ -11006,6 +11318,7 @@ window.switchContactTab = function(tab) {
     if (tabTeam) { tabTeam.style.borderBottomColor = 'var(--accent)'; tabTeam.style.color = 'var(--navy)'; tabTeam.style.fontWeight = '700'; }
     if (tabMine) { tabMine.style.borderBottomColor = 'transparent'; tabMine.style.color = 'var(--text2)'; tabMine.style.fontWeight = '600'; }
     if (addBtn) addBtn.style.display = 'none';
+    window._activeRepFilter = 'all';
     loadTeamContacts();
   }
 };
@@ -11046,8 +11359,7 @@ window.loadTeamContacts = function() {
     .then(function(rows) {
       if (loading) loading.style.display = 'none';
       window._teamContactsCache = rows;
-      buildRepFilters(rows);
-      renderTeamContacts(rows, '');
+      renderTeamRepPicker(rows);
     })
     .catch(function(e) {
       if (loading) loading.style.display = 'none';
@@ -11159,6 +11471,46 @@ window.setTeamTypeFilter = function(val) {
   renderTeamContacts(window._teamContactsCache || [], document.getElementById('p-search')?.value || '');
 };
 
+
+function renderTeamRepPicker(rows){
+  window._teamContactsCache = rows||[];
+  var reps={};
+  (rows||[]).forEach(function(r){ var id=r.user_id; if(!id) return; if(!reps[id]) reps[id]={id:id,name:r.rep_name||('Rep '+id),count:0}; reps[id].count++; });
+  var list=Object.keys(reps).map(function(k){return reps[k];}).sort(function(a,b){return b.count-a.count;});
+  var pk=document.getElementById('team-rep-picker'), tb=document.getElementById('team-back-bar'),
+      tbl=document.getElementById('team-ltable'), rf=document.getElementById('team-rep-filters'), tf=document.getElementById('team-type-filter-row');
+  if(tb) tb.style.display='none';
+  if(tbl) tbl.style.display='none';
+  if(rf) rf.style.display='none';
+  if(tf) tf.style.display='none';
+  if(pk){
+    pk.style.display='block';
+    if(!list.length){ pk.innerHTML='<div style="text-align:center;padding:30px;color:var(--text3);font-size:13px">No team accounts yet.</div>'; }
+    else pk.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px">Whose book do you want to see?</div>'
+      + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">'
+      + list.map(function(rp){ var ini=String(rp.name||"?").split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);
+        return '<div onclick="selectTeamRep('+rp.id+')" style="display:flex;align-items:center;gap:11px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:13px 14px;cursor:pointer;box-shadow:0 1px 3px rgba(15,25,35,.05)">'
+          + '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--navy),#22364f);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ini+'</div>'
+          + '<div style="min-width:0"><div style="font-size:13.5px;font-weight:700;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_actEsc(rp.name)+'</div>'
+          + '<div style="font-size:11.5px;color:var(--text3)">'+rp.count+' account'+(rp.count!==1?'s':'')+'</div></div></div>';
+      }).join('') + '</div>';
+  }
+  window._activeRepFilter='all';
+  var cnt=document.getElementById('list-count'); if(cnt) cnt.textContent=list.length+' rep'+(list.length!==1?'s':'');
+}
+function selectTeamRep(repId){
+  var cache=window._teamContactsCache||[];
+  var row=cache.filter(function(r){return r.user_id==repId;})[0];
+  var repName=row?(row.rep_name||('Rep '+repId)):'';
+  window._activeRepFilter=repName;
+  var pk=document.getElementById('team-rep-picker'); if(pk) pk.style.display='none';
+  var tb=document.getElementById('team-back-bar'); if(tb) tb.style.display='block';
+  var cr=document.getElementById('team-current-rep'); if(cr) cr.textContent=repName;
+  var tbl=document.getElementById('team-ltable'); if(tbl) tbl.style.display='';
+  var tf=document.getElementById('team-type-filter-row'); if(tf) tf.style.display='flex';
+  renderTeamContacts(cache, (document.getElementById('p-search')||{value:''}).value);
+}
+function backToRepPicker(){ renderTeamRepPicker(window._teamContactsCache||[]); }
 function renderTeamContacts(rows, search) {
   var tbody  = document.getElementById('team-prospects-tbody');
   var empty  = document.getElementById('team-p-empty');
@@ -11378,7 +11730,7 @@ function renderTeamContacts(rows, search) {
       '<td>' + repBadge + '</td>' +
       '<td><span class="pill-cat">' + (r.category||'—') + '</span></td>' +
       '<td>' + (r.city||'—') + '</td>' +
-      '<td>' + (r.phone ? '<a href="tel:' + r.phone + '" onclick="event.stopPropagation()" style="color:var(--accent);font-size:12px;font-weight:600;text-decoration:none">' + r.phone + '</a>' : '—') + '</td>' +
+      '<td>' + (r.phone ? '<a href="tel:' + r.phone + '" onclick="event.stopPropagation()" style="color:var(--accent);font-size:12px;font-weight:600;text-decoration:none">' + fmtPhone(r.phone) + '</a>' : '—') + '</td>' +
       '<td style="text-align:center">' + contactedBadge + '</td>' +
       '<td>' + statusBadge + '</td>' +
       '<td>' + routeBtn + '</td>' +
@@ -16611,6 +16963,198 @@ function rcSetSeg(seg) {
   loadReconnect();
 }
 
+function _fmEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function _fmDate(d){
+  if(!d) return '';
+  var dt = new Date(String(d) + 'T00:00:00');
+  if (isNaN(dt)) return String(d);
+  return dt.toLocaleDateString('en-US',{month:'short',year:'numeric'});
+}
+function _fmMoney(n){ return '$' + Math.round(Number(n)||0).toLocaleString('en-US'); }
+
+var TAG_COLORS = {
+  slate:  ['#eef1f5','#334155'],
+  blue:   ['#e0edff','#1d4ed8'],
+  green:  ['#dcfce7','#15803d'],
+  amber:  ['#fef3c7','#a16207'],
+  red:    ['#fee2e2','#b91c1c'],
+  purple: ['#ede9fe','#6d28d9']
+};
+function _tagEsc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function loadAccountTags(accountId){
+  var el = document.getElementById('rec-tags');
+  if(!el) return;
+  window._tagAccountId = accountId;
+  fetch('/api/tags/account/' + accountId)
+    .then(function(r){ return r.ok ? r.json() : []; })
+    .then(function(tags){ renderAccountTags(Array.isArray(tags) ? tags : [], accountId); })
+    .catch(function(){ renderAccountTags([], accountId); });
+}
+
+function renderAccountTags(tags, accountId){
+  var el = document.getElementById('rec-tags');
+  if(!el) return;
+  var chips = tags.map(function(t){
+    var c = TAG_COLORS[t.color] || TAG_COLORS.slate;
+    return '<span style="display:inline-flex;align-items:center;gap:5px;background:' + c[0] + ';color:' + c[1] +
+      ';font-size:11.5px;font-weight:650;padding:4px 9px;border-radius:99px">' + _tagEsc(t.name) +
+      '<button onclick="removeAccountTag(' + accountId + ',' + t.id + ')" title="Remove tag" ' +
+      'style="background:none;border:none;color:inherit;opacity:.55;cursor:pointer;font-size:13px;line-height:1;padding:0">&times;</button></span>';
+  }).join('');
+  el.innerHTML =
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">' + chips +
+      '<input id="tag-add-input" list="tag-catalog" placeholder="+ Add tag" ' +
+        'onkeydown="if(event.key===\'Enter\'){event.preventDefault();addAccountTag(' + accountId + ');}" ' +
+        'style="width:118px;padding:4px 9px;border:1px dashed var(--border2);border-radius:99px;font-family:inherit;font-size:11.5px;background:transparent" />' +
+      '<datalist id="tag-catalog"></datalist>' +
+    '</div>';
+  loadTagCatalog();
+}
+
+// Suggest labels the firm already uses so the vocabulary stays consistent
+// instead of drifting into "Key Account", "key acct", "KeyAccount".
+function loadTagCatalog(){
+  var dl = document.getElementById('tag-catalog');
+  if(!dl) return;
+  fetch('/api/tags').then(function(r){ return r.ok ? r.json() : []; }).then(function(list){
+    if(!Array.isArray(list)) return;
+    dl.innerHTML = list.map(function(t){ return '<option value="' + _tagEsc(t.name) + '"></option>'; }).join('');
+  }).catch(function(){});
+}
+
+function addAccountTag(accountId){
+  var input = document.getElementById('tag-add-input');
+  if(!input) return;
+  var name = (input.value || '').trim();
+  if(!name){ input.focus(); return; }
+  input.disabled = true;
+  fetch('/api/tags/account/' + accountId, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ name: name, color: 'slate' })
+  }).then(function(r){ return r.json(); }).then(function(res){
+    if(res && res.error){ alert(res.error); input.disabled = false; return; }
+    loadAccountTags(accountId);
+  }).catch(function(){ input.disabled = false; });
+}
+
+function removeAccountTag(accountId, tagId){
+  fetch('/api/tags/account/' + accountId + '/tag/' + tagId, { method:'DELETE' })
+    .then(function(){ loadAccountTags(accountId); })
+    .catch(function(){});
+}
+
+function loadFoundMoney() {
+  var list = document.getElementById('fm-list');
+  var sum  = document.getElementById('fm-summary');
+  if (!list) return;
+  list.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:20px;text-align:center">Loading…</div>';
+  if (sum) sum.innerHTML = '';
+
+  fetch('/api/found-money')
+    .then(function(r){ return r.ok ? r.json() : { items: [], summary: {} }; })
+    .then(function(d){
+      var items = (d && d.items) || [];
+      var s = (d && d.summary) || {};
+
+      if (sum) {
+        sum.className = '';
+        sum.innerHTML =
+          '<div class="rc-banner">'
+            + '<div class="rc-banner-main">'
+              + '<div class="rc-banner-fig">' + _fmMoney(s.total_found) + '</div>'
+              + '<div class="rc-banner-lbl">Sales below normal</div>'
+            + '</div>'
+            + '<div class="rc-banner-side">'
+              + '<div class="v">' + _fmMoney(s.total_commission_at_risk) + '</div>'
+              + '<div class="rc-banner-lbl">Your commission</div>'
+            + '</div>'
+            + '<div class="rc-banner-side">'
+              + '<div class="v">' + (s.account_lost||0) + ' \u00b7 ' + (s.lines_lost||0) + ' \u00b7 ' + (s.declining||0) + '</div>'
+              + '<div class="rc-banner-lbl">Lost \u00b7 Line lost \u00b7 Declining</div>'
+            + '</div>'
+          + '</div>';
+      }
+
+      if (!items.length) {
+        list.innerHTML = '<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:34px 20px">' +
+          '<div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:4px">Nothing slipping right now</div>' +
+          '<div style="font-size:12px;color:var(--text3);max-width:420px;margin:0 auto">' +
+          _fmEsc((d && d.message) || 'Every account is buying at or above its usual pace. Found Money compares each account against its own commission history, so it needs a couple of confirmed periods before it can spot a gap.') +
+          '</div></div>';
+        return;
+      }
+
+      list.innerHTML = items.map(function(i){
+        // The classification is the sales call: being fired is a different
+        // problem from losing one line to a competitor.
+        var kind = {
+          account_lost: { label: 'ACCOUNT LOST', accent: '#b91c1c', bg: '#fee2e2',
+                          note: 'Every line stopped' },
+          lines_lost:   { label: 'LINE LOST',    accent: '#c2410c', bg: '#ffedd5',
+                          note: 'Competitor likely took a line' },
+          declining:    { label: 'DECLINING',    accent: '#a16207', bg: '#fef3c7',
+                          note: 'Buying under its normal' }
+        }[i.type] || { label: 'AT RISK', accent: '#a16207', bg: '#fef3c7', note: '' };
+
+        var phone = i.phone ? String(i.phone).replace(/[^0-9+]/g,'') : '';
+        var meta = [i.category, i.city].filter(Boolean).join(' \u00b7 ');
+
+        // Per-line breakdown: which manufacturer, how far down, since when.
+        var lines = (i.lines || []).map(function(l){
+          var isStopped = l.type === 'stopped';
+          var bar = Math.max(0, Math.min(100, l.pct_of_normal || 0));
+          return '<div style="padding:7px 0;border-top:1px solid var(--border)">'
+            + '<div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">'
+              + '<span style="font-size:12.5px;font-weight:650;color:var(--navy)">' + _fmEsc(l.manufacturer) + '</span>'
+              + '<span style="font-size:12.5px;font-weight:750;color:' + kind.accent + ';font-variant-numeric:tabular-nums">'
+                + _fmMoney(l.gap_sales) + '</span>'
+            + '</div>'
+            + '<div style="height:4px;border-radius:99px;background:#eef1f5;margin-top:5px">'
+              + '<div style="height:100%;width:' + bar + '%;border-radius:99px;background:' + kind.accent + '"></div>'
+            + '</div>'
+            + '<div style="display:flex;justify-content:space-between;font-size:10.5px;color:var(--text3);margin-top:4px">'
+              + '<span>' + (isStopped ? 'Stopped buying' : 'At ' + bar + '% of normal') + '</span>'
+              + '<span>was ' + _fmMoney(l.baseline_sales) + '/period</span>'
+            + '</div>'
+          + '</div>';
+        }).join('');
+
+        // Trend and recency turn a number into something you can open a call with.
+        var facts = [];
+        if (i.periods_sliding > 1) facts.push(i.periods_sliding + ' periods sliding');
+        if (i.last_bought) facts.push('last bought ' + _fmDate(i.last_bought));
+        if (i.still_buying > 0) facts.push('still buys ' + _fmMoney(i.still_buying));
+
+        return '<div class="rc-card" style="--rc-accent:' + kind.accent + '">'
+            + '<div style="display:flex;justify-content:space-between;gap:14px;align-items:flex-start">'
+              + '<div style="min-width:0;flex:1">'
+                + '<div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">'
+                  + '<span class="rc-name">' + _fmEsc(i.customer_name) + '</span>'
+                  + '<span style="background:' + kind.bg + ';color:' + kind.accent + ';font-size:9.5px;font-weight:800;padding:3px 8px;border-radius:99px;letter-spacing:.4px">' + kind.label + '</span>'
+                + '</div>'
+                + '<div class="rc-meta">' + _fmEsc(meta || kind.note) + '</div>'
+              + '</div>'
+              + '<div style="text-align:right;flex-shrink:0">'
+                + '<div class="rc-money" style="color:' + kind.accent + '">' + _fmMoney(i.gap_sales) + '</div>'
+                + '<div class="rc-money-sub">' + _fmMoney(i.gap_commission) + ' commission</div>'
+              + '</div>'
+            + '</div>'
+            + (facts.length ? '<div style="font-size:11px;color:var(--text3);margin-top:8px">' + _fmEsc(facts.join('  \u00b7  ')) + '</div>' : '')
+            + '<div style="margin-top:8px">' + lines + '</div>'
+            + '<div class="rc-actions">'
+              + (phone ? '<a class="rc-call" href="tel:' + phone + '">Call</a>'
+                       : '<span class="rc-call rc-dim">No number</span>')
+              + (i.account_id ? '<button class="rc-act" onclick="viewRecord(' + i.account_id + ')">Open account</button>' : '')
+            + '</div>'
+          + '</div>';
+      }).join('');
+    })
+    .catch(function(){
+      list.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:20px;text-align:center">Could not load Found Money.</div>';
+    });
+}
+
 function loadReconnect() {
   // Reflect the active segment button.
   document.querySelectorAll('#rc-seg .rc-seg-btn').forEach(function(b){
@@ -16782,166 +17326,6 @@ function fortressNextStop(day){
   window.open('https://maps.apple.com/?daddr=' + dest + '&dirflg=d', '_blank', 'noopener');
 }
 
-// ── Distributor report ───────────────────────────────────────────────────────
-// Splits promo activity by the distributor each stop came from (the `source`
-// column seeded from fortress_promo_routes.csv). Purely a read of stops already
-// loaded by loadFortress() — no extra API call, no schema change.
-//
-// A handful of seeded rows carry junk in `source` (e.g. "Verified" landed in the
-// distributor column), so anything unrecognised is bucketed as "Unspecified"
-// rather than silently dropped — otherwise the totals stop reconciling.
-window._fortressReportOpen = false;
-
-// Reporting distributors. A stop seeded as "Both" carries BOTH lines, so it is
-// counted under Dixie AND under Great Southern — a dealer that stocks Dixie is a
-// Dixie dealer regardless of what else they stock. Columns therefore overlap and
-// will not sum to the stop count; the Total row is unique stops, and the caption
-// spells the overlap out so nobody reads it as a double count.
-var FORTRESS_DISTRIBUTORS = [
-  { key: 'Dixie',  label: 'Dixie' },
-  { key: 'GSW',    label: 'Great Southern' },
-  { key: 'Other',  label: 'Unspecified' }
-];
-
-// Does this stop carry the given line?
-function fortressCarries(stop, key){
-  var k = fortressDistributorKey(stop.source);
-  if (key === 'Dixie') return k === 'Dixie' || k === 'Both';
-  if (key === 'GSW')   return k === 'GSW'   || k === 'Both';
-  return k === 'Other';
-}
-
-function fortressDistributorKey(src){
-  var s = String(src == null ? '' : src).trim().toLowerCase();
-  if (s === 'dixie') return 'Dixie';
-  if (s === 'gsw' || s === 'great southern' || s === 'gs') return 'GSW';
-  if (s === 'both') return 'Both';
-  return 'Other';
-}
-
-function fortressToggleReport(){
-  window._fortressReportOpen = !window._fortressReportOpen;
-  var btn = document.getElementById('fortress-report-toggle');
-  var box = document.getElementById('fortress-report');
-  if (btn) btn.textContent = window._fortressReportOpen ? 'Hide distributor report' : 'Show distributor report';
-  if (box) box.style.display = window._fortressReportOpen ? 'block' : 'none';
-  renderFortressReport();
-}
-
-// Tally one set of stops into per-distributor counts.
-function fortressTally(stops){
-  var rows = {};
-  FORTRESS_DISTRIBUTORS.forEach(function(d){
-    var set = stops.filter(function(s){ return fortressCarries(s, d.key); });
-    var r = { label: d.label, total: set.length, visited: 0, outcomes: {} };
-    set.forEach(function(s){
-      if (!s.visited_at) return;
-      r.visited++;
-      var oc = String(s.outcome == null ? '' : s.outcome).trim() || 'No outcome recorded';
-      r.outcomes[oc] = (r.outcomes[oc] || 0) + 1;
-    });
-    rows[d.key] = r;
-  });
-  return rows;
-}
-
-// How many stops in this set carry both lines (the source of the overlap).
-function fortressDualCount(stops){
-  return stops.filter(function(s){ return fortressDistributorKey(s.source) === 'Both'; }).length;
-}
-
-function fortressPct(done, total){
-  if (!total) return '—';
-  return Math.round((done / total) * 100) + '%';
-}
-
-function fortressReportTable(title, stops){
-  var rows = fortressTally(stops);
-  var shown = FORTRESS_DISTRIBUTORS.filter(function(d){ return rows[d.key].total > 0; });
-  if (!shown.length) return '';
-
-  var gTotal = stops.length;
-  var gVisited = stops.filter(function(s){ return s.visited_at; }).length;
-
-  var html = '<div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px">' +
-    '<div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:10px">' + fortressEsc(title) + '</div>' +
-    '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">' +
-    '<thead><tr>' +
-      '<th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)">Distributor</th>' +
-      '<th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)">Stops</th>' +
-      '<th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)">Visited</th>' +
-      '<th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)">Remaining</th>' +
-      '<th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)">Complete</th>' +
-    '</tr></thead><tbody>';
-
-  shown.forEach(function(d){
-    var r = rows[d.key];
-    html += '<tr>' +
-      '<td style="padding:7px 8px;border-bottom:1px solid var(--border);font-weight:700;color:var(--navy)">' + fortressEsc(r.label) + '</td>' +
-      '<td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:right">' + r.total + '</td>' +
-      '<td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:right;color:var(--green);font-weight:700">' + r.visited + '</td>' +
-      '<td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:right">' + (r.total - r.visited) + '</td>' +
-      '<td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:right;font-weight:700">' + fortressPct(r.visited, r.total) + '</td>' +
-    '</tr>';
-  });
-
-  html += '<tr>' +
-    '<td style="padding:8px;font-weight:800;color:var(--navy)">Total (unique stops)</td>' +
-    '<td style="padding:8px;text-align:right;font-weight:800">' + gTotal + '</td>' +
-    '<td style="padding:8px;text-align:right;font-weight:800;color:var(--green)">' + gVisited + '</td>' +
-    '<td style="padding:8px;text-align:right;font-weight:800">' + (gTotal - gVisited) + '</td>' +
-    '<td style="padding:8px;text-align:right;font-weight:800">' + fortressPct(gVisited, gTotal) + '</td>' +
-  '</tr></tbody></table></div>';
-
-  var dual = fortressDualCount(stops);
-  if (dual) {
-    html += '<div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.5">' +
-      dual + ' of these dealers carry both lines, so they are counted under Dixie and under ' +
-      'Great Southern. The rows overlap on purpose and will not add up to ' + gTotal + '.</div>';
-  }
-
-  // Outcome breakdown per distributor — only where visits have been logged.
-  var oc = shown.filter(function(d){ return Object.keys(rows[d.key].outcomes).length; });
-  if (oc.length){
-    html += '<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">' +
-      '<div style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);font-weight:700;margin-bottom:6px">Outcomes logged</div>';
-    oc.forEach(function(d){
-      var r = rows[d.key];
-      var parts = Object.keys(r.outcomes).sort(function(a,b){ return r.outcomes[b] - r.outcomes[a]; })
-        .map(function(k){ return fortressEsc(k) + ' (' + r.outcomes[k] + ')'; });
-      html += '<div style="font-size:12px;color:var(--text2,var(--navy));margin-bottom:4px">' +
-        '<span style="font-weight:700">' + fortressEsc(r.label) + ':</span> ' + parts.join(', ') + '</div>';
-    });
-    html += '</div>';
-  }
-
-  return html + '</div>';
-}
-
-function renderFortressReport(){
-  var box = document.getElementById('fortress-report');
-  if (!box || !window._fortressReportOpen) return;
-
-  var all = window._fortressStops || [];
-  if (!all.length){ box.innerHTML = ''; return; }
-
-  var sel = window._fortressRep;
-  var html = '';
-
-  if (sel && sel !== 'all') {
-    html = fortressReportTable(sel, all.filter(function(s){ return s.rep === sel; }));
-  } else {
-    // Combined view: overall first, then each rep so Cody can read them separately.
-    html = fortressReportTable('All reps', all);
-    var reps = [];
-    all.forEach(function(s){ if (s.rep && reps.indexOf(s.rep) === -1) reps.push(s.rep); });
-    reps.sort().forEach(function(rep){
-      html += fortressReportTable(rep, all.filter(function(s){ return s.rep === rep; }));
-    });
-  }
-  box.innerHTML = html;
-}
-
 function renderFortress(){
   var toggle = document.getElementById('fortress-reptoggle');
   var progEl = document.getElementById('fortress-progress');
@@ -16950,7 +17334,7 @@ function renderFortress(){
 
   // Rep toggle buttons (managers also get an "All" option).
   var reps = [{k:'Kody',l:'Kody'}, {k:'Jack',l:'Jack'}];
-  if (fortressIsManager()) reps.push({k:'all', l:'All reps'});
+  if (fortressIsManager()) reps.push({k:'all', l:'Both'});
   if (toggle) toggle.innerHTML = reps.map(function(r){
     var active = window._fortressRep === r.k;
     return '<button onclick="fortressSetRep(\'' + r.k + '\')" style="min-height:40px;padding:0 16px;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;' +
@@ -16971,9 +17355,6 @@ function renderFortress(){
   // Overall progress for the selected rep(s).
   var doneAll = stops.filter(function(s){ return s.visited_at; }).length;
   if (progEl) progEl.textContent = doneAll + ' of ' + stops.length + ' visited';
-
-  // Keep the distributor report in step with the rep toggle.
-  renderFortressReport();
 
   // Group by day, preserving first-seen day order; stops already arrive in stop_order.
   var dayOrder = [], byDay = {};
@@ -17070,7 +17451,103 @@ function fortressMarkVisited(id, btn){
     .catch(function(){ if (btn) { btn.disabled = false; btn.textContent = 'Mark visited'; } showToast('Save failed'); });
 }
 
+// ── Manufacturers you represent (AI lookup → who buys → feeds the lead finder) ──
+function _mfrEsc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+window._pendingMfr = null;
+
+function _mfrSelectedProducts(){
+  var arr=[]; document.querySelectorAll('#mfr-product-row input[type="checkbox"]:checked').forEach(function(b){ arr.push(b.value); }); return arr;
+}
+function _mfrRenderResult(d){
+  var out=document.getElementById('rep-mfr-result');
+  window._pendingMfr=d;
+  var lines=d.product_lines||[];
+  var carried=(d.scoped_products&&d.scoped_products.length)?d.scoped_products:lines;
+  var carriedLower=carried.map(function(x){return String(x).toLowerCase();});
+  var prodBox = lines.length
+    ? '<div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin:4px 0 8px">Which lines do you carry? <span style="font-weight:400;text-transform:none;letter-spacing:0">(all checked = full range)</span></div>'
+      + '<div id="mfr-product-row" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:9px">'
+      + lines.map(function(pl){ var on=carriedLower.indexOf(String(pl).toLowerCase())>-1; return '<label class="mfr-prod"><input type="checkbox" value="'+_mfrEsc(pl)+'"'+(on?' checked':'')+'> '+_mfrEsc(pl)+'</label>'; }).join('')
+      + '</div>'
+      + '<button onclick="refineMfrProducts()" style="margin-bottom:14px;padding:7px 14px;background:#fff;border:1px solid var(--border);border-radius:7px;font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;font-family:inherit">&#8635; Update buyers for what I carry</button>'
+    : '';
+  out.innerHTML='<div style="border:1px solid var(--border);border-radius:10px;padding:14px 16px;background:#fafbfc">'
+    + '<div style="font-size:14px;font-weight:750;color:var(--navy)">'+_mfrEsc(d.name)+(d.category?' <span style="font-size:11px;font-weight:600;color:var(--text3)">&#183; '+_mfrEsc(d.category)+'</span>':'')+'</div>'
+    + (d.products?'<div style="font-size:12.5px;color:var(--text2);margin:5px 0 12px">'+_mfrEsc(d.products)+'</div>':'')
+    + prodBox
+    + '<div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Who buys this &#8212; remove any you don\'t sell to, or add your own</div>'
+    + '<div id="mfr-buyer-chips"></div>'
+    + '<button onclick="saveRepresentedManufacturer()" style="margin-top:14px;padding:9px 18px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Yes, I represent this</button>'
+  + '</div>';
+  renderBuyerChips();
+}
+function renderBuyerChips(){
+  var d=window._pendingMfr, box=document.getElementById('mfr-buyer-chips'); if(!box||!d) return;
+  var chips=(d.target_customers||[]).map(function(t,i){ return '<span style="display:inline-flex;align-items:center;gap:6px;background:#eef1f5;color:var(--navy);font-size:12px;font-weight:600;padding:5px 8px 5px 11px;border-radius:99px;margin:0 6px 6px 0">'+_mfrEsc(t)+'<button onclick="removeBuyerChip('+i+')" title="Remove" style="border:none;background:rgba(0,0,0,.1);color:var(--navy);width:16px;height:16px;border-radius:50%;cursor:pointer;font-size:12px;line-height:1;display:inline-flex;align-items:center;justify-content:center;font-family:inherit">&times;</button></span>'; }).join('');
+  box.innerHTML=chips+'<div style="display:flex;gap:6px;margin-top:8px;max-width:440px"><input id="mfr-add-buyer" type="text" placeholder="Add a buyer type you sell to&#8230;" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addBuyerChip();}" style="flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit"><button onclick="addBuyerChip()" style="padding:7px 14px;background:#fff;border:1px solid var(--border);border-radius:7px;font-size:12px;font-weight:600;color:var(--navy);cursor:pointer;font-family:inherit">Add</button></div>';
+}
+function removeBuyerChip(i){ var d=window._pendingMfr; if(!d||!d.target_customers) return; d.target_customers.splice(i,1); renderBuyerChips(); }
+function addBuyerChip(){ var d=window._pendingMfr; if(!d) return; var inp=document.getElementById('mfr-add-buyer'); if(!inp) return; var v=(inp.value||'').trim(); if(!v) return; d.target_customers=d.target_customers||[]; d.target_customers.push(v.slice(0,60)); renderBuyerChips(); var n=document.getElementById('mfr-add-buyer'); if(n) n.focus(); }
+function lookupManufacturer(){
+  var input=document.getElementById('rep-mfr-input'), btn=document.getElementById('rep-mfr-btn'), out=document.getElementById('rep-mfr-result');
+  if(!input) return;
+  var name=(input.value||'').trim(); if(!name){ input.focus(); return; }
+  btn.disabled=true; btn.textContent='Researching…';
+  out.innerHTML='<div style="font-size:12.5px;color:var(--text3);padding:8px 0">Researching '+_mfrEsc(name)+' and its market… a few seconds.</div>';
+  fetch('/api/ai/manufacturer-lookup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name})})
+    .then(function(r){return r.json();}).then(function(d){
+      btn.disabled=false; btn.textContent='Look up';
+      if(!d||d.error||!d.target_customers){ out.innerHTML='<div style="font-size:12.5px;color:#b91c1c;padding:8px 0">'+_mfrEsc((d&&d.error)||'Could not identify that manufacturer.')+'</div>'; return; }
+      _mfrRenderResult(d);
+    }).catch(function(){ btn.disabled=false; btn.textContent='Look up'; out.innerHTML='<div style="font-size:12.5px;color:#b91c1c;padding:8px 0">Lookup failed. Try again.</div>'; });
+}
+function refineMfrProducts(){
+  var d=window._pendingMfr; if(!d) return;
+  var products=_mfrSelectedProducts();
+  if(!products.length){ alert('Pick at least one line, or leave all checked for the full range.'); return; }
+  var out=document.getElementById('rep-mfr-result');
+  out.innerHTML='<div style="font-size:12.5px;color:var(--text3);padding:8px 0">Re-scoping buyers for '+_mfrEsc(products.join(', '))+'…</div>';
+  fetch('/api/ai/manufacturer-lookup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:d.name,products:products})})
+    .then(function(r){return r.json();}).then(function(nd){
+      if(!nd||nd.error||!nd.target_customers){ _mfrRenderResult(d); return; }
+      if((!nd.product_lines||!nd.product_lines.length)&&d.product_lines) nd.product_lines=d.product_lines;
+      _mfrRenderResult(nd);
+    }).catch(function(){ _mfrRenderResult(d); });
+}
+function saveRepresentedManufacturer(){
+  var d=window._pendingMfr; if(!d) return;
+  var payload={ name:d.name, products:d.products, category:d.category, target_customers:d.target_customers, carried_products:_mfrSelectedProducts() };
+  fetch('/api/lines/represent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(function(r){return r.json();}).then(function(res){
+      if(res&&res.ok){ document.getElementById('rep-mfr-input').value=''; document.getElementById('rep-mfr-result').innerHTML=''; window._pendingMfr=null; loadRepresentedManufacturers(); }
+      else alert((res&&res.error)||'Could not save.');
+    }).catch(function(){ alert('Could not save.'); });
+}
+
+function loadRepresentedManufacturers(){
+  var el = document.getElementById('rep-mfr-list');
+  if(!el) return;
+  fetch('/api/lines/represented').then(function(r){ return r.ok ? r.json() : []; }).then(function(list){
+    list = Array.isArray(list) ? list : [];
+    if(!list.length){ el.innerHTML = ''; return; }
+    el.innerHTML = '<div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">You represent</div>'
+      + list.map(function(m){
+        return '<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--border)">'
+          + '<div style="min-width:0"><div style="font-size:13.5px;font-weight:700;color:var(--navy)">' + _mfrEsc(m.name) + '</div>'
+          + '<div style="font-size:11.5px;color:var(--text3);margin-top:1px">' + _mfrEsc((m.target_customers||[]).slice(0,4).join(', ')) + ((m.target_customers||[]).length>4?'…':'') + '</div></div>'
+          + '<button onclick="removeRepresentedManufacturer(' + m.id + ')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px;font-weight:600;flex-shrink:0">Remove</button>'
+        + '</div>';
+      }).join('');
+  }).catch(function(){ el.innerHTML=''; });
+}
+
+function removeRepresentedManufacturer(id){
+  fetch('/api/lines/represent/' + id, { method:'DELETE' })
+    .then(function(){ loadRepresentedManufacturers(); }).catch(function(){});
+}
+
 function loadManufacturers() {
+  loadRepresentedManufacturers();
   // Always return to the list view on (re)entry.
   document.getElementById('mfr-detail-view').style.display = 'none';
   document.getElementById('mfr-list-view').style.display = '';
@@ -17489,6 +17966,21 @@ function discardCommission() {
       loadCommissionHistory();
     });
 }
+</script>
+<script>
+// Hard guard: account-search boxes must never hold an email. If Chrome force-fills
+// a remembered login address despite autocomplete=off, wipe it on load.
+(function(){
+  function clearAutofill(){
+    ['sb-search-input','p-search','lead-city-input'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el && el.value && el.value.indexOf('@')>-1) el.value='';
+    });
+  }
+  document.addEventListener('DOMContentLoaded', clearAutofill);
+  window.addEventListener('load', function(){ clearAutofill(); setTimeout(clearAutofill,200); setTimeout(clearAutofill,700); setTimeout(clearAutofill,1500); });
+  window.addEventListener('pageshow', clearAutofill);
+})();
 </script>
 </body>
 </html>
