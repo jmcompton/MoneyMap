@@ -2104,7 +2104,7 @@ window.addEventListener('load', function() {
         </div>
         <div class="rec-tabs">
           <div class="rt active" onclick="setRecTab('overview',this)">Overview</div>
-          <div class="rt" onclick="setRecTab('calls',this)">Timeline</div>
+          <div class="rt" onclick="setRecTab('calls',this)">Activities</div>
           <div class="rt" onclick="setRecTab('ai',this)">AI Intel</div>
           <div style="margin-left:auto;font-size:11px;color:var(--text3)" id="rec-last-update"></div>
         </div>
@@ -2125,12 +2125,12 @@ window.addEventListener('load', function() {
         <div class="rec-body">
           <div id="rec-tab-overview">
             <div class="rec-sec">
-              <div class="rec-sec-hdr"><span class="rec-sec-title">Contact Information</span><span style="font-size:11.5px;color:var(--blue);cursor:pointer">Edit</span></div>
+              <div class="rec-sec-hdr"><span class="rec-sec-title">Contact Information</span><span onclick="openEditContact(currentRecord)" style="font-size:11.5px;color:var(--blue);cursor:pointer">Edit</span></div>
               <div class="rec-sec-body" id="rec-fields"></div>
               <div id="rec-tags" style="padding:0 16px 14px"></div>
             </div>
             <div class="rec-sec">
-              <div class="rec-sec-hdr"><span class="rec-sec-title">Products & Territory</span><span style="font-size:11.5px;color:var(--blue);cursor:pointer">Edit</span></div>
+              <div class="rec-sec-hdr"><span class="rec-sec-title">Products & Territory</span><span onclick="openEditContact(currentRecord)" style="font-size:11.5px;color:var(--blue);cursor:pointer">Edit</span></div>
               <div class="rec-sec-body" id="rec-prod-fields"></div>
             </div>
             <!-- Lines this account buys — built from confirmed commission data -->
@@ -2244,7 +2244,7 @@ window.addEventListener('load', function() {
     <!-- Tab bar -->
     <div id="cd-tabs">
       <div class="cd-tab active" onclick="setContactTab('overview',this)" data-tab="overview">Overview</div>
-      <div class="cd-tab" onclick="setContactTab('timeline',this)" data-tab="timeline">Timeline</div>
+      <div class="cd-tab" onclick="setContactTab('timeline',this)" data-tab="timeline">Activities</div>
       <div class="cd-tab" onclick="setContactTab('bcard',this)" data-tab="bcard">Business Card</div>
     </div>
 
@@ -5074,6 +5074,38 @@ function clearContactSelection() {
   if (aside) aside.style.display = 'none';
 }
 
+
+function _actEsc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function _actDate(d){ if(!d) return '\u2014'; try{ return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }catch(e){ return String(d); } }
+function loadAccountActivities(id, companyName){
+  var el=document.getElementById('rec-timeline'); if(!el) return;
+  el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">Loading activity\u2026</div>';
+  var acctName=(companyName||'').toLowerCase().trim();
+  Promise.all([
+    fetch('/api/calls').then(function(r){return r.ok?r.json():[];}).catch(function(){return [];}),
+    fetch('/api/quotes').then(function(r){return r.ok?r.json():{};}).catch(function(){return {};})
+  ]).then(function(res){
+    var calls=(Array.isArray(res[0])?res[0]:[]).filter(function(c){return c.prospect_id===id;});
+    var quotes=((res[1]&&res[1].quotes)||[]).filter(function(q){return (q.account_name||'').toLowerCase().trim()===acctName;});
+    var items=[];
+    calls.forEach(function(c){ items.push({ type:'call', date:c.call_date, title:(c.call_type||'Call')+' \u2014 '+(c.outcome||'logged'), desc:[c.products_discussed?('Products: '+c.products_discussed):'', c.notes||''].filter(Boolean).join(' \u00b7 '), next:c.next_step, nextDate:c.next_step_date, who:c.rep_name||'' }); });
+    quotes.forEach(function(q){ items.push({ type:'quote', date:q.quote_date||q.created_at, title:'Quote'+(q.quote_number?(' #'+q.quote_number):'')+(q.status?(' \u2014 '+q.status):''), desc:(q.total?('$'+Number(q.total).toLocaleString()):''), who:q.rep_name||'' }); });
+    items.sort(function(a,b){ return new Date(b.date||0)-new Date(a.date||0); });
+    var cc=document.getElementById('rec-call-count'); if(cc) cc.textContent=calls.length;
+    if(!items.length){ el.innerHTML='<div style="text-align:center;padding:24px;color:var(--text3)">No activity yet. Log a call to get started.</div>'; return; }
+    var ICO={call:['#dbeafe','#1d4ed8','\ud83d\udcde'],quote:['#dcfce7','#15803d','$'],task:['#fef3c7','#b45309','\u2713'],note:['#ede9fe','#6d28d9','\u270e']};
+    el.innerHTML=items.map(function(it){ var ic=ICO[it.type]||ICO.note;
+      return '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)">'
+        +'<div style="width:30px;height:30px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;background:'+ic[0]+';color:'+ic[1]+'">'+ic[2]+'</div>'
+        +'<div style="flex:1;min-width:0">'
+          +'<div style="font-size:13.5px;font-weight:650;color:var(--navy)">'+_actEsc(it.title)+'</div>'
+          +(it.desc?'<div style="font-size:12.5px;color:var(--text2);margin-top:2px;line-height:1.45">'+_actEsc(it.desc)+'</div>':'')
+          +(it.next?'<div style="margin-top:4px;font-size:11.5px;color:var(--blue);font-weight:600">\u2192 Next: '+_actEsc(it.next)+(it.nextDate?(' ('+_actEsc(it.nextDate)+')'):'')+'</div>':'')
+          +'<div style="font-size:11px;color:var(--text3);margin-top:4px">'+(it.who?('<b>'+_actEsc(it.who)+'</b> \u00b7 '):'')+_actEsc(_actDate(it.date))+'</div>'
+        +'</div></div>';
+    }).join('');
+  }).catch(function(){ el.innerHTML='<div style="text-align:center;padding:24px;color:var(--text3)">Could not load activity.</div>'; });
+}
 function viewRecord(id) {
   fetch('/api/prospects')
     .then(function(r) { return r.json(); })
@@ -5111,8 +5143,9 @@ function viewRecord(id) {
       // People (contact name/title/email/mobile) now live in the Contacts tab,
       // sourced from the contacts table — they are NOT repeated in this business
       // grid so the same person isn't shown twice. Business facts stay here.
+      var _ownerNm = p.owner_name || (window.currentUser && window.currentUser.name) || 'You';
       var fields = [
-        ['Contact Owner','You'],['Company Type',ctRecBadge],
+        ['Contact Owner',_ownerNm],['Company Type',ctRecBadge],
         ['Account Name',p.company],
         ['Business Phone',p.phone||'—'],
         ['City',p.city||'—'],['State',p.state||'GA'],
@@ -5126,7 +5159,7 @@ function viewRecord(id) {
       document.getElementById('rec-fields').innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0">' +
         fields.map(function(f) { return '<div class="frow"><div class="flabel">' + f[0] + '</div><div class="fval' + (f[1]==='—'?' empty':'') + '">' + f[1] + '</div></div>'; }).join('') + '</div>';
       var pf = [
-        ['Products',p.products||'—'],['Territory','Atlanta Metro, GA'],
+        ['Products',p.products||'—'],['Territory',[p.city,p.state].filter(Boolean).join(', ')||'—'],
         ['Priority',p.priority||'Medium'],['Source',p.source||'Manual']
       ];
       document.getElementById('rec-prod-fields').innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0">' +
@@ -5148,21 +5181,7 @@ function viewRecord(id) {
           bcardImg.src = '';
         }
       }
-      fetch('/api/calls')
-        .then(function(r) { return r.json(); })
-        .then(function(calls) {
-          var rc = calls.filter(function(c) { return c.prospect_id === id; });
-          document.getElementById('rec-call-count').textContent = rc.length;
-          document.getElementById('rec-timeline').innerHTML = rc.length ?
-            rc.map(function(c) {
-              return '<div class="tl-item"><div class="tl-ico">' + (c.call_type && (c.call_type.indexOf('Person')!==-1||c.call_type.indexOf('Jobsite')!==-1) ? '' : '') + '</div>' +
-                '<div class="tl-body"><div class="tl-title">' + (c.call_type||'Call') + ' — ' + (c.outcome||'—') + '</div>' +
-                '<div class="tl-meta">' + (c.call_date||'—') + ' · Products: ' + (c.products_discussed||'—') + '</div>' +
-                (c.notes ? '<div class="tl-note">' + c.notes + '</div>' : '') +
-                (c.next_step ? '<div style="margin-top:5px;font-size:11px;color:var(--blue);font-weight:600">→ Next: ' + c.next_step + (c.next_step_date ? ' (' + c.next_step_date + ')' : '') + '</div>' : '') +
-                '</div></div>';
-            }).join('') : '<div style="text-align:center;padding:24px;color:var(--text3)">No activities logged yet.</div>';
-        });
+      loadAccountActivities(id, p.company);
       // Load quotes for this account
       fetch('/api/quotes')
         .then(function(r) { return r.json(); })
