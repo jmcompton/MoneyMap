@@ -1493,6 +1493,12 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 #page-record .rec-name{font-size:20px;font-weight:800;letter-spacing:-.3px}
 #page-record .rec-av{background:linear-gradient(135deg,var(--navy),#22364f);color:#fff;border-radius:12px}
 #page-record .rec-quick{max-width:1120px;margin:0 auto;padding:6px 22px 16px}
+
+#page-record .rec-kpis{max-width:1120px;margin:0 auto;padding:8px 22px 10px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+#page-record .rec-kpi{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(15,25,35,.05)}
+#page-record .rec-kpi-v{font-size:19px;font-weight:800;letter-spacing:-.3px;color:var(--navy);font-variant-numeric:tabular-nums}
+#page-record .rec-kpi-l{font-size:10.5px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-top:4px}
+@media(max-width:640px){#page-record .rec-kpis{gap:8px;padding:8px 14px}#page-record .rec-kpi{padding:10px 12px}#page-record .rec-kpi-v{font-size:15px}}
 </style>
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
@@ -2102,6 +2108,11 @@ window.addEventListener('load', function() {
             <button class="btn btn-secondary btn-sm" onclick="openEditContact(currentRecord)">✏️ Edit</button>
             <button class="btn btn-secondary btn-sm" onclick="recGoBack()">✕ Close</button>
           </div>
+        </div>
+        <div class="rec-kpis" id="rec-kpis">
+          <div class="rec-kpi"><div class="rec-kpi-v" id="rec-kpi-comm" style="color:#0f9d58">—</div><div class="rec-kpi-l">Commission</div></div>
+          <div class="rec-kpi"><div class="rec-kpi-v" id="rec-kpi-lines">—</div><div class="rec-kpi-l">Lines carried</div></div>
+          <div class="rec-kpi"><div class="rec-kpi-v" id="rec-kpi-touch">—</div><div class="rec-kpi-l">Last touch</div></div>
         </div>
         <div class="rec-tabs">
           <div class="rt active" data-tab="overview" onclick="setRecTab('overview',this)">Overview</div>
@@ -5073,6 +5084,7 @@ function clearContactSelection() {
 
 function _actEsc(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function _actDate(d){ if(!d) return '\u2014'; try{ return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }catch(e){ return String(d); } }
+function _timeAgo(d){ if(!d) return '\u2014'; var t=new Date(d).getTime(); if(!t) return '\u2014'; var days=Math.floor((Date.now()-t)/86400000); if(days<=0) return 'Today'; if(days===1) return 'Yesterday'; if(days<30) return days+' days ago'; if(days<60) return '1 month ago'; return Math.floor(days/30)+' months ago'; }
 function loadAccountActivities(id, companyName){
   var el=document.getElementById('rec-timeline'); if(!el) return;
   el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">Loading activity\u2026</div>';
@@ -5178,6 +5190,7 @@ function viewRecord(id) {
         }
       }
       loadAccountActivities(id, p.company);
+      var _tk=document.getElementById('rec-kpi-touch'); if(_tk) _tk.textContent=_timeAgo(p.last_activity_at||p.created_at);
       // Load quotes for this account
       fetch('/api/quotes')
         .then(function(r) { return r.json(); })
@@ -5346,12 +5359,16 @@ function loadAccountLines(accountId) {
     .then(function(lines){
       if (!Array.isArray(lines) || !lines.length) {
         body.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:14px 16px">No commission lines linked to this account yet.</div>';
+        var _kc=document.getElementById('rec-kpi-comm'); if(_kc) _kc.textContent='$0';
+        var _kl=document.getElementById('rec-kpi-lines'); if(_kl) _kl.textContent='0';
         return;
       }
       var money = function(n){ return '$' + (Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); };
       var totSales = lines.reduce(function(s,l){ return s + (Number(l.total_sales)||0); }, 0);
       var totComm  = lines.reduce(function(s,l){ return s + (Number(l.total_commission)||0); }, 0);
-      if (summary) summary.textContent = lines.length + ' line' + (lines.length!==1?'s':'') + ' · ' + money(totSales);
+      if (summary) summary.textContent = lines.length + ' line' + (lines.length!==1?'s':'') + ' \u00b7 ' + money(totSales);
+      var _kc=document.getElementById('rec-kpi-comm'); if(_kc) _kc.textContent='$'+Math.round(totComm).toLocaleString();
+      var _kl=document.getElementById('rec-kpi-lines'); if(_kl) _kl.textContent=lines.length;
       body.innerHTML = '<div style="padding:6px 16px 14px">' + lines.map(function(l){
         return '<div class="frow" style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)">' +
             '<div style="min-width:0"><div style="font-weight:600;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (l.name||'—') + '</div>' +

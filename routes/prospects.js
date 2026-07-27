@@ -183,7 +183,8 @@ router.get('/', async (req, res) => {
     const p = params.length;
     query += ` AND (company ILIKE $${p} OR contact ILIKE $${p} OR phone ILIKE $${p} OR email ILIKE $${p} OR city ILIKE $${p} OR category ILIKE $${p})`;
   }
-  query += ' ORDER BY created_at DESC';
+  // Recently-touched first (the CRM default); falls back to creation date.
+  query += ' ORDER BY last_activity_at DESC NULLS LAST, created_at DESC';
   const result = await pool.query(query, params);
   res.json(result.rows);
 });
