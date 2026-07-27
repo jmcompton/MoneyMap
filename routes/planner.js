@@ -939,39 +939,59 @@ router.post('/build-week', async (req, res) => {
     const used = new Set();
     const suggestions = [];
     const messages = [];
-    for (const day of dayList) {
-      const remaining = goal - (dayCounts[day] || 0);
-      if (remaining <= 0) continue;
+    const dayRemaining = {};
+    dayList.forEach(function(day){ dayRemaining[day] = Math.max(0, goal - (dayCounts[day] || 0)); });
 
-      const city = manualAnchors[day] || autoCityByDay[day] || territoryCity;
-      let coords = city ? await geocodeCity(city) : null;
+    // ── Pass 1: days with a REAL anchor (manual, or an existing first stop) get
+    //    filled with the highest-ranked candidates within radius of that anchor.
+    for (const day of dayList) {
+      if (dayRemaining[day] <= 0) continue;
+      const city = manualAnchors[day] || autoCityByDay[day];
+      if (!city) continue;                                 // unanchored → Pass 2
+      let coords = await geocodeCity(city);
       if (!coords && ures.home_base_lat && ures.home_base_lng) {
         coords = { lat: parseFloat(ures.home_base_lat), lng: parseFloat(ures.home_base_lng) };
       }
       const anchor = { cityKey: normCity(city), coords };
-
-      // No anchor city at all → cannot enforce a region; skip (rep seeds the day).
       if (!anchor.cityKey && !anchor.coords) continue;
-
-      let picked = 0;
       for (const c of candidates) {
-        if (picked >= remaining) break;
-        if (used.has(c.account_id)) continue;
-        if (!c.area) continue;                            // no location → couldn't place
-        if (!withinRadius(anchor, c, radius)) continue;   // GEOGRAPHIC SANITY
-        used.add(c.account_id);
-        picked++;
-        suggestions.push({
-          account_id: c.account_id, day, name: c.name, area: c.area,
-          reason: c.reason_hint, prep: c.prep || null
-        });
-      }
-      // Geographic honesty: if we couldn't reach the goal in radius, say so.
-      if (picked < remaining && city) {
-        messages.push('Only ' + picked + ' good ' + (picked === 1 ? 'stop' : 'stops') +
-          ' within ' + radius + 'mi of ' + city + ' on ' + day + '.');
+        if (dayRemaining[day] <= 0) break;
+        if (used.has(c.account_id) || !c.area) continue;
+        if (!withinRadius(anchor, c, radius)) continue;
+        used.add(c.account_id); dayRemaining[day]--;
+        suggestions.push({ account_id: c.account_id, day, name: c.name, area: c.area, reason: c.reason_hint, prep: c.prep || null });
       }
     }
+
+    // ── Pass 2: build the REST of the week. Cluster the remaining ranked accounts
+    //    by city and drop one city-cluster onto each still-open day, so every day
+    //    is a coherent geographic trip and the whole week fills — not just the one
+    //    anchored day. Highest-value clusters land first.
+    const clusters = {};
+    candidates.forEach(function(c, idx){
+      if (used.has(c.account_id) || !c.area) return;
+      const key = normCity(c.area);
+      if (!clusters[key]) clusters[key] = { city: c.area, items: [], bestRank: idx };
+      clusters[key].items.push(c);
+      if (idx < clusters[key].bestRank) clusters[key].bestRank = idx;
+    });
+    const clusterList = Object.keys(clusters).map(function(k){ return clusters[k]; })
+      .sort(function(a, b){ return a.bestRank - b.bestRank; });   // city with the best account first
+    let ci = 0;
+    for (const day of dayList) {
+      if (dayRemaining[day] <= 0) continue;
+      if (ci >= clusterList.length) break;
+      const cl = clusterList[ci++];
+      for (const c of cl.items) {
+        if (dayRemaining[day] <= 0) break;
+        if (used.has(c.account_id)) continue;
+        used.add(c.account_id); dayRemaining[day]--;
+        suggestions.push({ account_id: c.account_id, day, name: c.name, area: c.area, reason: c.reason_hint, prep: c.prep || null });
+      }
+    }
+
+    // Only flag a shortfall if the WHOLE week came up light — not day-by-day noise.
+    if (!suggestions.length) messages.push('No nearby accounts to plan. Try a wider radius or set anchor cities.');
 
     // Candidates with no usable location — surfaced so the rep can drag manually.
     const couldnt_place = candidates
