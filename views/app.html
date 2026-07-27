@@ -2072,19 +2072,6 @@ window.addEventListener('load', function() {
   <!-- RECORD DETAIL -->
   <div class="page" id="page-record">
     <div class="rec-layout">
-      <div class="rec-left">
-        <div class="rl-title">Related List</div>
-        <div class="rl-item active" onclick="setRecTab('notes',this)">Notes</div>
-        <div class="rl-item" onclick="setRecTab('overview',this)">Connected Records</div>
-        <div class="rl-item" onclick="setRecTab('overview',this)">Attachments</div>
-        <div class="rl-item" onclick="setRecTab('deals',this)">Deals</div>
-        <div class="rl-item" onclick="setRecTab('contacts',this)">Contacts <span class="rl-cnt" id="rec-contacts-count">0</span></div>
-        <div class="rl-item" onclick="setRecTab('quotes',this)">Quotes <span class="rl-cnt" id="rec-quote-count">0</span></div>
-        <div class="rl-item" onclick="setRecTab('calls',this)">Open Activities <span class="rl-cnt" id="rec-call-count">0</span></div>
-        <div class="rl-item" onclick="setRecTab('calls',this)">Closed Activities</div>
-        <div class="rl-item" onclick="setRecTab('outreach',this)">Emails</div>
-        <div class="rl-item" onclick="setRecTab('ai',this)">AI Intel</div>
-      </div>
       <div class="rec-main">
         <div class="rec-hdr">
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
@@ -2103,19 +2090,15 @@ window.addEventListener('load', function() {
           </div>
         </div>
         <div class="rec-tabs">
-          <div class="rt active" onclick="setRecTab('overview',this)">Overview</div>
-          <div class="rt" onclick="setRecTab('calls',this)">Activities</div>
-          <div class="rt" onclick="setRecTab('ai',this)">AI Intel</div>
+          <div class="rt active" data-tab="calls" onclick="setRecTab('calls',this)">Activities <span class="rl-cnt" id="rec-call-count">0</span></div>
+          <div class="rt" data-tab="overview" onclick="setRecTab('overview',this)">Overview</div>
+          <div class="rt" data-tab="contacts" onclick="setRecTab('contacts',this)">Contacts <span class="rl-cnt" id="rec-contacts-count">0</span></div>
+          <div class="rt" data-tab="quotes" onclick="setRecTab('quotes',this)">Quotes <span class="rl-cnt" id="rec-quote-count">0</span></div>
+          <div class="rt" data-tab="notes" onclick="setRecTab('notes',this)">Notes</div>
+          <div class="rt" data-tab="ai" onclick="setRecTab('ai',this)">AI Intel</div>
           <div style="margin-left:auto;font-size:11px;color:var(--text3)" id="rec-last-update"></div>
         </div>
-        <!-- Mobile-only extra tab row — mirrors the left sidebar items hidden on small screens -->
-        <div id="rec-mobile-extra-tabs" style="display:none">
-          <div class="rl-item" onclick="setRecTab('notes',this)">Notes</div>
-          <div class="rl-item" onclick="setRecTab('contacts',this)">Contacts <span class="rl-cnt" id="rec-contacts-count-mob"><!-- synced by JS --></span></div>
-          <div class="rl-item" onclick="setRecTab('quotes',this)">Quotes <span class="rl-cnt" id="rec-quote-count-mob"><!-- synced by JS --></span></div>
-          <div class="rl-item" onclick="setRecTab('deals',this)">Deals</div>
-          <div class="rl-item" onclick="setRecTab('outreach',this)">Emails</div>
-        </div>
+
         <div class="rec-quick">
           <div><div class="rq-label">Contact Owner</div><div class="rq-val">You</div></div>
           <div><div class="rq-label">Email</div><div class="rq-val" id="rq-email">—</div></div>
@@ -5246,7 +5229,7 @@ function viewRecord(id) {
       loadAccountContacts(p.id);
 
       // Respect pending tab (e.g. returning from a drill-in)
-      var pendingTab = window._pendingRecTab || 'overview';
+      var pendingTab = window._pendingRecTab || 'calls';
       window._pendingRecTab = null;
       setRecTab(pendingTab, null);
     });
@@ -5895,6 +5878,7 @@ function setRecTab(tab, el) {
   });
   document.querySelectorAll('.rl-item, .rt').forEach(function(i) { i.classList.remove('active'); });
   if (el) el.classList.add('active');
+  else { var _m = document.querySelector('.rt[data-tab="'+tab+'"]'); if (_m) _m.classList.add('active'); }
   if (tab === 'notes') loadNotes();
   if (tab === 'deals') loadRecordDeals();
 }
