@@ -4,6 +4,7 @@ const router = express.Router();
 const { pool } = require('../db');
 const { buildCooccurrence, recommendForAccount } = require('../lib/crosssell');
 const { getReconnect } = require('../lib/reconnect-store');
+const { getRepTerritory, inTerritory } = require('../lib/territory');
 
 // ── Anthropic helper — reuses the SAME client/model/key pattern as
 //    routes/ai.js & routes/weekly_report.js (no new AI dependency) ──
@@ -620,7 +621,14 @@ async function geocodeCity(city) {
       const d = await r.json();
       if (d.results && d.results[0]) {
         const loc = d.results[0].geometry.location;
-        coords = { lat: loc.lat, lng: loc.lng };
+        const comps = d.results[0].address_components || [];
+        let county = null, state = null;
+        for (const cc of comps) {
+          const ty = cc.types || [];
+          if (ty.indexOf('administrative_area_level_2') >= 0) county = cc.long_name;
+          if (ty.indexOf('administrative_area_level_1') >= 0) state = cc.short_name;
+        }
+        coords = { lat: loc.lat, lng: loc.lng, county: county, state: state };
       }
     } catch (e) { console.error('[planner geocodeCity]', e.message); }
   }
@@ -925,7 +933,7 @@ router.post('/build-week', async (req, res) => {
     const territoryCity = ures.territory && String(ures.territory).trim() ? String(ures.territory).trim() : null;
 
     // Ranked candidate pool: reconnect $ first, then commission run_rate, then leads.
-    const candidates = await gatherRankedCandidates(repId, exclude);
+    let candidates = await gatherRankedCandidates(repId, exclude);
     if (!candidates.length) {
       return res.json({ rep_id: repId, week_start: weekStart, week_end: friday, suggestions: [], couldnt_place: [], messages: [], message: 'No candidate accounts found to plan.' });
     }
@@ -933,6 +941,19 @@ router.post('/build-week', async (req, res) => {
     // Geocode candidate cities once (cached); attach coords for radius math.
     // Accounts with NO city are un-placeable by region — never geocode/guess them.
     for (const c of candidates) c.coords = c.area ? await geocodeCity(c.area) : null;
+
+    // ── Territory gate ── If the rep has drawn a territory, drop every candidate
+    //    whose county falls outside it, so the whole week (anchors + the leads the
+    //    finder drops around them) stays inside the area they actually cover.
+    const _territory = await getRepTerritory(repId);
+    if (_territory) {
+      candidates = candidates.filter(function(c){
+        return c.coords && inTerritory(_territory, { state: c.coords.state, county: c.coords.county });
+      });
+      if (!candidates.length) {
+        return res.json({ rep_id: repId, week_start: weekStart, week_end: friday, suggestions: [], couldnt_place: [], messages: ['No going-quiet accounts inside your territory this week.'], message: 'No candidates in territory.' });
+      }
+    }
 
     // Resolve each day's anchor (city + coords): MANUAL → first existing stop →
     // rep territory city → home base coords.

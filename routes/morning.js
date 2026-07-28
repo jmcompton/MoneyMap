@@ -1,6 +1,7 @@
 const express = require('express');
 const fetch = require('node-fetch');
 const { pool } = require('../db');
+const { getRepTerritory, inTerritory } = require('../lib/territory');
 const router = express.Router();
 
 const CLAUDE_API = 'https://api.anthropic.com/v1/messages';
@@ -799,7 +800,16 @@ router.post('/daily-leads', async (req, res) => {
       return da - db;
     });
 
-    const topLeads = allLeads.slice(0, 20);
+    // Territory gate — keep only leads inside the rep's covered area (if a
+    // territory is set). Leads carry state, so this stops out-of-state results;
+    // Build My Week enforces the finer county level via its anchors.
+    let _terr = null;
+    try {
+      const terrRepId = (req.body && req.body.rep_id) || (req.session && req.session.user && req.session.user.id);
+      if (terrRepId) _terr = await getRepTerritory(terrRepId);
+    } catch (e) { console.error('[leads territory]', e.message); }
+    const _inTerr = _terr ? allLeads.filter(function(l){ return inTerritory(_terr, { state: l.state, county: l.county }); }) : allLeads;
+    const topLeads = _inTerr.slice(0, 20);
 
     res.json({
       ok: true,
