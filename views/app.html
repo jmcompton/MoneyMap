@@ -16754,11 +16754,17 @@ function plBuildWeek() {
 }
 function plFillAnchorsWithLeads() {
   if (plState.readOnly) return;
-  var anchors = (plState.aiSuggestions || []).filter(function(g){ return g.is_anchor && g.search_city && g.buyer_types && g.buyer_types.length; });
+  var anchors = (plState.aiSuggestions || []).filter(function(g){ return g.is_anchor && g.search_city; });
   if (!anchors.length) return;
+  // Fallback buyer types when the anchor's lines carry no "who buys this" data
+  // (e.g. commission-derived lines). Guarantees the finder always has something
+  // to hunt so every anchor's day actually fills.
+  var DEFAULT_BUYERS = ['building material distributors', 'lumber and building supply', 'commercial construction contractors', 'roofing contractors', 'general contractors'];
+  showToast('Finding leads around ' + anchors.length + ' ' + (anchors.length === 1 ? 'anchor' : 'anchors') + '…');
   var jobs = anchors.map(function(a){
+    var buyers = (a.buyer_types && a.buyer_types.length) ? a.buyer_types : DEFAULT_BUYERS;
     return fetch('/api/morning/daily-leads', { method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ city: a.search_city, targetCustomers: a.buyer_types, market: 'both', rep_id: plState.repId }) })
+      body: JSON.stringify({ city: a.search_city, targetCustomers: buyers, market: 'both', rep_id: plState.repId }) })
       .then(function(r){ return r.json(); })
       .then(function(res){
         var leads = ((res && res.leads) || []).slice(0, 8);
@@ -16777,9 +16783,9 @@ function plFillAnchorsWithLeads() {
     if (add.length) {
       plState.aiSuggestions = plAiTag((plState.aiSuggestions || []).concat(add));
       plShowAiBar(); plRenderGrid();
-      showToast('Added ' + add.length + ' leads around your anchors — review, then Apply');
+      showToast('Added ' + add.length + ' leads across your week — review, then Apply');
     } else {
-      showToast('Anchors ready — review, then Apply');
+      showToast('No leads came back — check the Lead Finder works for these cities');
     }
   });
 }
