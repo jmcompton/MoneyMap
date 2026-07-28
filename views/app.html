@@ -1643,6 +1643,7 @@ window.addEventListener('load', function() {
     <button class="sb-item" data-roles="rep manager" onclick="go('contacts')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>Accounts</button>
     <button class="sb-item" data-roles="rep manager" onclick="go('quotes')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><path d="M3 2h10a1 1 0 011 1v11a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zM5 7h6M5 9.5h4"/></svg>Quotes</button>
     <button class="sb-item" data-roles="rep manager" onclick="go('manufacturers')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 14V6l4-2v3l4-2v3l4-2v8z"/><path d="M2 14h12"/></svg>Manufacturers</button>
+    <button class="sb-item" data-roles="rep manager" onclick="go('territory')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M8 1.5C5.2 1.5 3 3.7 3 6.4c0 3.3 5 8.1 5 8.1s5-4.8 5-8.1C13 3.7 10.8 1.5 8 1.5z"/><circle cx="8" cy="6.3" r="1.7"/></svg>Territory</button>
     <button class="sb-item" data-roles="rep manager" onclick="go('fortress')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 14V5l3-2 3 2 3-2 3 2v9z"/><path d="M5 14V8M11 14V8M2 11h12"/></svg>Fortress Promo</button>
   </div>
   <div class="sb-section" data-roles="rep manager">
@@ -2779,6 +2780,27 @@ window.addEventListener('load', function() {
   </div>
 
   <!-- MANUFACTURERS PAGE -->
+  <div class="page" id="page-territory" style="overflow-y:auto;padding-bottom:80px">
+    <div style="max-width:1080px;margin:0 auto;padding:20px 24px 60px;width:100%;box-sizing:border-box">
+      <div style="font-size:22px;font-weight:800;color:var(--navy);letter-spacing:-.4px">Your Territory</div>
+      <div style="font-size:13px;color:var(--text3);margin:3px 0 16px">Tap the counties you cover. Build My Week and the Lead Finder only pull from inside your territory.</div>
+      <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+        <select id="terr-state" onchange="terrSwitchState()" style="padding:9px 11px;border:1px solid var(--border);border-radius:9px;font-size:13px;font-family:inherit;font-weight:600;color:var(--navy)">
+          <option value="01">Alabama</option><option value="28">Mississippi</option><option value="13">Georgia</option><option value="47">Tennessee</option><option value="12">Florida</option><option value="45">South Carolina</option><option value="37">North Carolina</option><option value="21">Kentucky</option><option value="22">Louisiana</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="terrSelectAll()">Cover whole state</button>
+        <button class="btn btn-secondary btn-sm" onclick="terrClear()">Clear state</button>
+        <div style="margin-left:auto;display:flex;gap:10px;align-items:center">
+          <span id="terr-count" style="font-size:13px;font-weight:700;color:var(--navy)">0 counties</span>
+          <button class="btn btn-primary btn-sm" onclick="terrSave()">Save territory</button>
+        </div>
+      </div>
+      <div style="position:relative">
+        <div id="terr-map" style="height:560px;border-radius:14px;border:1px solid var(--border);z-index:0;background:#eef2f6"></div>
+        <div id="terr-loading" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:13px;font-weight:600">Loading map…</div>
+      </div>
+    </div>
+  </div>
   <div class="page" id="page-manufacturers" style="overflow-y:auto;padding-bottom:80px">
     <div style="padding:16px">
       <!-- LIST view -->
@@ -4327,6 +4349,7 @@ function go(id) {
   if (id === 'weekly-planner') loadPlanner();
   if (id === 'commissions') loadCommissions();
   if (id === 'manufacturers') loadManufacturers();
+  if (id === 'territory') territoryInit();
   if (id === 'reconnect') loadReconnect();
   if (id === 'found-money') loadFoundMoney();
   if (id === 'fortress') loadFortress();
@@ -16729,6 +16752,74 @@ function plShowAiBar() {
   // Show the bar whenever there are suggestions OR notes to convey.
   var show = n || msgs.length || np.length;
   if (bar) bar.style.display = show ? 'flex' : 'none';
+}
+
+// ── Territory (county map) ───────────────────────────────────────────────────
+var _terrMap=null,_terrLayer=null,_terrFeatures=[],_terrSel={},_terrState='01';
+function _terrScript(src){ return new Promise(function(res,rej){ var el=document.createElement('script'); el.src=src; el.onload=res; el.onerror=rej; document.head.appendChild(el); }); }
+function territoryInit(){
+  if (_terrMap){ setTimeout(function(){ try{_terrMap.invalidateSize();}catch(e){} },120); return; }
+  if (window.L && window.topojson) return _terrBoot();
+  var l=document.createElement('link'); l.rel='stylesheet'; l.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(l);
+  _terrScript('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js')
+    .then(function(){ return _terrScript('https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js'); })
+    .then(_terrBoot)
+    .catch(function(){ var el=document.getElementById('terr-loading'); if(el) el.textContent='Could not load the map library.'; });
+}
+function _terrBoot(){
+  _terrMap=L.map('terr-map',{scrollWheelZoom:true,minZoom:4});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,opacity:.55,attribution:'\u00A9 OpenStreetMap'}).addTo(_terrMap);
+  _terrMap.setView([32.8,-86.8],7);
+  Promise.all([
+    fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json').then(function(r){return r.json();}),
+    fetch('/api/territory').then(function(r){return r.ok?r.json():{counties:[]};}).catch(function(){return {counties:[]};})
+  ]).then(function(res){
+    _terrFeatures=topojson.feature(res[0],res[0].objects.counties).features;
+    ((res[1]&&res[1].counties)||[]).forEach(function(c){ var st=String(c.fips).slice(0,2); _terrSel[st]=_terrSel[st]||{}; _terrSel[st][c.fips]=c.name; });
+    var el=document.getElementById('terr-loading'); if(el) el.style.display='none';
+    // jump to the first state the rep already covers, if any
+    var firstSt=Object.keys(_terrSel)[0]; if(firstSt){ _terrState=firstSt; var sel=document.getElementById('terr-state'); if(sel) sel.value=firstSt; }
+    _terrDraw();
+  }).catch(function(){ var el=document.getElementById('terr-loading'); if(el) el.textContent='Could not load county map (network).'; });
+}
+function _terrBase(){ return {color:'#b3c0cf',weight:1,fillColor:'#f4f6f9',fillOpacity:.5}; }
+function _terrOn(){ return {color:'#0b7a44',weight:1.5,fillColor:'#0f9d58',fillOpacity:.55}; }
+function _terrIsOn(id){ return _terrSel[_terrState]&&_terrSel[_terrState][id]; }
+function _terrDraw(){
+  if(!_terrMap) return;
+  if(_terrLayer) _terrMap.removeLayer(_terrLayer);
+  var feats=_terrFeatures.filter(function(f){ return String(f.id).slice(0,2)===_terrState; });
+  _terrLayer=L.geoJSON({type:'FeatureCollection',features:feats},{
+    style:function(f){ return _terrIsOn(f.id)?_terrOn():_terrBase(); },
+    onEachFeature:function(f,layer){
+      layer.bindTooltip((f.properties&&f.properties.name?f.properties.name:'County')+' County',{sticky:true});
+      layer.on('click',function(){ _terrToggle(f.id,layer); });
+      layer.on('mouseover',function(){ if(!_terrIsOn(f.id)) layer.setStyle({fillColor:'#dbe7f6',fillOpacity:.65}); });
+      layer.on('mouseout',function(){ layer.setStyle(_terrIsOn(f.id)?_terrOn():_terrBase()); });
+    }
+  }).addTo(_terrMap);
+  try{ _terrMap.fitBounds(_terrLayer.getBounds(),{padding:[10,10]}); }catch(e){}
+  _terrCount();
+}
+function _terrToggle(id,layer){
+  _terrSel[_terrState]=_terrSel[_terrState]||{};
+  var f=_terrFeatures.find(function(x){return String(x.id)===String(id);});
+  var name=f&&f.properties?f.properties.name:id;
+  if(_terrSel[_terrState][id]) delete _terrSel[_terrState][id]; else _terrSel[_terrState][id]=name;
+  layer.setStyle(_terrIsOn(id)?_terrOn():_terrBase());
+  _terrCount();
+}
+function _terrCount(){ var t=0; Object.keys(_terrSel).forEach(function(st){ t+=Object.keys(_terrSel[st]).length; }); var el=document.getElementById('terr-count'); if(el) el.textContent=t+(t===1?' county':' counties'); }
+function terrSwitchState(){ _terrState=document.getElementById('terr-state').value; _terrDraw(); }
+function terrSelectAll(){ _terrSel[_terrState]={}; _terrFeatures.filter(function(f){return String(f.id).slice(0,2)===_terrState;}).forEach(function(f){ _terrSel[_terrState][f.id]=f.properties.name; }); _terrDraw(); }
+function terrClear(){ _terrSel[_terrState]={}; _terrDraw(); }
+function terrSave(){
+  var counties=[];
+  Object.keys(_terrSel).forEach(function(st){ Object.keys(_terrSel[st]).forEach(function(id){ counties.push({fips:id,name:_terrSel[st][id],state:st}); }); });
+  fetch('/api/territory',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({counties:counties})})
+    .then(function(r){return r.json();})
+    .then(function(d){ if(d&&d.ok) showToast('Saved '+d.count+' '+(d.count===1?'county':'counties')+' as your territory'); else showToast((d&&d.error)||'Could not save'); })
+    .catch(function(){ showToast('Could not save territory'); });
 }
 function plBuildWeek() {
   if (plState.readOnly) return;

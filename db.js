@@ -659,6 +659,20 @@ async function initDB() {
     ALTER TABLE planner_anchors        ADD COLUMN IF NOT EXISTS start_time  TEXT;
     ALTER TABLE planner_anchors        ADD COLUMN IF NOT EXISTS end_point   TEXT;
     ALTER TABLE planner_anchors        ADD COLUMN IF NOT EXISTS end_time    TEXT;
+
+    -- ════════════════════════════════════════════════════════════
+    -- Rep territories — the counties each rep covers. County-based so
+    -- coverage tiles perfectly and every business (which has a county)
+    -- can be checked against it exactly.
+    CREATE TABLE IF NOT EXISTS rep_territories (
+      user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      county_fips TEXT NOT NULL,
+      county_name TEXT,
+      state_fips  TEXT,
+      created_at  TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY (user_id, county_fips)
+    );
+    CREATE INDEX IF NOT EXISTS idx_rep_territories_user ON rep_territories(user_id);
     ALTER TABLE contacts               ADD COLUMN IF NOT EXISTS company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE;
 
     CREATE INDEX IF NOT EXISTS idx_users_company        ON users(company_id);
