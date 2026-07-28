@@ -691,6 +691,32 @@ router.get('/test', async (req, res) => {
   } catch(e) { res.json({ ok: false, error: e.message }); }
 });
 
+// GET /api/places/reverse?lat=&lng= — reverse-geocode the rep's current position
+// to "City, ST" for the header location label.
+router.get('/reverse', async (req, res) => {
+  try {
+    if (!PLACES_KEY) return res.json({ label: '' });
+    const lat = parseFloat(req.query.lat), lng = parseFloat(req.query.lng);
+    if (!isFinite(lat) || !isFinite(lng)) return res.json({ label: '' });
+    const r = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${PLACES_KEY}`);
+    const d = await r.json();
+    let city = '', state = '';
+    if (d.results && d.results[0]) {
+      (d.results[0].address_components || []).forEach(function(c){
+        const ty = c.types || [];
+        if (ty.indexOf('locality') >= 0) city = c.long_name;
+        if (!city && ty.indexOf('administrative_area_level_2') >= 0) city = c.long_name;
+        if (ty.indexOf('administrative_area_level_1') >= 0) state = c.short_name;
+      });
+    }
+    const label = city ? (city + (state ? (', ' + state) : '')) : (state || '');
+    res.json({ city, state, label });
+  } catch (e) {
+    console.error('[places reverse]', e.message);
+    res.json({ label: '' });
+  }
+});
+
 router.get('/company-search', async (req, res) => {
   const q = (req.query.q || '').trim();
   if (!q || q.length < 2) return res.json([]);

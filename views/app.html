@@ -1698,7 +1698,7 @@ window.addEventListener('load', function() {
     </div>
     <button class="btn btn-secondary btn-sm" onclick="openModal('add-prospect')">+ New Account</button>
     <button class="btn btn-primary btn-sm" onclick="go('leads')">AI Find Leads</button>
-    <span style="font-size:11px;color:var(--text3);background:var(--bg);border:1px solid var(--border);padding:4px 10px;border-radius:12px">📍 Atlanta Metro</span>
+    <span style="font-size:11px;color:var(--text3);background:var(--bg);border:1px solid var(--border);padding:4px 10px;border-radius:12px" id="current-loc-pill">📍 Locating…</span>
   </div>
 
   <div class="mod-tabs" id="mod-tabs" style="display:none">
@@ -14200,6 +14200,7 @@ document.addEventListener('click', function(e) {
 
   // ── Hook: qd-acct blur (Quote form account field) ───────────────
   document.addEventListener('DOMContentLoaded', function() {
+    if (typeof updateCurrentLocation === 'function') setTimeout(updateCurrentLocation, 1200);
     var acctInput = document.getElementById('qd-acct');
     if (acctInput) {
       acctInput.addEventListener('blur', function() {
@@ -16757,6 +16758,20 @@ function plShowAiBar() {
 // ── Territory (county map) ───────────────────────────────────────────────────
 var _terrMap=null,_terrLayer=null,_terrFeatures=[],_terrSel={},_terrState='01';
 function _terrScript(src){ return new Promise(function(res,rej){ var el=document.createElement('script'); el.src=src; el.onload=res; el.onerror=rej; document.head.appendChild(el); }); }
+function updateCurrentLocation(){
+  var pill=document.getElementById('current-loc-pill');
+  var sb=document.getElementById('sb-territory-label');
+  if(!navigator.geolocation){ if(pill) pill.style.display='none'; return; }
+  navigator.geolocation.getCurrentPosition(function(pos){
+    fetch('/api/places/reverse?lat='+pos.coords.latitude+'&lng='+pos.coords.longitude)
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(d && d.label){ if(pill){ pill.textContent='\uD83D\uDCCD '+d.label; pill.style.display=''; } if(sb) sb.textContent=d.label; }
+        else if(pill){ pill.style.display='none'; }
+      })
+      .catch(function(){ if(pill) pill.style.display='none'; });
+  }, function(){ if(pill){ pill.textContent='\uD83D\uDCCD Location off'; } }, { timeout:8000, maximumAge:600000 });
+}
 function territoryInit(){
   if (_terrMap){ setTimeout(function(){ try{_terrMap.invalidateSize();}catch(e){} },120); return; }
   if (window.L && window.topojson) return _terrBoot();
