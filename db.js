@@ -673,6 +673,23 @@ async function initDB() {
       PRIMARY KEY (user_id, county_fips)
     );
     CREATE INDEX IF NOT EXISTS idx_rep_territories_user ON rep_territories(user_id);
+
+    -- ════════════════════════════════════════════════════════════
+    -- Tasks — a rep's to-dos. They roll over (keep showing) until checked
+    -- off. Usually created as the "next step" when a call is logged, and
+    -- attached to the account so they show on that account's Activities.
+    CREATE TABLE IF NOT EXISTS tasks (
+      id          SERIAL PRIMARY KEY,
+      user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      account_id  INTEGER REFERENCES prospects(id) ON DELETE SET NULL,
+      body        TEXT NOT NULL,
+      due_date    DATE,
+      done        BOOLEAN DEFAULT FALSE,
+      done_at     TIMESTAMPTZ,
+      company_id  INTEGER,
+      created_at  TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_tasks_user_open ON tasks(user_id) WHERE done = FALSE;
     ALTER TABLE contacts               ADD COLUMN IF NOT EXISTS company_id INTEGER REFERENCES companies(id) ON DELETE CASCADE;
 
     CREATE INDEX IF NOT EXISTS idx_users_company        ON users(company_id);

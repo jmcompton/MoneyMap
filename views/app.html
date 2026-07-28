@@ -2734,6 +2734,38 @@ window.addEventListener('load', function() {
       <div id="today-content" style="order:2"></div>
       <div id="today-finder-slot" style="order:3;display:none"></div>
     </div>
+    <div id="today-log-modal" style="display:none;position:fixed;inset:0;background:rgba(10,20,35,.55);z-index:400;align-items:flex-end;justify-content:center">
+      <div style="background:#fff;border-radius:20px 20px 0 0;max-width:520px;width:100%;padding:18px 20px 26px;max-height:92vh;overflow:auto" onclick="event.stopPropagation()">
+        <div style="width:38px;height:4px;border-radius:2px;background:#d7dee6;margin:0 auto 14px"></div>
+        <div style="font-size:19px;font-weight:800;color:var(--navy)">Log visit</div>
+        <div id="tlog-sub" style="font-size:12.5px;color:var(--text3);margin:2px 0 16px">Account</div>
+        <div style="margin-bottom:15px">
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px">Type of call</label>
+          <div style="display:flex;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:3px">
+            <button id="tlog-inperson" onclick="tlogType('In Person')" style="flex:1;border:none;background:#fff;font-size:13.5px;font-weight:600;padding:9px;border-radius:8px;cursor:pointer;color:var(--navy);box-shadow:0 1px 3px rgba(0,0,0,.1);font-family:inherit">In person</button>
+            <button id="tlog-phone" onclick="tlogType('Phone')" style="flex:1;border:none;background:none;font-size:13.5px;font-weight:600;padding:9px;border-radius:8px;cursor:pointer;color:var(--text3);font-family:inherit">Phone</button>
+          </div>
+        </div>
+        <div style="margin-bottom:15px">
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px">How'd it go?</label>
+          <div style="position:relative">
+            <textarea id="tlog-notes" rows="3" placeholder="Talk or type your notes…" style="width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;resize:vertical"></textarea>
+            <button id="tlog-mic" onclick="tlogMic()" style="position:absolute;right:9px;bottom:9px;width:40px;height:40px;border-radius:50%;border:none;background:var(--accent);color:#fff;font-size:17px;cursor:pointer">&#127908;</button>
+          </div>
+        </div>
+        <div style="margin-bottom:16px">
+          <label style="display:block;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px">Next step (becomes a task on this account)</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="tlog-task" placeholder="e.g. Email Soudal pricing" style="flex:1;padding:11px 12px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit">
+            <input type="date" id="tlog-task-date" style="max-width:150px;padding:11px 12px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit">
+          </div>
+        </div>
+        <div style="display:flex;gap:9px">
+          <button class="btn btn-secondary" style="flex:1;padding:13px" onclick="closeTodayLog()">Cancel</button>
+          <button class="btn btn-primary" style="flex:1;padding:13px" onclick="saveTodayLog()">Log visit</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- DAILY RECAP PAGE -->
@@ -5616,26 +5648,142 @@ function todayWorkingCity(d) {
 }
 
 function loadToday() {
-  moveFinderIntoToday();
   var content = document.getElementById('today-content');
   var hdr = document.getElementById('today-header');
+  var slot = document.getElementById('today-finder-slot');
+  if (hdr) hdr.innerHTML = '';
+  if (slot) slot.style.display = 'none';
   if (!content) return;
   content.innerHTML = '<div style="font-size:12px;color:var(--text3);padding:30px;text-align:center">Loading today…</div>';
-  function okJson(r){ return r && r.ok ? r.json() : null; }
   Promise.all([
-    fetch('/api/planner/today').then(okJson).catch(function(){ return null; }),
-    fetch('/api/morning').then(okJson).catch(function(){ return null; }),
-    fetch('/api/reconnect?filter=all').then(okJson).catch(function(){ return null; }),
-    fetch('/api/planner/panel').then(okJson).catch(function(){ return null; })
+    fetch('/api/planner/today').then(function(r){ return r && r.ok ? r.json() : null; }).catch(function(){ return null; }),
+    fetch('/api/tasks').then(function(r){ return r && r.ok ? r.json() : null; }).catch(function(){ return null; })
   ]).then(function(res){
-    var d = res[0] || { date: new Date().toISOString().slice(0,10), goal: 10, progress:{done:0,total:0}, stops:[], carried_over:[], nearby:[] };
-    window._todayData = d;
-    var calls = (res[1] && res[1].stats && res[1].stats.callsMadeToday) || 0;
-    var recon = (res[2] && res[2].accounts) || [];
-    var commissionCount = (res[3] && res[3].revenue && res[3].revenue.length) || 0;
-    renderTodayCockpit(d, { calls: calls, recon: recon, commissionCount: commissionCount });
+    var d = res[0] || { stops: [] };
+    window._todayStops = d.stops || [];
+    window._todayTasks = (res[1] && res[1].tasks) || [];
+    renderTodayV2();
   });
 }
+function _tEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function renderTodayV2(){
+  var stops = window._todayStops || [], tasks = window._todayTasks || [];
+  var content = document.getElementById('today-content'); if (!content) return;
+  var logged = stops.filter(function(s){ return s.done; }).length;
+  var dstr = new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+  var hasCoords = stops.some(function(s){ return s.lat; });
+  var html = '<div style="max-width:760px;margin:0 auto;width:100%">';
+  html += '<div style="font-size:24px;font-weight:800;color:var(--navy);letter-spacing:-.5px">Today</div>';
+  html += '<div style="font-size:13px;color:var(--text3);margin:2px 0 14px">'+dstr+'</div>';
+  html += '<div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">'
+    + _tStat(stops.length,'Stops','#16283d') + _tStat(logged,'Logged','#0f9d58')
+    + _tStat(stops.length-logged,'To go','#16283d') + _tStat(tasks.length,'Open tasks','#b45309') + '</div>';
+  if (hasCoords) html += '<div id="today-map" style="height:210px;border-radius:14px;border:1px solid var(--border);z-index:0;margin-bottom:20px;background:#eef2f6"></div>';
+  html += '<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin:0 0 11px">Your route · '+stops.length+' stops</div>';
+  html += stops.length ? stops.map(function(s,i){ return _tStopCard(s,i); }).join('')
+    : '<div style="background:#fff;border:1px solid var(--border);border-radius:13px;padding:24px;text-align:center;color:var(--text3);font-size:13px">No stops planned today. Build your week on the Weekly Planner.</div>';
+  html += '<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin:24px 0 11px">Tasks <span style="font-weight:500;text-transform:none;letter-spacing:0">roll over until done</span></div>';
+  html += '<div id="today-tasks">' + (tasks.length ? tasks.map(_tTaskRow).join('') : '<div style="font-size:13px;color:var(--text3);padding:6px 0">All caught up.</div>') + '</div>';
+  html += '</div>';
+  content.innerHTML = html;
+  if (hasCoords) initTodayMap(stops);
+}
+function _tStat(v,l,color){ return '<div style="flex:1;min-width:80px;background:#fff;border:1px solid var(--border);border-radius:11px;padding:11px 13px"><div style="font-size:20px;font-weight:800;letter-spacing:-.4px;color:'+color+'">'+v+'</div><div style="font-size:10.5px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-top:2px">'+l+'</div></div>'; }
+function _tStopCard(s,i){
+  var name=_tEsc(s.company||'Stop'), city=_tEsc(s.city||''), reason=_tEsc(s.ai_reason||s.reason||s.next_step||''), done=!!s.done;
+  var h='<div style="background:#fff;border:1px solid var(--border);border-radius:13px;box-shadow:0 1px 3px rgba(15,25,35,.05);margin-bottom:11px;overflow:hidden">';
+  h+='<div style="display:flex;gap:12px;padding:14px 15px;'+(done?'background:#e7f7ee':'')+'">';
+  h+='<div style="width:26px;height:26px;border-radius:50%;background:'+(done?'#0f9d58':'#16283d')+';color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+(i+1)+'</div>';
+  h+='<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700;line-height:1.2">'+name+'</div>';
+  if(city) h+='<div style="font-size:12px;color:var(--text3);margin-top:2px">\uD83D\uDCCD '+city+'</div>';
+  if(reason) h+='<div style="font-size:12.5px;color:var(--text2);margin-top:7px;line-height:1.35">'+reason+'</div>';
+  h+='</div></div>';
+  if(done){ h+='<div style="padding:11px 15px 13px 53px;border-top:1px solid #d6ecdf;background:#e7f7ee;font-size:12.5px;color:#0b6b3d"><b>\u2713 Logged</b>'+(s.last_notes?' \u2014 '+_tEsc(s.last_notes):'')+'</div>'; }
+  else {
+    h+='<div style="display:flex;gap:8px;padding:0 15px 14px 53px;flex-wrap:wrap">';
+    h+='<button class="btn btn-primary btn-sm" onclick="openTodayLog('+s.account_id+')">Visited</button>';
+    if(s.phone) h+='<a href="tel:'+_tEsc(s.phone)+'" class="btn btn-secondary btn-sm" style="text-decoration:none">\uD83D\uDCDE Call</a>';
+    h+='<button class="btn btn-secondary btn-sm" onclick="viewRecord('+s.account_id+')">Open</button></div>';
+  }
+  return h+'</div>';
+}
+function _tTaskRow(t){
+  var rolled=t.overdue, days=t.days_over||0;
+  return '<div style="display:flex;align-items:flex-start;gap:12px;background:#fff;border:1px solid var(--border);'+(rolled?'border-left:3px solid #b45309;':'')+'border-radius:12px;padding:13px 15px;margin-bottom:9px">'
+    + '<div onclick="toggleTodayTask('+t.id+')" style="width:21px;height:21px;border:2px solid #cdd6e0;border-radius:6px;flex-shrink:0;cursor:pointer;margin-top:1px"></div>'
+    + '<div style="flex:1"><div style="font-size:14px;font-weight:600;line-height:1.25">'+_tEsc(t.body)+'</div>'
+    + '<div style="font-size:11.5px;color:var(--text3);margin-top:3px">'+(t.account_name?_tEsc(t.account_name):'')+(rolled?' \u00B7 <span style="color:#b45309;font-weight:700">rolled over '+days+' day'+(days!==1?'s':'')+'</span>':(t.due_date?' \u00B7 due '+_tEsc(t.due_date):''))+'</div></div>'
+    + '<div style="font-size:15px;flex-shrink:0;margin-top:1px">\uD83D\uDCCB</div></div>';
+}
+var _todayMap=null, _tRecog=null;
+function initTodayMap(stops){
+  function boot(){
+    var el=document.getElementById('today-map'); if(!el) return;
+    if(_todayMap){ try{_todayMap.remove();}catch(e){} _todayMap=null; }
+    _todayMap=L.map('today-map',{scrollWheelZoom:false});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,opacity:.7}).addTo(_todayMap);
+    var latlngs=[];
+    stops.forEach(function(s,i){ if(!s.lat||!s.lng) return;
+      var done=!!s.done;
+      var icon=L.divIcon({className:'',html:'<div style="width:26px;height:26px;border-radius:50%;background:'+(done?'#0f9d58':'#16283d')+';color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)">'+(i+1)+'</div>',iconSize:[26,26],iconAnchor:[13,13]});
+      L.marker([s.lat,s.lng],{icon:icon}).addTo(_todayMap).bindPopup('<b>'+_tEsc(s.company)+'</b><br>'+_tEsc(s.city||''));
+      latlngs.push([s.lat,s.lng]);
+    });
+    if(latlngs.length>1) L.polyline(latlngs,{color:'#2f6df6',weight:3,opacity:.6,dashArray:'6 6'}).addTo(_todayMap);
+    if(latlngs.length) _todayMap.fitBounds(L.latLngBounds(latlngs).pad(0.25));
+  }
+  if(window.L) boot();
+  else {
+    if(!document.getElementById('leaflet-css-today')){ var l=document.createElement('link'); l.id='leaflet-css-today'; l.rel='stylesheet'; l.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(l); }
+    var sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'; sc.onload=boot; document.head.appendChild(sc);
+  }
+}
+var _tLogAcct=null, _tLogType='In Person', _tLogRec=false;
+function openTodayLog(accountId){
+  _tLogAcct=accountId; tlogType('In Person');
+  var s=(window._todayStops||[]).filter(function(x){return x.account_id==accountId;})[0];
+  document.getElementById('tlog-sub').textContent = s ? (s.company + (s.city?(' \u00B7 '+s.city):'')) : '';
+  document.getElementById('tlog-notes').value=''; document.getElementById('tlog-task').value=''; document.getElementById('tlog-task-date').value='';
+  document.getElementById('today-log-modal').style.display='flex';
+}
+function closeTodayLog(){ document.getElementById('today-log-modal').style.display='none'; if(_tLogRec) tlogMic(); }
+function tlogType(t){ _tLogType=t;
+  var ip=document.getElementById('tlog-inperson'), ph=document.getElementById('tlog-phone');
+  var base='flex:1;border:none;font-size:13.5px;font-weight:600;padding:9px;border-radius:8px;cursor:pointer;font-family:inherit;';
+  var on='background:#fff;color:#16283d;box-shadow:0 1px 3px rgba(0,0,0,.1)', off='background:none;color:#8794a4';
+  ip.style.cssText=base+(t==='In Person'?on:off); ph.style.cssText=base+(t==='Phone'?on:off);
+}
+function tlogMic(){
+  var mic=document.getElementById('tlog-mic'), ta=document.getElementById('tlog-notes');
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ showToast('Voice input not supported here'); return; }
+  if(!_tLogRec){
+    _tLogRec=true; mic.style.background='#c0392b'; mic.innerHTML='&#9632;';
+    _tRecog=new SR(); _tRecog.continuous=true; _tRecog.interimResults=true;
+    var base=ta.value;
+    _tRecog.onresult=function(e){ var txt=''; for(var i=e.resultIndex;i<e.results.length;i++) txt+=e.results[i][0].transcript; ta.value=(base?base+' ':'')+txt; };
+    _tRecog.onerror=function(){}; try{_tRecog.start();}catch(e){}
+  } else { _tLogRec=false; mic.style.background='var(--accent)'; mic.innerHTML='&#127908;'; if(_tRecog){ try{_tRecog.stop();}catch(e){} } }
+}
+function saveTodayLog(){
+  if(!_tLogAcct) return;
+  var notes=document.getElementById('tlog-notes').value.trim();
+  var task=document.getElementById('tlog-task').value.trim();
+  var taskDate=document.getElementById('tlog-task-date').value||null;
+  var today=new Date().toISOString().slice(0,10);
+  fetch('/api/calls',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ prospect_id:_tLogAcct, call_date:today, call_type:_tLogType, notes:notes, next_step:task||null, next_step_date:taskDate })})
+    .then(function(r){return r.json();})
+    .then(function(){ if(task) return fetch('/api/tasks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body:task,account_id:_tLogAcct,due_date:taskDate})}); })
+    .then(function(){ closeTodayLog(); showToast('Visit logged'); loadToday(); })
+    .catch(function(){ showToast('Could not log the visit'); });
+}
+function toggleTodayTask(id){
+  fetch('/api/tasks/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({done:true})})
+    .then(function(r){return r.json();})
+    .then(function(){ window._todayTasks=(window._todayTasks||[]).filter(function(t){return t.id!==id;}); renderTodayV2(); showToast('Task done'); })
+    .catch(function(){ showToast('Could not update task'); });
+}
+
 
 function renderTodayCockpit(d, extra) {
   var hdr = document.getElementById('today-header');

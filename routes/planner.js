@@ -1207,6 +1207,11 @@ router.get('/today', async (req, res) => {
     )).rows;
     const stops = todayRows.map(row => shapeStop(row, model));
 
+    // Attach coordinates (cached geocode by city) so Today can draw the route map.
+    for (const s of stops) {
+      if (s.city) { const g = await geocodeCity(s.city); if (g && g.lat) { s.lat = g.lat; s.lng = g.lng; } }
+    }
+
     const done = stops.filter(s => s.done).length;
     const progress = { done, total: stops.length };
 
