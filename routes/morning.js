@@ -1,8 +1,30 @@
 const express = require('express');
 const fetch = require('node-fetch');
 const { pool } = require('../db');
-const { getRepTerritory, inTerritory } = require('../lib/territory');
+const { getRepTerritory, inTerritory, ST_TO_FIPS } = require('../lib/territory');
 const router = express.Router();
+
+// City -> county lookup for territory checks on manually found leads. Cached by
+// city so a search that spans a handful of cities is just a handful of lookups.
+const _leadCountyCache = {};
+async function leadCityCounty(city, state, key) {
+  if (!city || !key) return null;
+  const ck = String(city).toLowerCase().trim() + '|' + String(state || '').toLowerCase().trim();
+  if (Object.prototype.hasOwnProperty.call(_leadCountyCache, ck)) return _leadCountyCache[ck];
+  let county = null;
+  try {
+    const q = encodeURIComponent(city + (state ? (', ' + state) : ''));
+    const r = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${q}&components=country:US&key=${key}`);
+    const d = await r.json();
+    if (d.results && d.results[0]) {
+      (d.results[0].address_components || []).forEach(function(c){
+        if ((c.types || []).indexOf('administrative_area_level_2') >= 0) county = c.long_name;
+      });
+    }
+  } catch (e) { console.error('[leadCityCounty]', e.message); }
+  _leadCountyCache[ck] = county;
+  return county;
+}
 
 const CLAUDE_API = 'https://api.anthropic.com/v1/messages';
 const MODEL = 'claude-sonnet-4-6';
@@ -808,7 +830,18 @@ router.post('/daily-leads', async (req, res) => {
       const terrRepId = (req.body && req.body.rep_id) || (req.session && req.session.user && req.session.user.id);
       if (terrRepId) _terr = await getRepTerritory(terrRepId);
     } catch (e) { console.error('[leads territory]', e.message); }
-    const _inTerr = _terr ? allLeads.filter(function(l){ return inTerritory(_terr, { state: l.state, county: l.county }); }) : allLeads;
+    let _inTerr = allLeads;
+    if (_terr) {
+      // Attach each in-state lead's county (cached), so the check is county-exact
+      // and coast carve-outs are respected here too — not just in Build My Week.
+      for (const l of allLeads) {
+        const stF = /^\d{2}$/.test(String(l.state)) ? String(l.state) : ST_TO_FIPS[String(l.state || '').toUpperCase()];
+        if (stF && _terr.states.has(stF) && l.city && !l.county) {
+          l.county = await leadCityCounty(l.city, l.state, PLACES_KEY);
+        }
+      }
+      _inTerr = allLeads.filter(function(l){ return inTerritory(_terr, { state: l.state, county: l.county }); });
+    }
     const topLeads = _inTerr.slice(0, 20);
 
     res.json({
