@@ -616,7 +616,7 @@ async function geocodeCity(city) {
   if (PLACES_KEY) {
     try {
       const r = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(city)}&key=${PLACES_KEY}`
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(city)}&components=country:US&region=us&key=${PLACES_KEY}`
       );
       const d = await r.json();
       if (d.results && d.results[0]) {
