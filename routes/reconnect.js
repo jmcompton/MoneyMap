@@ -13,6 +13,7 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../db');
 const { getReconnect, RECONNECT_CONFIG } = require('../lib/reconnect-store');
+const { getRepTerritory, inTerritory } = require('../lib/territory');
 
 function isMgr(req) { return req.session.user.role === 'manager'; }
 
@@ -25,6 +26,14 @@ router.get('/', async (req, res) => {
       repId: req.query.rep_id,
       filter: req.query.filter,
     });
+    // Territory: a rep only reconnects inside their covered area. (Managers see
+    // firm-wide, so no filter for them.)
+    if (!isMgr(req) && out && Array.isArray(out.accounts)) {
+      try {
+        const terr = await getRepTerritory(req.session.user.id);
+        if (terr) out.accounts = out.accounts.filter(function(a){ return inTerritory(terr, { state: a.state }); });
+      } catch (_) {}
+    }
     res.json(out);
   } catch (e) {
     console.error('[reconnect]', e.message);

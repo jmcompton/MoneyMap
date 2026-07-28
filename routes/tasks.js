@@ -6,16 +6,22 @@ const { pool } = require('../db');
 // Overdue first, then due today, then no-date, newest last.
 router.get('/', async (req, res) => {
   const uid = req.session.user.id;
+  const accountId = req.query.account_id ? parseInt(req.query.account_id, 10) : null;
+  const includeAll = req.query.all === '1' || req.query.all === 'true';
   try {
+    const conds = ['t.user_id = $1'];
+    const params = [uid];
+    if (!includeAll) conds.push('t.done = FALSE');
+    if (accountId) { params.push(accountId); conds.push('t.account_id = $' + params.length); }
     const rows = (await pool.query(
-      `SELECT t.id, t.body, t.due_date, t.done, t.account_id, p.company AS account_name,
-              (t.due_date IS NOT NULL AND t.due_date < CURRENT_DATE) AS overdue,
+      `SELECT t.id, t.body, t.due_date, t.done, t.done_at, t.created_at, t.account_id, p.company AS account_name,
+              (t.due_date IS NOT NULL AND t.due_date < CURRENT_DATE AND t.done = FALSE) AS overdue,
               (CURRENT_DATE - t.due_date) AS days_over
          FROM tasks t
          LEFT JOIN prospects p ON t.account_id = p.id
-        WHERE t.user_id = $1 AND t.done = FALSE
-        ORDER BY (t.due_date IS NULL) ASC, t.due_date ASC, t.created_at ASC`,
-      [uid]
+        WHERE ${conds.join(' AND ')}
+        ORDER BY t.done ASC, (t.due_date IS NULL) ASC, t.due_date ASC, t.created_at ASC`,
+      params
     )).rows;
     res.json({ tasks: rows });
   } catch (e) {

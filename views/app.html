@@ -5197,13 +5197,16 @@ function loadAccountActivities(id, companyName){
   var acctName=(companyName||'').toLowerCase().trim();
   Promise.all([
     fetch('/api/calls').then(function(r){return r.ok?r.json():[];}).catch(function(){return [];}),
-    fetch('/api/quotes').then(function(r){return r.ok?r.json():{};}).catch(function(){return {};})
+    fetch('/api/quotes').then(function(r){return r.ok?r.json():{};}).catch(function(){return {};}),
+    fetch('/api/tasks?account_id='+id+'&all=1').then(function(r){return r.ok?r.json():{};}).catch(function(){return {};})
   ]).then(function(res){
     var calls=(Array.isArray(res[0])?res[0]:[]).filter(function(c){return c.prospect_id===id;});
     var quotes=((res[1]&&res[1].quotes)||[]).filter(function(q){return (q.account_name||'').toLowerCase().trim()===acctName;});
     var items=[];
     calls.forEach(function(c){ items.push({ type:'call', date:c.call_date, title:(c.call_type||'Call')+' \u2014 '+(c.outcome||'logged'), desc:[c.products_discussed?('Products: '+c.products_discussed):'', c.notes||''].filter(Boolean).join(' \u00b7 '), next:c.next_step, nextDate:c.next_step_date, who:c.rep_name||'' }); });
     quotes.forEach(function(q){ items.push({ type:'quote', date:q.quote_date||q.created_at, title:'Quote'+(q.quote_number?(' #'+q.quote_number):'')+(q.status?(' \u2014 '+q.status):''), desc:(q.total?('$'+Number(q.total).toLocaleString()):''), who:q.rep_name||'' }); });
+    var tasks=((res[2]&&res[2].tasks)||[]);
+    tasks.forEach(function(t){ items.push({ type:'task', date:(t.done?t.done_at:(t.due_date||t.created_at)), title:(t.done?'\u2713 Done: ':'Task: ')+t.body, desc:(t.done?'Completed':(t.due_date?('Due '+t.due_date):'Open, rolls over until done')), who:'' }); });
     items.sort(function(a,b){ return new Date(b.date||0)-new Date(a.date||0); });
     var cc=document.getElementById('rec-call-count'); if(cc) cc.textContent=calls.length;
     if(!items.length){ el.innerHTML='<div style="text-align:center;padding:24px;color:var(--text3)">No activity yet. Log a call to get started.</div>'; return; }
@@ -5684,6 +5687,7 @@ function renderTodayV2(){
     : '<div style="background:#fff;border:1px solid var(--border);border-radius:13px;padding:24px;text-align:center;color:var(--text3);font-size:13px">No stops planned today. Build your week on the Weekly Planner.</div>';
   html += '<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin:24px 0 11px">Tasks <span style="font-weight:500;text-transform:none;letter-spacing:0">roll over until done</span></div>';
   html += '<div id="today-tasks">' + (tasks.length ? tasks.map(_tTaskRow).join('') : '<div style="font-size:13px;color:var(--text3);padding:6px 0">All caught up.</div>') + '</div>';
+  html += '<button onclick="todayAddTask()" style="width:100%;border:1px dashed var(--border);background:#fff;color:var(--text3);border-radius:11px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:2px">+ Add a task</button>';
   html += '</div>';
   content.innerHTML = html;
   if (hasCoords) initTodayMap(stops);
@@ -5782,6 +5786,13 @@ function toggleTodayTask(id){
     .then(function(r){return r.json();})
     .then(function(){ window._todayTasks=(window._todayTasks||[]).filter(function(t){return t.id!==id;}); renderTodayV2(); showToast('Task done'); })
     .catch(function(){ showToast('Could not update task'); });
+}
+function todayAddTask(){
+  var text=prompt('New task:'); if(!text||!text.trim()) return;
+  fetch('/api/tasks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body:text.trim()})})
+    .then(function(r){return r.json();})
+    .then(function(d){ if(d&&d.ok){ showToast('Task added'); loadToday(); } else showToast((d&&d.error)||'Could not add task'); })
+    .catch(function(){ showToast('Could not add task'); });
 }
 
 
