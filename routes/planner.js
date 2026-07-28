@@ -928,9 +928,24 @@ router.post('/build-week', async (req, res) => {
 
     // Territory fallback for days with no anchor.
     const ures = (await pool.query(
-      `SELECT territory, home_base_lat, home_base_lng FROM users WHERE id=$1`, [repId]
+      `SELECT territory, home_base_lat, home_base_lng, company_id FROM users WHERE id=$1`, [repId]
     )).rows[0] || {};
     const territoryCity = ures.territory && String(ures.territory).trim() ? String(ures.territory).trim() : null;
+
+    // Who this firm's represented manufacturers sell to — the real fallback for a
+    // day's lead search when the anchor account has no buyer types of its own.
+    // (Beats a generic "building materials" guess that pulls the wrong businesses.)
+    let _repBuyers = [];
+    try {
+      const rb = (await pool.query(
+        `SELECT target_customers FROM lines
+          WHERE represented = TRUE AND (company_id IS NOT DISTINCT FROM $1) AND target_customers IS NOT NULL`,
+        [ures.company_id || null]
+      )).rows;
+      const set = [];
+      rb.forEach(function(row){ try { (JSON.parse(row.target_customers) || []).forEach(function(t){ if (t && set.indexOf(t) < 0) set.push(String(t)); }); } catch (_) {} });
+      _repBuyers = set.slice(0, 10);
+    } catch (e) { console.error('[repBuyers]', e.message); }
 
     // Ranked candidate pool: reconnect $ first, then commission run_rate, then leads.
     let candidates = await gatherRankedCandidates(repId, exclude);
@@ -972,8 +987,10 @@ router.post('/build-week', async (req, res) => {
         for (const row of rows) {
           try { (JSON.parse(row.target_customers) || []).forEach(function(t){ if (t && out.indexOf(t) < 0) out.push(String(t)); }); } catch (_) {}
         }
-        return out.slice(0, 8);
-      } catch (_) { return []; }
+        // Account's own line buyers first; otherwise who the firm's represented
+        // manufacturers sell to. Only truly empty if the rep represents nothing.
+        return out.length ? out.slice(0, 8) : _repBuyers.slice(0, 8);
+      } catch (_) { return _repBuyers.slice(0, 8); }
     }
 
     // ── One anchor per day. Each day gets a SINGLE reconnect/going-quiet account
