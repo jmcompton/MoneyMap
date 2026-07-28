@@ -469,7 +469,7 @@ router.post('/leads/save', async (req, res) => {
       console.error('Save lead error:', e.message);
     }
   }
-  res.json({ saved: saved.length });
+  res.json({ saved: saved.length, rows: saved });
 });
 
 // POST /api/ai/leads/dedupe — merge/clean duplicate prospects for current user

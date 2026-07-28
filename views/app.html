@@ -16746,10 +16746,42 @@ function plBuildWeek() {
       plState.couldntPlace = (d && d.couldnt_place) || [];
       plShowAiBar();
       plRenderGrid();
-      showToast(plState.aiSuggestions.length ? 'AI drafted your week — review, then Apply' : (d && d.message) || 'No stops found in radius');
+      showToast(plState.aiSuggestions.length ? 'AI drafted your week — finding leads around each anchor…' : (d && d.message) || 'No stops found in radius');
+      plFillAnchorsWithLeads();
     })
     .catch(function(){ showToast('Build My Week failed'); })
     .finally(function(){ if (btn) { btn.disabled = false; btn.innerHTML = '&#10024; Build My Week'; } });
+}
+function plFillAnchorsWithLeads() {
+  if (plState.readOnly) return;
+  var anchors = (plState.aiSuggestions || []).filter(function(g){ return g.is_anchor && g.search_city && g.buyer_types && g.buyer_types.length; });
+  if (!anchors.length) return;
+  var jobs = anchors.map(function(a){
+    return fetch('/api/morning/daily-leads', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ city: a.search_city, targetCustomers: a.buyer_types, market: 'both', rep_id: plState.repId }) })
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        var leads = ((res && res.leads) || []).slice(0, 8);
+        if (!leads.length) return [];
+        return fetch('/api/ai/leads/save', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ leads: leads }) })
+          .then(function(r){ return r.json(); })
+          .then(function(sv){
+            var rows = (sv && sv.rows) || [];
+            return rows.map(function(p){ return { account_id: p.id, day: a.day, name: p.company, area: (p.city || a.search_city), reason: 'New lead near ' + a.search_city, is_lead: true }; });
+          }).catch(function(){ return []; });
+      }).catch(function(){ return []; });
+  });
+  Promise.all(jobs).then(function(results){
+    var add = [];
+    results.forEach(function(arr){ add = add.concat(arr); });
+    if (add.length) {
+      plState.aiSuggestions = plAiTag((plState.aiSuggestions || []).concat(add));
+      plShowAiBar(); plRenderGrid();
+      showToast('Added ' + add.length + ' leads around your anchors — review, then Apply');
+    } else {
+      showToast('Anchors ready — review, then Apply');
+    }
+  });
 }
 function plFillDay(date) {
   if (plState.readOnly) return;
