@@ -17069,7 +17069,12 @@ function plFindRun(){
   function run(city){
     _plFind.city=city; plFindRender();
     fetch('/api/morning/daily-leads',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ city:city, targetCustomers:tc, rep_id:plState.repId })})
-      .then(function(r){return r.json();}).then(function(d){ _plFind.results=(d&&d.leads)||[]; _plFind.picked={}; _plFind.stage='results'; plFindRender(); })
+      .then(function(r){return r.json();}).then(function(d){
+        var leads=(d&&d.leads)||[];
+        // Closest first, so the rep chains the nearest next stop for the day.
+        leads.sort(function(a,b){ var da=(a.distance_miles==null?99999:a.distance_miles), db=(b.distance_miles==null?99999:b.distance_miles); return da-db; });
+        _plFind.results=leads; _plFind.picked={}; _plFind.stage='results'; plFindRender();
+      })
       .catch(function(){ _plFind.results=[]; _plFind.stage='results'; plFindRender(); });
   }
   if(_plFind.loc==='day'){
