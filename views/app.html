@@ -1695,6 +1695,7 @@ window.addEventListener('load', function() {
       <button onclick="openTerritoryModal()" style="font-size:10px;padding:3px 8px;background:transparent;border:1px solid var(--border);border-radius:4px;color:rgba(255,255,255,.5);cursor:pointer;font-family:inherit">Change</button>
     </div>
     <div class="sb-user"><div class="sb-av" id="s-av">JM</div><div><div class="sb-uname" id="s-name">Loading...</div><div class="sb-urole" id="s-role">Rep</div></div></div>
+    <button onclick="loadDemoData()" style="width:calc(100% - 16px);margin:0 8px 6px;padding:7px;background:transparent;border:1px solid #2f6df655;border-radius:5px;color:#2f6df6;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Load Demo Data</button>
     <button onclick="wipeMyData()" style="width:calc(100% - 16px);margin:0 8px 6px;padding:7px;background:transparent;border:1px solid #ef444455;border-radius:5px;color:#ef4444;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">Clear My Demo Data</button>
     <button class="sb-out" onclick="signOut()">Sign Out</button>
   </div>
@@ -18288,6 +18289,20 @@ function closeManufacturer() {
 // ── Clear Demo Data (manager-only) ───────────────────────────────────────────
 // Previews the scoped set (source='Commission Import' AND the caller's own
 // accounts), confirms, then clears and refreshes the Accounts list.
+function loadDemoData() {
+  if (!window.confirm('Load a sample firm into this account? This adds demo accounts, commission history, today\'s stops, and a few tasks so you can see the app populated. You can remove it anytime with Clear My Demo Data.')) return;
+  showToast('Loading demo data…');
+  fetch('/api/admin/demo-data/seed', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (!res || res.error) { showToast('Could not load demo data.'); return; }
+      showToast('Demo firm loaded · ' + (res.accounts || 0) + ' accounts', 3500);
+      if (typeof loadHome === 'function') loadHome();
+      if (typeof go === 'function') go('home');
+    })
+    .catch(function(){ showToast('Could not load demo data.'); });
+}
+
 function clearDemoData() {
   var btn = document.getElementById('set-clear-demo-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Checking…'; }

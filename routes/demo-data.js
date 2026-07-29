@@ -67,6 +67,10 @@ router.post('/clear', async (req, res) => {
     await client.query(
       'DELETE FROM account_lines WHERE account_id = ANY($1::int[])', [accountIds]);
 
+    // (2b) Demo schedule stops and tasks tied to these accounts.
+    await client.query('DELETE FROM planner_items WHERE account_id = ANY($1::int[])', [accountIds]);
+    await client.query('DELETE FROM tasks WHERE account_id = ANY($1::int[])', [accountIds]);
+
     // (3) Delete the demo accounts themselves. (commission_customer_map cascades;
     //     commission_lines.account_id is SET NULL — raw facts are preserved.)
     const delAcct = await client.query(
@@ -276,6 +280,45 @@ router.post('/seed', async (req, res) => {
                         COUNT(*) rc
                    FROM commission_lines WHERE import_id = $1) s
           WHERE ci.id = $1`, [imp.id]);
+    }
+
+    // 5) Light up Today's schedule + Today's tasks on the home dashboard.
+    //    Pull the demo accounts we just made, clear any lingering demo schedule/
+    //    tasks (clean re-seed), then plant a few stops, one meeting, and tasks.
+    const demoRows = await client.query(
+      `SELECT id, company FROM prospects WHERE source='Demo Data' AND user_id=$1 ORDER BY id ASC`, [uid]);
+    const demo = demoRows.rows;
+    const demoIds = demo.map(r => r.id);
+    if (demoIds.length) {
+      await client.query('DELETE FROM tasks WHERE user_id=$1 AND account_id = ANY($2::int[])', [uid, demoIds]);
+      await client.query('DELETE FROM planner_items WHERE rep_id=$1 AND account_id = ANY($2::int[])', [uid, demoIds]);
+    }
+    const dayISO = (off) => iso(new Date(Date.now() + off * 86400000));
+    const todayISO = dayISO(0);
+    // Today's stops (first 3 accounts) + one confirmed meeting.
+    let so = 1;
+    for (let i = 0; i < Math.min(3, demo.length); i++) {
+      await client.query(
+        `INSERT INTO planner_items (rep_id, planned_date, item_type, account_id, sort_order, source)
+         VALUES ($1,$2,'stop',$3,$4,'manual')`,
+        [uid, todayISO, demo[i].id, so++]);
+    }
+    if (demo.length > 1) {
+      await client.query(
+        `INSERT INTO planner_items (rep_id, planned_date, item_type, account_id, title, appt_time, note, sort_order, source)
+         VALUES ($1,$2,'appointment',$3,$4,$5,$6,$7,'manual')`,
+        [uid, todayISO, demo[1].id, 'Quarterly review — ' + demo[1].company, '10:30 AM', 'Confirmed with buyer', so++]);
+    }
+    // Tasks: one overdue, two due today (tied to demo accounts).
+    const demoTasks = [
+      { body: 'Email pricing to ' + (demo[0] ? demo[0].company : 'a customer'), due: dayISO(-3), acct: demo[0] ? demo[0].id : null },
+      { body: 'Send firestop spec to ' + (demo[1] ? demo[1].company : 'a customer'), due: todayISO, acct: demo[1] ? demo[1].id : null },
+      { body: 'Follow up on the open quote with ' + (demo[2] ? demo[2].company : 'a customer'), due: todayISO, acct: demo[2] ? demo[2].id : null },
+    ];
+    for (const t of demoTasks) {
+      await client.query(
+        `INSERT INTO tasks (user_id, account_id, body, due_date, company_id) VALUES ($1,$2,$3,$4,$5)`,
+        [uid, t.acct, t.body, t.due, companyId]);
     }
 
     await client.query('COMMIT');
