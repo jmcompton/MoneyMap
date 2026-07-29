@@ -17073,8 +17073,16 @@ function plFindRun(){
       .catch(function(){ _plFind.results=[]; _plFind.stage='results'; plFindRender(); });
   }
   if(_plFind.loc==='day'){
-    var c=(plState.anchors && plState.anchors[_plAdd.date] && plState.anchors[_plAdd.date].city) || '';
-    if(!c){ showToast('Set this day\'s anchor city first, or use Near me'); _plFind.stage='setup'; plFindRender(); return; }
+    // The day anchor can be a raw street address (auto-set from the first stop),
+    // which the lead engine can't search. Prefer a real city from the day's
+    // stops; if none is usable, fall back to the rep's GPS location.
+    var dayStops=(plState.items||[]).filter(function(it){ return it.planned_date===_plAdd.date && it.item_type==='stop' && it.account_city; });
+    var c = dayStops.length ? dayStops[0].account_city : '';
+    if(!c){
+      var anc=(plState.anchors && plState.anchors[_plAdd.date] && plState.anchors[_plAdd.date].city) || '';
+      if(anc && !/^\s*\d/.test(anc)) c=anc; // use anchor only if it looks like a city, not a street address
+    }
+    if(!c){ showToast('No city set for this day — using your location'); _plFind.loc='near'; plFindRun(); return; }
     run(c);
   } else {
     if(!navigator.geolocation){ showToast('Location not available'); _plFind.stage='setup'; plFindRender(); return; }
