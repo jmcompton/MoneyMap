@@ -1478,6 +1478,9 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 
 /* ── NEW SCREENS on mobile: Planner (day tabs), Territory, route maps ── */
 @media(max-width:768px){
+  /* Accounts: fixed tabs/search/chips, cards scroll below (no flex squish) */
+  #page-contacts.page.active .contacts-split{ display:flex !important; flex-direction:column; flex:1 1 auto; min-height:0; }
+  #page-contacts.page.active #contact-tab-mine{ flex:1 1 auto; min-height:0; overflow-y:auto; }
   /* Weekly Planner: stack the panel below, show ONE day at a time with day tabs
      across the top (JS shows the selected day's column, hides the rest). */
   #pl-layout{ flex-direction:column !important; }
@@ -1981,12 +1984,12 @@ window.addEventListener('load', function() {
   <!-- CONTACTS -->
   <div class="page" id="page-contacts">
     <!-- Tab switcher — outside list-bar to avoid mobile CSS override -->
-    <div style="display:flex;align-items:center;gap:0;padding:10px 16px 0;border-bottom:1px solid var(--border);background:var(--surface)">
+    <div style="display:flex;align-items:center;gap:0;padding:10px 16px 0;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0">
       <button id="tab-my-contacts" onclick="switchContactTab('mine')" style="padding:8px 20px;border:none;border-bottom:2px solid var(--accent);background:transparent;color:var(--navy);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">My Accounts</button>
       <button id="tab-team-contacts" onclick="switchContactTab('team')" style="padding:8px 20px;border:none;border-bottom:2px solid transparent;background:transparent;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Team Accounts</button>
       <div id="crm-stats-bar" style="display:none"></div>
     </div>
-    <div class="list-bar" style="gap:8px;align-items:center;flex-wrap:nowrap">
+    <div class="list-bar" style="gap:8px;align-items:center;flex-wrap:nowrap;flex-shrink:0">
       <div class="sb-in" style="flex:1"><span style="font-size:12px;color:var(--text3)">&#128269;</span><input id="p-search" readonly onfocus="this.removeAttribute('readonly')" type="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-form-type="other" name="acct_search_p" placeholder="Search accounts..." oninput="handleContactSearch()" onkeydown="if(event.key==='Enter'){event.preventDefault();handleContactSearch();}" /></div>
       <button class="btn btn-secondary btn-sm" id="btn-add-contact" onclick="openModal('add-prospect')">+ New</button>
       <span class="list-count" id="list-count" style="display:none">0</span>
@@ -1994,7 +1997,7 @@ window.addEventListener('load', function() {
       <button id="view-route-btn" onclick="go('leads')" style="display:none">View Route (<span id="view-route-count">0</span>)</button>
     </div>
 
-    <div id="acct-chips" style="display:flex;gap:7px;padding:10px 16px;overflow-x:auto;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:nowrap"></div>
+    <div id="acct-chips" style="display:flex;gap:7px;padding:10px 16px;overflow-x:auto;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:nowrap;flex-shrink:0;flex:0 0 auto"></div>
     <div class="contacts-split">
     <!-- MY CONTACTS tab -->
     <div id="contact-tab-mine" class="list-wrap">
