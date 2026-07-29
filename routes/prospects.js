@@ -134,15 +134,26 @@ router.get('/', async (req, res) => {
 
   const params = [];
   let query;
+  // Latest call per account drives the status shown on each card (last visit,
+  // going quiet, follow-up due).
+  const SEL = `SELECT prospects.*, lc.call_date AS last_call_date,
+                      lc.next_step AS last_next_step, lc.next_step_date AS last_next_step_date
+                 FROM prospects
+                 LEFT JOIN LATERAL (
+                   SELECT call_date, next_step, next_step_date FROM calls
+                   WHERE calls.prospect_id = prospects.id
+                   ORDER BY call_date DESC, created_at DESC LIMIT 1
+                 ) lc ON true
+                WHERE `;
   // Scope: a manager sees the whole firm's book of business; a rep sees only
   // their own accounts. Previously this was always user-scoped, so managers
   // couldn't see their team's accounts at all.
   if (role === 'manager' && companyId) {
     params.push(companyId);
-    query = `SELECT * FROM prospects WHERE user_id IN (SELECT id FROM users WHERE company_id = $${params.length})`;
+    query = SEL + `prospects.user_id IN (SELECT id FROM users WHERE company_id = $${params.length})`;
   } else {
     params.push(uid);
-    query = `SELECT * FROM prospects WHERE user_id = $${params.length}`;
+    query = SEL + `prospects.user_id = $${params.length}`;
   }
 
   // Leads vs. accounts. A raw AI-found lead that has never been worked is NOT
@@ -184,7 +195,7 @@ router.get('/', async (req, res) => {
     query += ` AND (company ILIKE $${p} OR contact ILIKE $${p} OR phone ILIKE $${p} OR email ILIKE $${p} OR city ILIKE $${p} OR category ILIKE $${p})`;
   }
   // Recently-touched first (the CRM default); falls back to creation date.
-  query += ' ORDER BY last_activity_at DESC NULLS LAST, created_at DESC';
+  query += ' ORDER BY prospects.last_activity_at DESC NULLS LAST, prospects.created_at DESC';
   const result = await pool.query(query, params);
   res.json(result.rows);
 });
