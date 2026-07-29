@@ -3454,10 +3454,17 @@ window.addEventListener('load', function() {
         <button class="modal-x" onclick="document.getElementById('modal-pl-add').classList.remove('open')" style="font-size:22px">&times;</button>
       </div>
       <input type="hidden" id="pl-add-date" />
-      <div style="padding:2px 16px 10px"><input id="pl-add-search" placeholder="Search your accounts..." oninput="plAddRender()" autocomplete="off" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--border);border-radius:11px;font-family:inherit;font-size:15px;background:var(--surface)" /></div>
-      <div id="pl-add-chips" style="display:flex;gap:7px;overflow-x:auto;padding:0 16px 12px;border-bottom:1px solid var(--border);flex-shrink:0"></div>
-      <div id="pl-add-results" style="flex:1;overflow-y:auto;padding:10px 14px 12px;min-height:200px"></div>
-      <div style="padding:12px 16px 16px;border-top:1px solid var(--border);flex-shrink:0"><button id="pl-add-btn" onclick="plAddConfirm()" disabled style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:750;cursor:pointer;font-family:inherit;opacity:.45">Select accounts to add</button></div>
+      <div style="display:flex;gap:0;margin:0 16px 10px;background:var(--surface);border-radius:11px;padding:3px;flex-shrink:0">
+        <div id="plm-existing" onclick="plAddMode('existing')" style="flex:1;text-align:center;padding:9px;font-size:13px;font-weight:700;border-radius:9px;cursor:pointer;background:#fff;color:var(--navy);box-shadow:0 1px 3px rgba(0,0,0,.08)">My accounts</div>
+        <div id="plm-find" onclick="plAddMode('find')" style="flex:1;text-align:center;padding:9px;font-size:13px;font-weight:700;border-radius:9px;cursor:pointer;color:var(--text3)">&#10022; Find new leads</div>
+      </div>
+      <div id="pl-add-existing" style="display:flex;flex-direction:column;flex:1;min-height:0">
+        <div style="padding:2px 16px 10px"><input id="pl-add-search" placeholder="Search your accounts..." oninput="plAddRender()" autocomplete="off" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--border);border-radius:11px;font-family:inherit;font-size:15px;background:var(--surface)" /></div>
+        <div id="pl-add-chips" style="display:flex;gap:7px;overflow-x:auto;padding:0 16px 12px;border-bottom:1px solid var(--border);flex-shrink:0"></div>
+        <div id="pl-add-results" style="flex:1;overflow-y:auto;padding:10px 14px 12px;min-height:160px"></div>
+      </div>
+      <div id="pl-add-find" style="display:none;flex-direction:column;flex:1;min-height:0;overflow-y:auto;padding:4px 16px 12px"></div>
+      <div style="padding:12px 16px 16px;border-top:1px solid var(--border);flex-shrink:0"><button id="pl-add-btn" onclick="plAddFooterAction()" disabled style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:750;cursor:pointer;font-family:inherit;opacity:.45">Select accounts to add</button></div>
     </div>
   </div>
 
@@ -16850,12 +16857,15 @@ function plSaveAppt() {
 
 // ── Mobile add-stop sheet (tap-to-add: Suggested / Near me / Going quiet / All) ──
 var _plAdd = { date:null, accts:null, picked:{}, filter:'sug', geo:null, loc:null };
+var _plFind = { mode:'existing', lines:null, line:null, loc:'near', city:null, results:null, picked:{}, stage:'setup' };
 function plOpenAdd(date) {
   _plAdd.date = date; _plAdd.picked = {}; _plAdd.filter = 'sug';
+  _plFind = { lines:_plFind?_plFind.lines:null, line:null, loc:'near', city:null, results:null, picked:{}, stage:'setup', mode:'existing' };
   document.getElementById('pl-add-date').value = date;
   document.getElementById('pl-add-title').textContent = 'Add to ' + plFmtDay(date) + ' ' + plFmtMD(date);
   document.getElementById('pl-add-search').value = '';
   openModal('pl-add');
+  plAddMode('existing');
   if (_plAdd.accts) { plAddRender(); return; }
   document.getElementById('pl-add-results').innerHTML = '<div style="color:var(--text3);padding:24px;text-align:center">Loading accounts…</div>';
   fetch('/api/prospects').then(function(r){ return r.json(); }).then(function(rows){
@@ -16870,7 +16880,7 @@ function plOpenAdd(date) {
     plAddRender();
   }).catch(function(){ document.getElementById('pl-add-results').innerHTML='<div style="color:var(--text3);padding:24px;text-align:center">Could not load accounts.</div>'; });
 }
-var PL_ADD_CHIPS=[['ai','✦ AI picks'],['sug','⚡ Suggested'],['near','📍 Near me'],['quiet','⚠ Going quiet'],['all','All']];
+var PL_ADD_CHIPS=[['sug','⚡ Suggested'],['near','📍 Near me'],['quiet','⚠ Going quiet'],['all','All']];
 function plAddRenderChips(){
   var box=document.getElementById('pl-add-chips'); if(!box) return;
   box.innerHTML = PL_ADD_CHIPS.map(function(c){
@@ -16976,6 +16986,110 @@ function plAddConfirm(){
     return fetch('/api/planner/items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rep_id:plState.repId,planned_date:date,item_type:'stop',account_id:parseInt(id,10)})});
   })).then(function(){ showToast(ids.length+' stop'+(ids.length>1?'s':'')+' added'); done(); })
     .catch(function(){ done(); });
+}
+
+// ── Find new leads (Lead Finder, scoped to one line, near me) ──
+function plAddMode(m){
+  _plFind.mode=m;
+  document.getElementById('pl-add-existing').style.display = m==='existing'?'flex':'none';
+  document.getElementById('pl-add-find').style.display = m==='find'?'flex':'none';
+  function sw(el,on){ if(!el)return; el.style.background=on?'#fff':'transparent'; el.style.color=on?'var(--navy)':'var(--text3)'; el.style.boxShadow=on?'0 1px 3px rgba(0,0,0,.08)':'none'; }
+  sw(document.getElementById('plm-existing'), m==='existing');
+  sw(document.getElementById('plm-find'), m==='find');
+  if(m==='find'){ if(!_plFind.lines) plFindLoadLines(); else plFindRender(); }
+  else { plAddRender(); }
+}
+function plAddFooterAction(){
+  if(_plFind.mode==='find'){
+    if(_plFind.stage==='results') plFindAdd();
+    else if(_plFind.stage==='setup') plFindRun();
+  } else { plAddConfirm(); }
+}
+function plFindLoadLines(){
+  _plFind.stage='setup';
+  document.getElementById('pl-add-find').innerHTML='<div style="color:var(--text3);padding:24px;text-align:center;font-size:13px">Loading your lines…</div>';
+  fetch('/api/lines/represented').then(function(r){return r.json();}).then(function(d){
+    var ls = (d && (d.lines||d)) || [];
+    _plFind.lines = Array.isArray(ls) ? ls : [];
+    plFindRender();
+  }).catch(function(){ _plFind.lines=[]; plFindRender(); });
+}
+function plFindPickLine(i){ _plFind.line=i; plFindRender(); }
+function plFindPickLoc(l){ _plFind.loc=l; plFindRender(); }
+function plFindToggle(i){ if(_plFind.picked[i])delete _plFind.picked[i];else _plFind.picked[i]=true; plFindRender(); }
+function plFindRender(){
+  var box=document.getElementById('pl-add-find');
+  var sub=document.getElementById('pl-add-sub');
+  var btn=document.getElementById('pl-add-btn');
+  if(!box) return;
+  if(_plFind.stage==='setup'){
+    if(sub) sub.textContent='Find new leads for a line near you';
+    var lines=_plFind.lines||[];
+    if(!lines.length){
+      box.innerHTML='<div style="color:var(--text3);padding:24px;text-align:center;font-size:13px">No manufacturer lines set up yet.<br>Add lines on the Manufacturers tab, then come back.</div>';
+      if(btn){ btn.textContent='No lines yet'; btn.disabled=true; btn.style.opacity='.45'; btn.style.background='#6d28d9'; }
+      return;
+    }
+    var h='<div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin:10px 2px 8px">1 · Which line are you selling?</div><div style="display:flex;flex-wrap:wrap;gap:8px">';
+    h+=lines.map(function(l,i){ var on=_plFind.line===i; return '<div onclick="plFindPickLine('+i+')" style="border:1.5px solid '+(on?'#6d28d9':'var(--border)')+';background:'+(on?'#f5f3ff':'#fff')+';color:'+(on?'#6d28d9':'var(--text2)')+';border-radius:11px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer">'+plEsc(l.name||l.company||('Line '+(i+1)))+'</div>'; }).join('');
+    h+='</div><div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin:16px 2px 8px">2 · Where?</div><div style="display:flex;gap:9px">'
+      +'<div onclick="plFindPickLoc(\'near\')" style="flex:1;border:1.5px solid '+(_plFind.loc==='near'?'var(--accent)':'var(--border)')+';background:'+(_plFind.loc==='near'?'#f0f6ff':'#fff')+';color:'+(_plFind.loc==='near'?'var(--accent)':'var(--text2)')+';border-radius:11px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;text-align:center">📍 Near me</div>'
+      +'<div onclick="plFindPickLoc(\'day\')" style="flex:1;border:1.5px solid '+(_plFind.loc==='day'?'var(--accent)':'var(--border)')+';background:'+(_plFind.loc==='day'?'#f0f6ff':'#fff')+';color:'+(_plFind.loc==='day'?'var(--accent)':'var(--text2)')+';border-radius:11px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;text-align:center">📌 This day\'s area</div></div>';
+    box.innerHTML=h;
+    if(btn){ btn.textContent='✦ Find leads'; btn.disabled=(_plFind.line==null); btn.style.opacity=(_plFind.line==null)?'.45':'1'; btn.style.background='#6d28d9'; }
+  } else if(_plFind.stage==='loading'){
+    var ln=(_plFind.lines[_plFind.line]||{}).name||'';
+    box.innerHTML='<div style="color:var(--text3);padding:40px 20px;text-align:center;font-size:13px">✦ Hunting for '+plEsc(ln)+' buyers'+(_plFind.city?' near '+plEsc(_plFind.city):'')+'…</div>';
+    if(btn){ btn.textContent='Finding…'; btn.disabled=true; btn.style.opacity='.45'; btn.style.background='#6d28d9'; }
+  } else if(_plFind.stage==='results'){
+    var res=_plFind.results||[];
+    if(sub) sub.textContent=res.length+' new lead'+(res.length!==1?'s':'')+(_plFind.city?' near '+_plFind.city:'');
+    var h2='<div style="display:flex;align-items:center;gap:8px;margin:8px 2px 10px"><span style="font-size:11px;font-weight:800;color:#6d28d9;text-transform:uppercase;letter-spacing:.05em">✦ New leads</span><span style="flex:1"></span><span onclick="_plFind.stage=\'setup\';plFindRender()" style="font-size:12px;color:var(--accent);font-weight:600;cursor:pointer">Change line</span></div>';
+    if(!res.length){ h2+='<div style="color:var(--text3);padding:24px;text-align:center;font-size:13px">No new leads found there. Try a different line or area.</div>'; }
+    else { h2+=res.map(function(r,i){ var sel=!!_plFind.picked[i];
+      return '<div onclick="plFindToggle('+i+')" style="display:flex;gap:11px;align-items:flex-start;background:'+(sel?'#faf8ff':'#fff')+';border:1px solid '+(sel?'#6d28d9':'var(--border)')+';border-radius:12px;padding:12px 13px;margin-bottom:8px;cursor:pointer">'
+        +'<div style="width:38px;height:38px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;background:#6d28d9">'+plEsc(_plAddInit(r.company||'?'))+'</div>'
+        +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--navy)">'+plEsc(r.company||'')+'</div>'
+        +(r.matched_query?'<div style="font-size:11.5px;color:#6d28d9;font-weight:600;margin-top:3px">✦ '+plEsc(r.matched_query)+'</div>':'')
+        +'<div style="font-size:11px;color:var(--text3);margin-top:2px">📍 '+plEsc(r.city||'')+(r.address?' · '+plEsc(r.address):'')+'</div></div>'
+        +(r.distance_miles!=null?'<div style="font-size:12px;font-weight:800;color:var(--accent);flex-shrink:0">'+Number(r.distance_miles).toFixed(1)+' mi</div>':'')
+        +'<div style="width:24px;height:24px;border-radius:50%;border:2px solid '+(sel?'#6d28d9':'#d5dbe3')+';background:'+(sel?'#6d28d9':'#fff')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:800;margin-top:6px">'+(sel?'✓':'')+'</div></div>';
+    }).join(''); }
+    box.innerHTML=h2;
+    var n=Object.keys(_plFind.picked).length;
+    if(btn){ btn.textContent=n?('Add '+n+' to '+plFmtDay(_plAdd.date)):'Select leads to add'; btn.disabled=!n; btn.style.opacity=n?'1':'.45'; btn.style.background='#6d28d9'; }
+  }
+}
+function plFindRun(){
+  var line=(_plFind.lines||[])[_plFind.line]; if(!line) return;
+  var tc=[]; try{ tc=Array.isArray(line.target_customers)?line.target_customers:JSON.parse(line.target_customers||'[]'); }catch(e){ tc=[]; }
+  _plFind.stage='loading'; plFindRender();
+  function run(city){
+    _plFind.city=city; plFindRender();
+    fetch('/api/morning/daily-leads',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ city:city, targetCustomers:tc, rep_id:plState.repId })})
+      .then(function(r){return r.json();}).then(function(d){ _plFind.results=(d&&d.leads)||[]; _plFind.picked={}; _plFind.stage='results'; plFindRender(); })
+      .catch(function(){ _plFind.results=[]; _plFind.stage='results'; plFindRender(); });
+  }
+  if(_plFind.loc==='day'){
+    var c=(plState.anchors && plState.anchors[_plAdd.date] && plState.anchors[_plAdd.date].city) || '';
+    if(!c){ showToast('Set this day\'s anchor city first, or use Near me'); _plFind.stage='setup'; plFindRender(); return; }
+    run(c);
+  } else {
+    if(!navigator.geolocation){ showToast('Location not available'); _plFind.stage='setup'; plFindRender(); return; }
+    navigator.geolocation.getCurrentPosition(function(pos){
+      fetch('/api/places/reverse?lat='+pos.coords.latitude+'&lng='+pos.coords.longitude).then(function(r){return r.json();}).then(function(g){ run((g&&(g.label||g.city))||''); }).catch(function(){ run(''); });
+    }, function(){ showToast('Location permission denied'); _plFind.stage='setup'; plFindRender(); }, {timeout:8000,maximumAge:600000});
+  }
+}
+function plFindAdd(){
+  var idx=Object.keys(_plFind.picked); if(!idx.length) return;
+  var date=_plAdd.date;
+  var btn=document.getElementById('pl-add-btn'); if(btn){ btn.disabled=true; btn.textContent='Adding…'; }
+  function done(){ document.getElementById('modal-pl-add').classList.remove('open'); plLoad(); }
+  Promise.all(idx.map(function(i){
+    var r=_plFind.results[i];
+    return fetch('/api/planner/items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rep_id:plState.repId,planned_date:date,item_type:'stop',title:r.company,note:r.address||'',source:'ai'})});
+  })).then(function(){ showToast(idx.length+' lead'+(idx.length>1?'s':'')+' added'); done(); }).catch(function(){ done(); });
 }
 
 // ── Weekly Planner AI assist (propose / review / apply) ───────────
