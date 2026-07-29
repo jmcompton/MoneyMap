@@ -1623,25 +1623,21 @@ window.addEventListener('load', function() {
 
 <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 <nav class="bottom-nav">
-  <button class="bn-item active" id="bn-home" data-roles="rep manager" onclick="go('dashboard');setActiveNav('bn-home')">
-    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    <span>Home</span>
-  </button>
-  <button class="bn-item" id="bn-today" data-roles="rep" onclick="go('today');setActiveNav('bn-today')">
+  <button class="bn-item active" id="bn-today" data-roles="rep manager" onclick="go('today');setActiveNav('bn-today')">
     <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 10h18M16 2v4M8 2v4"/><path d="M9 15.5l1.75 1.75L14.5 13.5"/></svg>
     <span>Today</span>
   </button>
-  <button class="bn-item" id="bn-contacts" data-roles="rep manager" onclick="go('contacts');setActiveNav('bn-contacts')">
+  <button class="bn-item" id="bn-planner" data-roles="rep manager" onclick="go('weekly-planner');setActiveNav('bn-planner')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg>
+    <span>Planner</span>
+  </button>
+  <button class="bn-item" id="bn-leads" data-roles="rep manager" onclick="go('leads');setActiveNav('bn-leads')">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+    <span>Leads</span>
+  </button>
+  <button class="bn-item" id="bn-accounts" data-roles="rep manager" onclick="go('contacts');setActiveNav('bn-accounts')">
     <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     <span>Accounts</span>
-  </button>
-  <button class="bn-item" id="bn-calls" data-roles="manager" onclick="go('calls');setActiveNav('bn-calls')">
-    <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.58 3.38 2 2 0 0 1 3.55 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.5a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-    <span>Calls</span>
-  </button>
-  <button class="bn-item" id="bn-reconnect" data-roles="rep manager" onclick="go('reconnect');setActiveNav('bn-reconnect')">
-    <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0115.5-6M21 12a9 9 0 01-15.5 6"/><polyline points="18 2 18 6 14 6"/><polyline points="6 22 6 18 10 18"/></svg>
-    <span>Reconnect</span>
   </button>
   <button class="bn-item" id="bn-more" data-roles="rep manager" onclick="openMobileMenu()">
     <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -4340,6 +4336,12 @@ function go(id) {
   // Home is now the adaptive Today cockpit. Old money-dashboard is retired as a
   // landing surface; both "Home" entry points resolve to the Today cockpit.
   if (id === 'dashboard') id = 'home';
+  // Keep the mobile bottom bar in sync with the current page, however we got here.
+  try {
+    var _bnMap = { today:'bn-today', 'weekly-planner':'bn-planner', leads:'bn-leads', contacts:'bn-accounts' };
+    document.querySelectorAll('.bn-item').forEach(function(b){ b.classList.remove('active'); });
+    if (_bnMap[id]) { var _bn = document.getElementById(_bnMap[id]); if (_bn) _bn.classList.add('active'); }
+  } catch(e){}
   if (window._teamViewActive && id !== 'record') {
     var _lb = document.querySelector('[onclick="logCallForRecord()"]');
     var _ob = document.querySelector('[onclick="writeOutreachForRecord()"]');
