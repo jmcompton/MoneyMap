@@ -16870,7 +16870,7 @@ function plOpenAdd(date) {
     plAddRender();
   }).catch(function(){ document.getElementById('pl-add-results').innerHTML='<div style="color:var(--text3);padding:24px;text-align:center">Could not load accounts.</div>'; });
 }
-var PL_ADD_CHIPS=[['sug','⚡ Suggested'],['near','📍 Near me'],['quiet','⚠ Going quiet'],['all','All']];
+var PL_ADD_CHIPS=[['ai','✦ AI picks'],['sug','⚡ Suggested'],['near','📍 Near me'],['quiet','⚠ Going quiet'],['all','All']];
 function plAddRenderChips(){
   var box=document.getElementById('pl-add-chips'); if(!box) return;
   box.innerHTML = PL_ADD_CHIPS.map(function(c){
@@ -16879,7 +16879,18 @@ function plAddRenderChips(){
     return '<div onclick="plAddTapChip(\''+c[0]+'\')" style="white-space:nowrap;border:1px solid '+(on?bg:'var(--border)')+';background:'+bg+';color:'+(on?'#fff':'var(--text2)')+';border-radius:20px;padding:8px 14px;font-size:12.5px;font-weight:650;cursor:pointer;flex-shrink:0">'+c[1]+'</div>';
   }).join('');
 }
-function plAddTapChip(c){ if(c==='near' && !(_plAdd.loc && _plAdd.geo)){ plAddNearMe(); return; } _plAdd.filter=c; plAddRender(); }
+function plAddTapChip(c){ if(c==='near' && !(_plAdd.loc && _plAdd.geo)){ plAddNearMe(); return; } if(c==='ai'){ plAddLoadAi(); return; } _plAdd.filter=c; plAddRender(); }
+function plAddLoadAi(){
+  _plAdd.filter='ai'; plAddRenderChips();
+  var se=document.getElementById('pl-add-sub'); if(se) se.textContent='AI is picking accounts for this day…';
+  document.getElementById('pl-add-results').innerHTML='<div style="color:var(--text3);padding:28px;text-align:center;font-size:13px">✦ Letting AI pick the best accounts for '+plFmtDay(_plAdd.date)+'…</div>';
+  fetch('/api/planner/fill-day',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rep_id:plState.repId,date:_plAdd.date,radius:(plState.radius||25)})})
+    .then(function(r){return r.json();}).then(function(d){
+      var s=(d&&d.suggestions)||[];
+      _plAdd.ai = s.map(function(x){ return {id:x.account_id, name:x.name||x.company||'', city:x.area||x.city||'', ai:true, last:null}; });
+      plAddRender();
+    }).catch(function(){ _plAdd.ai=[]; plAddRender(); });
+}
 function plAddNearMe(){
   if(!navigator.geolocation){ showToast('Location not available'); return; }
   showToast('Finding accounts near you…');
@@ -16897,14 +16908,15 @@ function _plAddInit(n){return n.split(' ').filter(Boolean).slice(0,2).map(functi
 function plAddRender(){
   plAddRenderChips();
   var box=document.getElementById('pl-add-results');
-  var list=(_plAdd.accts||[]).slice();
+  var near=_plAdd.filter==='near', isAi=_plAdd.filter==='ai';
   var q=(document.getElementById('pl-add-search').value||'').trim().toLowerCase();
-  var near=_plAdd.filter==='near';
-  var now=Date.now(), QUIET=45*864e5;
+  var now=Date.now(), QUIET=45*864e5, NEAR_CAP=60;
   var anc=(plState.anchors && plState.anchors[_plAdd.date] && plState.anchors[_plAdd.date].city) || '';
   var ancKey=anc?anc.toLowerCase().split(',')[0].trim():'';
+  var list = isAi ? (_plAdd.ai||[]).slice() : (_plAdd.accts||[]).slice();
+  // filter
   list=list.filter(function(a){
-    if(!near){
+    if(!near && !isAi){
       var isQuiet=!a.last || (now-a.last.getTime())>QUIET;
       var nearAnchor=ancKey && a.city && a.city.toLowerCase().indexOf(ancKey)>=0;
       if(_plAdd.filter==='quiet' && !isQuiet) return false;
@@ -16913,29 +16925,44 @@ function plAddRender(){
     if(q && a.name.toLowerCase().indexOf(q)<0 && (a.city||'').toLowerCase().indexOf(q)<0) return false;
     return true;
   });
-  if(near && _plAdd.loc && _plAdd.geo){
+  // near: needs location + geo; compute distance, cap to a sensible radius, sort
+  if(near){
+    if(!(_plAdd.loc && _plAdd.geo)){
+      var se0=document.getElementById('pl-add-sub'); if(se0) se0.textContent='Near me';
+      box.innerHTML='<div style="color:var(--text3);padding:28px;text-align:center;font-size:13px">Turn on location to see accounts near you.<br><button onclick="plAddNearMe()" style="margin-top:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-weight:700;font-family:inherit;cursor:pointer">Use my location</button></div>';
+      _plAddBtnState(); return;
+    }
     list.forEach(function(a){ var g=_plAdd.geo[a.name.toLowerCase()]; a.dist=g?haversineMi(_plAdd.loc,g):99999; });
-    list.sort(function(a,b){return (a.dist||99999)-(b.dist||99999);});
+    list=list.filter(function(a){ return a.dist<=NEAR_CAP; });
+    list.sort(function(a,b){return a.dist-b.dist;});
   } else if(_plAdd.filter==='quiet'){
     list.sort(function(a,b){ var ta=a.last?a.last.getTime():0,tb=b.last?b.last.getTime():0; return ta-tb; });
-  } else {
+  } else if(!isAi){
     list.sort(function(a,b){return a.name.localeCompare(b.name);});
   }
-  var sub={sug:'Going quiet + near this day',near:'Closest to you right now',quiet:'Accounts slipping away',all:'Pick the accounts to visit'}[_plAdd.filter];
+  var sub={ai:'AI picks for this day',sug:'Going quiet + near this day',near:'Within '+NEAR_CAP+' miles of you',quiet:'Accounts slipping away',all:'Pick the accounts to visit'}[_plAdd.filter];
   var se=document.getElementById('pl-add-sub'); if(se) se.textContent=sub;
-  if(!list.length){ box.innerHTML='<div style="color:var(--text3);padding:24px;text-align:center;font-size:13px">No accounts match.</div>'; }
-  else {
-    box.innerHTML=list.map(function(a){
-      var sel=!!_plAdd.picked[a.id];
-      var badge = near ? '' : ((!a.last||(now-a.last.getTime())>QUIET) ? '<span style="display:inline-block;font-size:9px;font-weight:800;padding:2px 7px;border-radius:9px;text-transform:uppercase;margin-right:5px;background:#fef3c7;color:#c2760a">'+(a.last?Math.floor((now-a.last.getTime())/864e5)+'d quiet':'Not visited')+'</span>' : '');
-      var right = near ? '<div style="font-size:13px;font-weight:800;color:var(--accent);flex-shrink:0;margin-right:2px">'+(a.dist<9999?a.dist.toFixed(1)+' mi':'—')+'</div>' : '';
-      return '<div onclick="plAddToggle('+a.id+')" style="display:flex;gap:11px;align-items:center;background:'+(sel?'#f5f9ff':'#fff')+';border:1px solid '+(sel?'var(--accent)':'var(--border)')+';border-radius:12px;padding:11px 13px;margin-bottom:8px;cursor:pointer">'
-        +'<div style="width:38px;height:38px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;background:'+_plAddColor(a.name)+'">'+plEsc(_plAddInit(a.name))+'</div>'
-        +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--navy)">'+plEsc(a.name)+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">'+badge+(a.city?'📍 '+plEsc(a.city):'')+'</div></div>'
-        + right
-        +'<div style="width:26px;height:26px;border-radius:50%;border:2px solid '+(sel?'var(--accent)':'#d5dbe3')+';background:'+(sel?'var(--accent)':'#fff')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:800">'+(sel?'✓':'')+'</div></div>';
-    }).join('');
+  if(!list.length){
+    var msg = near ? ('No accounts within '+NEAR_CAP+' miles.') : isAi ? 'AI had no picks for this day.' : 'No accounts match.';
+    box.innerHTML='<div style="color:var(--text3);padding:26px;text-align:center;font-size:13px">'+msg+'</div>';
+    _plAddBtnState(); return;
   }
+  box.innerHTML=list.map(function(a){
+    var sel=!!_plAdd.picked[a.id];
+    var badge;
+    if(near) badge='';
+    else if(isAi) badge='<span style="display:inline-block;font-size:9px;font-weight:800;padding:2px 7px;border-radius:9px;text-transform:uppercase;margin-right:5px;background:#ede9fe;color:#6d28d9">✦ AI pick</span>';
+    else badge=((!a.last||(now-a.last.getTime())>QUIET) ? '<span style="display:inline-block;font-size:9px;font-weight:800;padding:2px 7px;border-radius:9px;text-transform:uppercase;margin-right:5px;background:#fef3c7;color:#c2760a">'+(a.last?Math.floor((now-a.last.getTime())/864e5)+'d quiet':'Not visited')+'</span>' : '');
+    var right = near ? '<div style="font-size:13px;font-weight:800;color:var(--accent);flex-shrink:0;margin-right:2px">'+a.dist.toFixed(1)+' mi</div>' : '';
+    return '<div onclick="plAddToggle('+a.id+')" style="display:flex;gap:11px;align-items:center;background:'+(sel?'#f5f9ff':'#fff')+';border:1px solid '+(sel?'var(--accent)':'var(--border)')+';border-radius:12px;padding:11px 13px;margin-bottom:8px;cursor:pointer">'
+      +'<div style="width:38px;height:38px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;background:'+_plAddColor(a.name)+'">'+plEsc(_plAddInit(a.name))+'</div>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--navy)">'+plEsc(a.name)+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">'+badge+(a.city?'📍 '+plEsc(a.city):'')+'</div></div>'
+      + right
+      +'<div style="width:26px;height:26px;border-radius:50%;border:2px solid '+(sel?'var(--accent)':'#d5dbe3')+';background:'+(sel?'var(--accent)':'#fff')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:800">'+(sel?'✓':'')+'</div></div>';
+  }).join('');
+  _plAddBtnState();
+}
+function _plAddBtnState(){
   var n=Object.keys(_plAdd.picked).length;
   var btn=document.getElementById('pl-add-btn');
   if(btn){ btn.textContent = n? ('Add '+n+' to '+plFmtDay(_plAdd.date)) : 'Select accounts to add'; btn.style.opacity=n?'1':'.45'; btn.disabled=!n; }

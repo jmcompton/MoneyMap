@@ -1322,16 +1322,24 @@ router.post('/items/:id/undone', async (req, res) => {
   }
 });
 
-// GET /api/planner/account-geo — coordinates for the rep's accounts (geocoded by
-// city, cached) so the Accounts tab can sort by distance for "Near me".
+// GET /api/planner/account-geo — coordinates for the rep's (or firm's) accounts,
+// geocoded by city and cached, so Accounts + planner can sort by distance.
 router.get('/account-geo', async (req, res) => {
   try {
-    const repId = (req.session && req.session.user && req.session.user.id);
-    if (!repId) return res.json({ accounts: [] });
+    const uid = (req.session && req.session.user && req.session.user.id);
+    const role = (req.session && req.session.user && req.session.user.role);
+    const companyId = req.companyId;
+    if (!uid) return res.json({ accounts: [] });
+    let where, params;
+    if (role === 'manager' && companyId) {
+      where = `user_id IN (SELECT id FROM users WHERE company_id = $1)`; params = [companyId];
+    } else {
+      where = `user_id = $1`; params = [uid];
+    }
     const rows = (await pool.query(
       `SELECT DISTINCT ON (LOWER(company)) id, company, city
-         FROM prospects WHERE user_id=$1 AND city IS NOT NULL AND city <> '' ORDER BY LOWER(company)`,
-      [repId]
+         FROM prospects WHERE ${where} AND city IS NOT NULL AND city <> '' ORDER BY LOWER(company)`,
+      params
     )).rows;
     const out = [];
     for (const r of rows) {
