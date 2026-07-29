@@ -1476,21 +1476,19 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 #page-home .home-tile-i{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700}
 @media(max-width:760px){#page-home #home-stats{grid-template-columns:1fr 1fr}#page-home #home-cols{grid-template-columns:1fr}}
 
-/* ── NEW SCREENS on mobile: Planner (swipe days), Territory, route maps ── */
+/* ── NEW SCREENS on mobile: Planner (day tabs), Territory, route maps ── */
 @media(max-width:768px){
-  /* Weekly Planner: stack the Add-Accounts panel below, and swipe through the
-     five days instead of cramming them into five tiny columns. */
+  /* Weekly Planner: stack the panel below, show ONE day at a time with day tabs
+     across the top (JS shows the selected day's column, hides the rest). */
   #pl-layout{ flex-direction:column !important; }
+  #pl-daytabs{ display:flex !important; }
   #pl-grid{
-    grid-template-columns:none !important;
-    grid-auto-flow:column !important;
-    grid-auto-columns:82% !important;
-    overflow-x:auto !important;
-    -webkit-overflow-scrolling:touch;
-    scroll-snap-type:x mandatory;
-    padding-bottom:8px; width:100%;
+    grid-template-columns:1fr !important;
+    grid-auto-flow:row !important;
+    overflow-x:visible !important;
+    width:100%;
   }
-  #pl-grid > div{ scroll-snap-align:start; }
+  #pl-grid > .pl-day{ min-height:auto !important; }
   /* Territory county map — shorter so the whole page fits a phone screen */
   #terr-map{ height:400px !important; }
   /* Today + Home route maps — comfortable phone heights */
@@ -3413,8 +3411,10 @@ window.addEventListener('load', function() {
       </div>
 
       <div style="display:flex;gap:14px;align-items:flex-start" id="pl-layout">
+        <!-- Mobile-only day tabs (hidden on desktop) -->
+        <div id="pl-daytabs" style="display:none;gap:7px;width:100%;overflow-x:auto;padding-bottom:2px"></div>
         <!-- Week grid -->
-        <div id="pl-grid" style="flex:1;display:grid;grid-template-columns:repeat(5,1fr);gap:10px;min-width:0"></div>
+        <div id="pl-grid" style="flex:1;display:grid;grid-template-columns:repeat(5,1fr);gap:10px;min-width:0;width:100%"></div>
         <div id="pl-route-modal" style="display:none;position:fixed;inset:0;background:rgba(10,20,35,.55);z-index:400;align-items:center;justify-content:center;padding:16px">
           <div style="background:#fff;border-radius:16px;max-width:430px;width:100%;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.3)" onclick="event.stopPropagation()">
             <div style="font-size:17px;font-weight:800;color:var(--navy)">Route this day</div>
@@ -16626,12 +16626,39 @@ function plDayGoal() {
   return u.daily_call_goal || 10;
 }
 
+function plRenderDayTabs(dayMeta){
+  var box = document.getElementById('pl-daytabs');
+  if (!box) return;
+  box.style.display = 'flex';
+  if (plState.selectedDay == null || plState.selectedDay >= dayMeta.length) {
+    var todayStr = new Date().toISOString().slice(0,10);
+    var idx = -1;
+    for (var k=0;k<dayMeta.length;k++){ if(dayMeta[k].date===todayStr){ idx=k; break; } }
+    plState.selectedDay = idx >= 0 ? idx : 0;
+  }
+  box.innerHTML = dayMeta.map(function(d,i){
+    var on = i === plState.selectedDay;
+    return '<div onclick="plSelectDay('+i+')" style="flex:1;min-width:52px;border:1px solid '+(on?'#16283d':'var(--border)')+';background:'+(on?'#16283d':'#fff')+';border-radius:11px;padding:8px 3px;text-align:center;cursor:pointer">'
+      + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:'+(on?'#aab8c9':'var(--text3)')+'">'+d.dow+'</div>'
+      + '<div style="font-size:16px;font-weight:800;line-height:1;margin-top:2px;color:'+(on?'#fff':'var(--navy)')+'">'+d.dd+'</div>'
+      + '<div style="font-size:9.5px;font-weight:700;margin-top:5px;color:'+(on?'#8fc9ff':(d.count?'var(--accent)':'#c3cbd4'))+'">'+(d.count?d.count:'\u2014')+'</div>'
+      + '</div>';
+  }).join('');
+  plShowSelectedDay();
+}
+function plShowSelectedDay(){
+  var grid = document.getElementById('pl-grid');
+  if (!grid) return;
+  grid.querySelectorAll('.pl-day').forEach(function(c, i){ c.style.display = (i === plState.selectedDay) ? 'flex' : 'none'; });
+}
+function plSelectDay(i){ plState.selectedDay = i; plRenderGrid(); }
 function plRenderGrid() {
   var grid = document.getElementById('pl-grid');
   if (!grid) return;
   var mobile = plIsMobile();
   grid.style.gridTemplateColumns = mobile ? '1fr' : 'repeat(5,1fr)';
   var html = '';
+  var dayMeta = [];
   for (var i = 0; i < 5; i++) {
     var date = plAddDays(plState.weekStart, i);
     var dayItems = plState.items.filter(function(it){ return it.planned_date === date; });
@@ -16640,6 +16667,8 @@ function plRenderGrid() {
     var visited = stops.filter(function(s){ return s.visited; }).length;
     var goal = plDayGoal();
     var ro = plState.readOnly;
+    var _dp = date.split('-');
+    dayMeta.push({ date: date, dow: plFmtDay(date), dd: parseInt(_dp[2], 10), count: stops.length });
 
     html += '<div class="pl-day" data-date="'+date+'" ondragover="plDragOver(event)" ondragleave="plDragLeave(event)" ondrop="plDrop(event)" style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:10px;min-height:180px;display:flex;flex-direction:column">';
     html += '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">';
@@ -16717,6 +16746,12 @@ function plRenderGrid() {
     html += '</div>';
   }
   grid.innerHTML = html;
+  // Mobile: present the week as day tabs, showing one day at a time.
+  var _dt = document.getElementById('pl-daytabs');
+  if (_dt) {
+    if (mobile) { plRenderDayTabs(dayMeta); }
+    else { _dt.style.display = 'none'; grid.querySelectorAll('.pl-day').forEach(function(c){ c.style.display = 'flex'; }); }
+  }
 }
 
 // ── Drag & drop (desktop) ────────────────────────────────────────
