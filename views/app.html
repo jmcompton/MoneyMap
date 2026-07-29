@@ -3447,11 +3447,11 @@ window.addEventListener('load', function() {
   </div>
 
   <!-- Planner mobile add sheet -->
-  <div class="mo" id="modal-pl-add">
-    <div class="modal" style="width:100%;max-width:440px;background:#fff;padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:88vh;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+  <div id="modal-pl-add" onclick="if(event.target===this)plAddHide()" style="display:none;position:fixed;inset:0;background:rgba(10,20,35,.5);z-index:3000;align-items:flex-end;justify-content:center">
+    <div class="modal" style="width:100%;max-width:440px;background:#fff;padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:88vh;border-radius:18px 18px 0 0;box-shadow:0 -8px 32px rgba(0,0,0,.25)">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px 10px">
         <div><h3 id="pl-add-title" style="margin:0;font-size:17px;font-weight:800;color:var(--navy)">Add to day</h3><div id="pl-add-sub" style="font-size:12px;color:var(--text3);margin-top:2px">Pick the accounts to visit</div></div>
-        <button class="modal-x" onclick="document.getElementById('modal-pl-add').classList.remove('open')" style="font-size:22px">&times;</button>
+        <button onclick="plAddHide()" style="background:transparent;border:none;font-size:26px;color:var(--text3);cursor:pointer;line-height:1;font-family:inherit;padding:0 4px">&times;</button>
       </div>
       <input type="hidden" id="pl-add-date" />
       <div style="display:flex;gap:0;margin:0 16px 10px;background:var(--surface);border-radius:11px;padding:3px;flex-shrink:0">
@@ -16858,13 +16858,15 @@ function plSaveAppt() {
 // ── Mobile add-stop sheet (tap-to-add: Suggested / Near me / Going quiet / All) ──
 var _plAdd = { date:null, accts:null, picked:{}, filter:'sug', geo:null, loc:null };
 var _plFind = { mode:'existing', lines:null, line:null, loc:'near', city:null, results:null, picked:{}, stage:'setup' };
+function plAddShow(){ var m=document.getElementById('modal-pl-add'); if(m){ m.style.display='flex'; document.body.style.overflow='hidden'; } }
+function plAddHide(){ var m=document.getElementById('modal-pl-add'); if(m){ m.style.display='none'; document.body.style.overflow=''; } }
 function plOpenAdd(date) {
   _plAdd.date = date; _plAdd.picked = {}; _plAdd.filter = 'sug';
   _plFind = { lines:_plFind?_plFind.lines:null, line:null, loc:'near', city:null, results:null, picked:{}, stage:'setup', mode:'existing' };
   document.getElementById('pl-add-date').value = date;
   document.getElementById('pl-add-title').textContent = 'Add to ' + plFmtDay(date) + ' ' + plFmtMD(date);
   document.getElementById('pl-add-search').value = '';
-  openModal('pl-add');
+  plAddShow();
   plAddMode('existing');
   if (_plAdd.accts) { plAddRender(); return; }
   document.getElementById('pl-add-results').innerHTML = '<div style="color:var(--text3);padding:24px;text-align:center">Loading accounts…</div>';
@@ -16981,7 +16983,7 @@ function plAddConfirm(){
   var ids=Object.keys(_plAdd.picked); if(!ids.length) return;
   var date=_plAdd.date;
   var btn=document.getElementById('pl-add-btn'); if(btn){ btn.disabled=true; btn.textContent='Adding…'; }
-  function done(){ document.getElementById('modal-pl-add').classList.remove('open'); plLoad(); }
+  function done(){ plAddHide(); plLoad(); }
   Promise.all(ids.map(function(id){
     return fetch('/api/planner/items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rep_id:plState.repId,planned_date:date,item_type:'stop',account_id:parseInt(id,10)})});
   })).then(function(){ showToast(ids.length+' stop'+(ids.length>1?'s':'')+' added'); done(); })
@@ -17085,7 +17087,7 @@ function plFindAdd(){
   var idx=Object.keys(_plFind.picked); if(!idx.length) return;
   var date=_plAdd.date;
   var btn=document.getElementById('pl-add-btn'); if(btn){ btn.disabled=true; btn.textContent='Adding…'; }
-  function done(){ document.getElementById('modal-pl-add').classList.remove('open'); plLoad(); }
+  function done(){ plAddHide(); plLoad(); }
   Promise.all(idx.map(function(i){
     var r=_plFind.results[i];
     return fetch('/api/planner/items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rep_id:plState.repId,planned_date:date,item_type:'stop',title:r.company,note:r.address||'',source:'ai'})});
