@@ -12168,77 +12168,7 @@ fetch('/api/notifications/evaluate', { method: 'POST' }).then(function(r){ retur
 
   <!-- Menu items -->
   <div style="flex:1;overflow-y:auto;padding:8px 0">
-    <div style="font-size:11px;font-weight:700;color:#8a95a3;text-transform:uppercase;letter-spacing:.06em;padding:14px 20px 8px">Daily</div>
-
-    <button onclick="goAndCloseMenu('recap')" class="mm-item">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#1d6aff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2h8l4 4v13a1 1 0 01-1 1H5a1 1 0 01-1-1V3a1 1 0 011-1z"/><path d="M13 2v5h5M8 11h6M8 14.5h6"/></svg>
-      <span>Daily Recap</span>
-      <svg class="mm-chev" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#8a95a3" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
-    </button>
-
-    <div style="font-size:11px;font-weight:700;color:#8a95a3;text-transform:uppercase;letter-spacing:.06em;padding:14px 20px 8px">Communication</div>
-
-    <button onclick="goAndCloseMenu('email')" class="mm-item">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#1d6aff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="18" height="14" rx="2"/><path d="M2 6l9 7 9-7"/></svg>
-      <span>Email</span>
-      <svg class="mm-chev" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#8a95a3" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
-    </button>
-
-    <button onclick="goAndCloseMenu('calendar')" class="mm-item">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#1d6aff" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="4" width="18" height="16" rx="2"/><path d="M7 2v4M15 2v4M2 10h18"/></svg>
-      <span>Team Calendar</span>
-      <svg class="mm-chev" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#8a95a3" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
-    </button>
-
-    <div style="font-size:11px;font-weight:700;color:#8a95a3;text-transform:uppercase;letter-spacing:.06em;padding:14px 20px 8px">CRM</div>
-
-    <button onclick="goAndCloseMenu('accounts')" class="mm-item">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#1d6aff" stroke-width="1.6" stroke-linecap="round"><rect x="2" y="6" width="18" height="13" rx="2"/><path d="M7 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-      <span>Accounts</span>
-      <svg class="mm-chev" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#8a95a3" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
-    </button>
-
-    <button onclick="goAndCloseMenu('deals')" class="mm-item">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#1d6aff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 11 16 11 13 19 9 3 6 11 1 11"/></svg>
-      <span>Pipeline</span>
-      <svg class="mm-chev" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#8a95a3" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
-    </button>
-
-    <button onclick="goAndCloseMenu('quotes')" class="mm-item" data-roles="rep manager">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#1d6aff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h10l4 4v14a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1z"/><path d="M14 2v4h4M7 11h8M7 14.5h6"/></svg>
-      <span>Quotes</span>
-      <svg class="mm-chev" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#8a95a3" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
-    </button>
-
-    <button onclick="goAndCloseMenu('fortress')" class="mm-item">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#1d6aff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19V7l4-3 4 3 4-3 4 3v12z"/><path d="M7 19v-8M15 19v-8M3 15h16"/></svg>
-      <span>Fortress Promo</span>
-      <svg class="mm-chev" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#8a95a3" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
-    </button>
-
-    <button onclick="goAndCloseMenu('command')" class="mm-item">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#1d6aff" stroke-width="1.6" stroke-linecap="round"><path d="M12 2L10 20M3 7l-2 4 2 4M19 7l2 4-2 4"/></svg>
-      <span>AI Command</span>
-      <svg class="mm-chev" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#8a95a3" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
-    </button>
-
-    <button onclick="goAndCloseMenu('bulk')" class="mm-item">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#1d6aff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="16" height="16" rx="2"/><path d="M8 12h6M11 9v6"/></svg>
-      <span>Bulk Import</span>
-      <svg class="mm-chev" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#8a95a3" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
-    </button>
-
-    <button onclick="goAndCloseMenu('manager')" class="mm-item">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#1d6aff" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><circle cx="15" cy="8" r="3"/><path d="M2 19c0-3 3-5 6-5s6 2 6 5"/><path d="M15 14c3 .5 5 2.5 5 5"/></svg>
-      <span>Team Dashboard</span>
-      <svg class="mm-chev" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#8a95a3" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
-    </button>
-
-    <button id="mm-time-tracker-btn" onclick="goAndCloseMenu('time')" class="mm-item jm-only">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#1d6aff" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M11 7v4.5l2.5 2"/></svg>
-      <span>Time Tracker</span>
-      <svg class="mm-chev" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#8a95a3" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>
-    </button>
+    <div id="mm-nav-items"></div>
 
     <div style="font-size:11px;font-weight:700;color:#8a95a3;text-transform:uppercase;letter-spacing:.06em;padding:14px 20px 8px">Account</div>
 
@@ -12986,24 +12916,45 @@ button.jm-only.jm-visible,
 <script>
 window.openMobileMenu = function() {
   var menu = document.getElementById('mobile-menu');
-  if (menu) {
-    menu.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-    // Populate user info if available
-    fetch('/api/me').then(function(r){return r.json();}).then(function(u){
-      if (u && u.name) {
-        var avatar = document.getElementById('mm-avatar');
-        var name = document.getElementById('mm-name');
-        var role = document.getElementById('mm-role');
-        if (name) name.textContent = u.name;
-        if (role) role.textContent = u.role === 'rep' ? 'Sales Rep' : 'Manager';
-        if (avatar) {
-          var initials = u.name.split(' ').map(function(p){return p[0];}).join('').substring(0,2).toUpperCase();
-          avatar.textContent = initials;
-        }
-      }
-    }).catch(function(){});
+  if (!menu) return;
+  menu.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  // Build the mobile menu from the SAME sidebar items as desktop — one source of
+  // truth, so the two navs can never drift out of sync again.
+  function buildNav(role){
+    var box = document.getElementById('mm-nav-items');
+    if (!box) return;
+    box.innerHTML = '';
+    document.querySelectorAll('.sidebar .sb-item').forEach(function(sb){
+      var roles = sb.getAttribute('data-roles');
+      if (roles && role && roles.indexOf(role) === -1) return;
+      var oc = sb.getAttribute('onclick') || '';
+      var m = oc.match(/go\('([a-z-]+)'\)/i);
+      if (!m) return;
+      var target = m[1];
+      var label = (sb.textContent || '').trim();
+      var svgEl = sb.querySelector('svg');
+      var svgHtml = svgEl ? svgEl.outerHTML.replace(/width:14px;height:14px/g, 'width:20px;height:20px') : '';
+      var btn = document.createElement('button');
+      btn.className = 'mm-item';
+      btn.addEventListener('click', function(){ goAndCloseMenu(target); });
+      btn.innerHTML = svgHtml + '<span>' + label + '</span><svg class="mm-chev" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#8a95a3" stroke-width="1.5"><path d="M6 4l4 4-4 4"/></svg>';
+      box.appendChild(btn);
+    });
   }
+  fetch('/api/me').then(function(r){return r.json();}).then(function(u){
+    if (u && u.name) {
+      var avatar = document.getElementById('mm-avatar');
+      var name = document.getElementById('mm-name');
+      var role = document.getElementById('mm-role');
+      if (name) name.textContent = u.name;
+      if (role) role.textContent = u.role === 'rep' ? 'Sales Rep' : 'Manager';
+      if (avatar) {
+        avatar.textContent = u.name.split(' ').map(function(p){return p[0];}).join('').substring(0,2).toUpperCase();
+      }
+    }
+    buildNav(u && u.role);
+  }).catch(function(){ buildNav(null); });
 };
 
 window.closeMobileMenu = function() {
