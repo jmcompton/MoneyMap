@@ -3446,13 +3446,16 @@ window.addEventListener('load', function() {
 
   <!-- Planner mobile add sheet -->
   <div class="modal-overlay" id="modal-pl-add" style="display:none">
-    <div class="modal" style="max-width:420px">
-      <div class="modal-head"><h3 id="pl-add-title">Add to day</h3><button class="modal-x" onclick="closeModal('pl-add')">&times;</button></div>
-      <div class="modal-body">
-        <input type="hidden" id="pl-add-date" />
-        <input id="pl-add-search" placeholder="Search accounts..." oninput="plMobileSearch()" autocomplete="off" style="width:100%;box-sizing:border-box;padding:8px;border:1px solid var(--border);border-radius:6px;font-family:inherit;margin-bottom:8px" />
-        <div id="pl-add-results" style="font-size:12px"></div>
+    <div class="modal" style="max-width:440px;padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:88vh">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px 10px">
+        <div><h3 id="pl-add-title" style="margin:0;font-size:17px;font-weight:800;color:var(--navy)">Add to day</h3><div id="pl-add-sub" style="font-size:12px;color:var(--text3);margin-top:2px">Pick the accounts to visit</div></div>
+        <button class="modal-x" onclick="closeModal('pl-add')" style="font-size:22px">&times;</button>
       </div>
+      <input type="hidden" id="pl-add-date" />
+      <div style="padding:2px 16px 10px"><input id="pl-add-search" placeholder="Search your accounts..." oninput="plAddRender()" autocomplete="off" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--border);border-radius:11px;font-family:inherit;font-size:15px;background:var(--surface)" /></div>
+      <div id="pl-add-chips" style="display:flex;gap:7px;overflow-x:auto;padding:0 16px 12px;border-bottom:1px solid var(--border);flex-shrink:0"></div>
+      <div id="pl-add-results" style="flex:1;overflow-y:auto;padding:10px 14px 12px;min-height:200px"></div>
+      <div style="padding:12px 16px 16px;border-top:1px solid var(--border);flex-shrink:0"><button id="pl-add-btn" onclick="plAddConfirm()" disabled style="width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:750;cursor:pointer;font-family:inherit;opacity:.45">Select accounts to add</button></div>
     </div>
   </div>
 
@@ -16843,41 +16846,106 @@ function plSaveAppt() {
     .then(function(r){ return r.json(); }).then(function(){ closeModal('pl-appt'); plLoad(); showToast('Appointment added'); });
 }
 
-// ── Mobile add-stop sheet ────────────────────────────────────────
+// ── Mobile add-stop sheet (tap-to-add: Suggested / Near me / Going quiet / All) ──
+var _plAdd = { date:null, accts:null, picked:{}, filter:'sug', geo:null, loc:null };
 function plOpenAdd(date) {
+  _plAdd.date = date; _plAdd.picked = {}; _plAdd.filter = 'sug';
   document.getElementById('pl-add-date').value = date;
-  document.getElementById('pl-add-title').textContent = 'Add stop — ' + plFmtDay(date) + ' ' + plFmtMD(date);
+  document.getElementById('pl-add-title').textContent = 'Add to ' + plFmtDay(date) + ' ' + plFmtMD(date);
   document.getElementById('pl-add-search').value = '';
-  document.getElementById('pl-add-results').innerHTML = '';
   openModal('pl-add');
-  plMobileSearch();
+  if (_plAdd.accts) { plAddRender(); return; }
+  document.getElementById('pl-add-results').innerHTML = '<div style="color:var(--text3);padding:24px;text-align:center">Loading accounts…</div>';
+  fetch('/api/prospects').then(function(r){ return r.json(); }).then(function(rows){
+    var map={};
+    (rows||[]).forEach(function(p){
+      var key=(p.company||'').trim(); if(!key) return;
+      var d=p.last_call_date?new Date(p.last_call_date):null;
+      if(!map[key]) map[key]={id:p.id, name:key, city:p.city||'', ctype:p.company_type||'', last:d};
+      else if(d && (!map[key].last||d>map[key].last)) map[key].last=d;
+    });
+    _plAdd.accts = Object.keys(map).map(function(k){ return map[k]; });
+    plAddRender();
+  }).catch(function(){ document.getElementById('pl-add-results').innerHTML='<div style="color:var(--text3);padding:24px;text-align:center">Could not load accounts.</div>'; });
 }
-function plMobileSearch() {
-  var q = document.getElementById('pl-add-search').value.trim();
-  var box = document.getElementById('pl-add-results');
-  var url = q.length >= 2
-    ? '/api/prospects/contacts/search?q=' + encodeURIComponent(q) + '&rep_user_id=' + plState.repId
-    : null;
-  if (!url) {
-    // show panel defaults (not-contacted) when no query
-    var d = plState.panel || {};
-    var rows = (d.notContacted || []).concat(d.followUps || []);
-    box.innerHTML = plMobileRows(rows.slice(0,15)); return;
-  }
-  fetch(url).then(function(r){ return r.json(); }).then(function(rows){ box.innerHTML = plMobileRows(rows); });
+var PL_ADD_CHIPS=[['sug','⚡ Suggested'],['near','📍 Near me'],['quiet','⚠ Going quiet'],['all','All']];
+function plAddRenderChips(){
+  var box=document.getElementById('pl-add-chips'); if(!box) return;
+  box.innerHTML = PL_ADD_CHIPS.map(function(c){
+    var on=_plAdd.filter===c[0];
+    var bg=on?(c[0]==='near'?'var(--accent)':'var(--navy)'):'#fff';
+    return '<div onclick="plAddTapChip(\''+c[0]+'\')" style="white-space:nowrap;border:1px solid '+(on?bg:'var(--border)')+';background:'+bg+';color:'+(on?'#fff':'var(--text2)')+';border-radius:20px;padding:8px 14px;font-size:12.5px;font-weight:650;cursor:pointer;flex-shrink:0">'+c[1]+'</div>';
+  }).join('');
 }
-function plMobileRows(rows) {
-  if (!rows || !rows.length) return '<div style="color:var(--text3);padding:6px 0">No matches</div>';
-  var h = '';
-  rows.forEach(function(p){
-    h += '<div onclick="plMobileAdd('+p.id+')" style="padding:8px;border:1px solid var(--border);border-radius:6px;margin-bottom:5px;cursor:pointer"><span style="font-weight:600;color:var(--navy)">'+plEsc(p.company)+'</span>'+(p.city?' <span style="color:var(--text3);font-size:11px">'+plEsc(p.city)+'</span>':'')+'</div>';
+function plAddTapChip(c){ if(c==='near' && !(_plAdd.loc && _plAdd.geo)){ plAddNearMe(); return; } _plAdd.filter=c; plAddRender(); }
+function plAddNearMe(){
+  if(!navigator.geolocation){ showToast('Location not available'); return; }
+  showToast('Finding accounts near you…');
+  navigator.geolocation.getCurrentPosition(function(pos){
+    _plAdd.loc={lat:pos.coords.latitude,lng:pos.coords.longitude};
+    fetch('/api/planner/account-geo').then(function(r){return r.json();}).then(function(d){
+      _plAdd.geo={}; ((d&&d.accounts)||[]).forEach(function(a){ _plAdd.geo[(a.company||'').toLowerCase()]={lat:a.lat,lng:a.lng}; });
+      _plAdd.filter='near'; plAddRender();
+    }).catch(function(){ showToast('Could not load account locations'); });
+  }, function(){ showToast('Location permission denied'); }, {timeout:8000,maximumAge:600000});
+}
+function plAddToggle(id){ if(_plAdd.picked[id])delete _plAdd.picked[id];else _plAdd.picked[id]=true; plAddRender(); }
+function _plAddColor(n){var c=['#2f6df6','#0f9d58','#c2760a','#7c3aed','#c0392b','#0891b2','#db2777'],s=0;for(var i=0;i<n.length;i++)s+=n.charCodeAt(i);return c[s%c.length];}
+function _plAddInit(n){return n.split(' ').filter(Boolean).slice(0,2).map(function(w){return w[0];}).join('').toUpperCase();}
+function plAddRender(){
+  plAddRenderChips();
+  var box=document.getElementById('pl-add-results');
+  var list=(_plAdd.accts||[]).slice();
+  var q=(document.getElementById('pl-add-search').value||'').trim().toLowerCase();
+  var near=_plAdd.filter==='near';
+  var now=Date.now(), QUIET=45*864e5;
+  var anc=(plState.anchors && plState.anchors[_plAdd.date] && plState.anchors[_plAdd.date].city) || '';
+  var ancKey=anc?anc.toLowerCase().split(',')[0].trim():'';
+  list=list.filter(function(a){
+    if(!near){
+      var isQuiet=!a.last || (now-a.last.getTime())>QUIET;
+      var nearAnchor=ancKey && a.city && a.city.toLowerCase().indexOf(ancKey)>=0;
+      if(_plAdd.filter==='quiet' && !isQuiet) return false;
+      if(_plAdd.filter==='sug' && !(isQuiet||nearAnchor)) return false;
+    }
+    if(q && a.name.toLowerCase().indexOf(q)<0 && (a.city||'').toLowerCase().indexOf(q)<0) return false;
+    return true;
   });
-  return h;
+  if(near && _plAdd.loc && _plAdd.geo){
+    list.forEach(function(a){ var g=_plAdd.geo[a.name.toLowerCase()]; a.dist=g?haversineMi(_plAdd.loc,g):99999; });
+    list.sort(function(a,b){return (a.dist||99999)-(b.dist||99999);});
+  } else if(_plAdd.filter==='quiet'){
+    list.sort(function(a,b){ var ta=a.last?a.last.getTime():0,tb=b.last?b.last.getTime():0; return ta-tb; });
+  } else {
+    list.sort(function(a,b){return a.name.localeCompare(b.name);});
+  }
+  var sub={sug:'Going quiet + near this day',near:'Closest to you right now',quiet:'Accounts slipping away',all:'Pick the accounts to visit'}[_plAdd.filter];
+  var se=document.getElementById('pl-add-sub'); if(se) se.textContent=sub;
+  if(!list.length){ box.innerHTML='<div style="color:var(--text3);padding:24px;text-align:center;font-size:13px">No accounts match.</div>'; }
+  else {
+    box.innerHTML=list.map(function(a){
+      var sel=!!_plAdd.picked[a.id];
+      var badge = near ? '' : ((!a.last||(now-a.last.getTime())>QUIET) ? '<span style="display:inline-block;font-size:9px;font-weight:800;padding:2px 7px;border-radius:9px;text-transform:uppercase;margin-right:5px;background:#fef3c7;color:#c2760a">'+(a.last?Math.floor((now-a.last.getTime())/864e5)+'d quiet':'Not visited')+'</span>' : '');
+      var right = near ? '<div style="font-size:13px;font-weight:800;color:var(--accent);flex-shrink:0;margin-right:2px">'+(a.dist<9999?a.dist.toFixed(1)+' mi':'—')+'</div>' : '';
+      return '<div onclick="plAddToggle('+a.id+')" style="display:flex;gap:11px;align-items:center;background:'+(sel?'#f5f9ff':'#fff')+';border:1px solid '+(sel?'var(--accent)':'var(--border)')+';border-radius:12px;padding:11px 13px;margin-bottom:8px;cursor:pointer">'
+        +'<div style="width:38px;height:38px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;background:'+_plAddColor(a.name)+'">'+plEsc(_plAddInit(a.name))+'</div>'
+        +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--navy)">'+plEsc(a.name)+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">'+badge+(a.city?'📍 '+plEsc(a.city):'')+'</div></div>'
+        + right
+        +'<div style="width:26px;height:26px;border-radius:50%;border:2px solid '+(sel?'var(--accent)':'#d5dbe3')+';background:'+(sel?'var(--accent)':'#fff')+';flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:800">'+(sel?'✓':'')+'</div></div>';
+    }).join('');
+  }
+  var n=Object.keys(_plAdd.picked).length;
+  var btn=document.getElementById('pl-add-btn');
+  if(btn){ btn.textContent = n? ('Add '+n+' to '+plFmtDay(_plAdd.date)) : 'Select accounts to add'; btn.style.opacity=n?'1':'.45'; btn.disabled=!n; }
 }
-function plMobileAdd(id) {
-  var date = document.getElementById('pl-add-date').value;
-  plAddStop(id, date);
-  closeModal('pl-add');
+function plAddConfirm(){
+  var ids=Object.keys(_plAdd.picked); if(!ids.length) return;
+  var date=_plAdd.date;
+  var btn=document.getElementById('pl-add-btn'); if(btn){ btn.disabled=true; btn.textContent='Adding…'; }
+  Promise.all(ids.map(function(id){
+    return fetch('/api/planner/items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rep_id:plState.repId,planned_date:date,item_type:'stop',account_id:parseInt(id,10)})});
+  })).then(function(){ closeModal('pl-add'); showToast(ids.length+' stop'+(ids.length>1?'s':'')+' added'); plLoad(); })
+    .catch(function(){ closeModal('pl-add'); plLoad(); });
 }
 
 // ── Weekly Planner AI assist (propose / review / apply) ───────────
