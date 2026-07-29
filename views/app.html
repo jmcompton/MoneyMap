@@ -1791,40 +1791,52 @@ window.addEventListener('load', function() {
   </div>
 
   <!-- ═══ HOME — the CRM cockpit (accounts, priorities, quick access) ═══ -->
-  <div class="page" id="page-home" style="overflow-y:auto">
+  <div class="page active" id="page-home" style="overflow-y:auto">
     <div style="max-width:1320px;margin:0;padding:22px 24px 60px">
       <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em" id="home-date"></div>
       <div style="font-size:24px;font-weight:800;color:var(--navy);margin:4px 0 20px;letter-spacing:-.4px" id="home-greeting">Welcome back</div>
 
-      <!-- Follow-ups you owe (due or overdue) -->
-      <div id="home-followups" style="margin-bottom:22px"></div>
-
-      <!-- Today's route map -->
-      <div id="home-route-card" style="display:none;background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:0 1px 3px rgba(15,25,35,.05);padding:14px 15px;margin-bottom:22px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="font-size:13px;font-weight:800;color:var(--navy)">Today's route <span id="home-route-count" style="font-weight:600;color:var(--text3)"></span></div>
-          <button onclick="go('today')" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Open Today &rarr;</button>
-        </div>
-        <div id="home-map" style="height:200px;border-radius:11px;border:1px solid var(--border);z-index:0;background:#eef2f6"></div>
-      </div>
+      <!-- Follow-ups (legacy, superseded by Today's tasks) -->
+      <div id="home-followups" style="display:none"></div>
 
       <!-- Headline stats -->
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px" id="home-stats">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px" id="home-stats">
         <div class="home-stat"><div class="home-stat-v" id="hs-accounts">—</div><div class="home-stat-l">Accounts</div></div>
         <div class="home-stat"><div class="home-stat-v" style="color:#b91c1c" id="hs-risk">—</div><div class="home-stat-l">Commission at risk</div></div>
         <div class="home-stat"><div class="home-stat-v" style="color:#b45309" id="hs-found">—</div><div class="home-stat-l">Found money</div></div>
         <div class="home-stat"><div class="home-stat-v" id="hs-leads">—</div><div class="home-stat-l">New leads</div></div>
       </div>
 
-      <!-- Two columns: what needs attention + your accounts -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px" id="home-cols">
-        <div class="home-card">
-          <div class="home-card-hdr"><span>Needs attention</span><a onclick="go('reconnect')" class="home-card-link">Reconnect →</a></div>
-          <div id="home-priorities"><div class="home-empty">Loading…</div></div>
+      <div id="home-grid" style="display:grid;grid-template-columns:1.35fr 1fr;gap:18px;margin-bottom:22px">
+        <!-- LEFT: today's schedule + route map -->
+        <div>
+          <div class="home-card" style="margin-bottom:18px">
+            <div class="home-card-hdr"><span>Today's schedule <span id="home-sched-count" style="font-weight:600;color:var(--text3)"></span></span><a onclick="go('today')" class="home-card-link">Open Today →</a></div>
+            <div id="home-schedule"><div class="home-empty">Loading…</div></div>
+          </div>
+          <div id="home-route-card" style="display:none;background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:0 1px 3px rgba(15,25,35,.05);padding:14px 15px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <div style="font-size:13px;font-weight:800;color:var(--navy)">Today's route <span id="home-route-count" style="font-weight:600;color:var(--text3)"></span></div>
+              <button onclick="go('today')" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Open Today &rarr;</button>
+            </div>
+            <div id="home-map" style="height:200px;border-radius:11px;border:1px solid var(--border);z-index:0;background:#eef2f6"></div>
+          </div>
         </div>
-        <div class="home-card">
-          <div class="home-card-hdr"><span>Your accounts</span><a onclick="go('accounts')" class="home-card-link">View all →</a></div>
-          <div id="home-accounts"><div class="home-empty">Loading…</div></div>
+        <!-- RIGHT: tasks + needs attention + accounts -->
+        <div>
+          <div class="home-card" style="margin-bottom:18px">
+            <div class="home-card-hdr"><span>Today's tasks <span id="home-tasks-count" style="font-weight:600;color:var(--text3)"></span></span><a onclick="go('today')" class="home-card-link">View all →</a></div>
+            <div id="home-tasks"><div class="home-empty">Loading…</div></div>
+            <button onclick="homeAddTask()" style="width:100%;border:1px dashed var(--border);background:#fafbfc;color:var(--text3);border-radius:10px;padding:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px">＋ Add a task</button>
+          </div>
+          <div class="home-card" style="margin-bottom:18px">
+            <div class="home-card-hdr"><span>Needs attention</span><a onclick="go('reconnect')" class="home-card-link">Reconnect →</a></div>
+            <div id="home-priorities"><div class="home-empty">Loading…</div></div>
+          </div>
+          <div class="home-card">
+            <div class="home-card-hdr"><span>Your accounts</span><a onclick="go('accounts')" class="home-card-link">View all →</a></div>
+            <div id="home-accounts"><div class="home-empty">Loading…</div></div>
+          </div>
         </div>
       </div>
 
@@ -1841,7 +1853,7 @@ window.addEventListener('load', function() {
     </div>
   </div>
 
-  <div class="page active" id="page-dashboard" style="overflow-y:auto">
+  <div class="page" id="page-dashboard" style="overflow-y:auto">
     <div style="padding:24px 24px 60px 24px;width:100%;box-sizing:border-box">
 
       <!-- Greeting -->
@@ -4608,9 +4620,58 @@ function loadHomeRouteMap(){
     }
   }).catch(function(){ if(card) card.style.display='none'; });
 }
+function _homeSchedRow(time, kind, name, sub){
+  var dot = kind==='appt' ? '#6d28d9' : (kind==='lead' ? '#2f6df6' : '#16283d');
+  var pill = kind==='appt' ? '<span style="display:inline-block;font-size:8.5px;font-weight:800;padding:2px 6px;border-radius:8px;background:#ede9fe;color:#6d28d9;margin-left:5px;text-transform:uppercase;vertical-align:middle">Meeting</span>' : '';
+  return '<div style="display:flex;gap:11px;padding:8px 0;border-bottom:1px solid #f1f4f8">'
+    + '<div style="font-size:11.5px;font-weight:800;color:var(--text2);width:52px;flex-shrink:0;padding-top:2px">'+_hEsc(time||'')+'</div>'
+    + '<div style="width:9px;height:9px;border-radius:50%;background:'+dot+';flex-shrink:0;margin-top:5px"></div>'
+    + '<div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:700;color:var(--navy)">'+_hEsc(name||'')+pill+'</div>'+(sub?'<div style="font-size:11px;color:var(--text3);margin-top:1px">'+_hEsc(sub)+'</div>':'')+'</div></div>';
+}
+function renderHomeSchedule(){
+  var box=document.getElementById('home-schedule'); if(!box) return;
+  fetch('/api/planner/today').then(function(r){return r.ok?r.json():null;}).then(function(d){
+    var stops=(d&&d.stops)||[];
+    var appts=(d&&d.appointments)||[];
+    var cnt=document.getElementById('home-sched-count');
+    var total=stops.length+appts.length;
+    if(cnt) cnt.textContent = total ? ('· '+stops.length+' stop'+(stops.length!==1?'s':'')) : '';
+    if(!total){ box.innerHTML='<div class="home-empty">Nothing planned today. <a onclick="go(\'weekly-planner\')" style="color:var(--accent);cursor:pointer;font-weight:600">Build your week →</a></div>'; return; }
+    var html='';
+    appts.forEach(function(a){ html += _homeSchedRow(a.appt_time||'', 'appt', a.title||a.company||'Meeting', a.note||a.city||''); });
+    stops.forEach(function(s,i){ html += _homeSchedRow('#'+(i+1), (s.source==='ai'?'lead':'stop'), s.company||'Stop', s.next_step||s.note||s.city||''); });
+    box.innerHTML=html;
+  }).catch(function(){ box.innerHTML='<div class="home-empty">Could not load schedule.</div>'; });
+}
+function renderHomeTasks(){
+  var box=document.getElementById('home-tasks'); if(!box) return;
+  fetch('/api/tasks').then(function(r){return r.ok?r.json():[];}).then(function(list){
+    list = Array.isArray(list) ? list : ((list&&list.tasks)||[]);
+    var cnt=document.getElementById('home-tasks-count');
+    if(cnt) cnt.textContent = list.length ? ('· '+list.length+' open') : '';
+    if(!list.length){ box.innerHTML='<div class="home-empty">No open tasks. Nice.</div>'; return; }
+    box.innerHTML=list.slice(0,6).map(function(t){
+      var meta='', mcol='#8794a4';
+      if(t.overdue){ var dov=t.days_over||0; meta='⚠ Overdue'+(dov?(' '+dov+' day'+(dov>1?'s':'')):''); mcol='#dc2626'; }
+      else if(t.due_date){ var dd=new Date(t.due_date); var td=new Date(); var same=dd.toDateString()===td.toDateString(); meta=same?'Due today':('Due '+dd.toLocaleDateString('en-US',{month:'short',day:'numeric'})); mcol=same?'#c2760a':'#8794a4'; }
+      return '<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #f1f4f8">'
+        + '<div onclick="homeToggleTask('+t.id+')" style="width:19px;height:19px;border:2px solid #cdd5df;border-radius:6px;flex-shrink:0;margin-top:1px;cursor:pointer"></div>'
+        + '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--navy)">'+_hEsc(t.body||'')+'</div>'+(meta?'<div style="font-size:10.5px;font-weight:700;margin-top:2px;color:'+mcol+'">'+_hEsc(meta)+'</div>':'')+'</div></div>';
+    }).join('');
+  }).catch(function(){ box.innerHTML='<div class="home-empty">Could not load tasks.</div>'; });
+}
+function homeToggleTask(id){
+  fetch('/api/tasks/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({done:true})}).then(function(){ renderHomeTasks(); }).catch(function(){});
+}
+function homeAddTask(){
+  var body=window.prompt('New task:'); if(!body||!body.trim()) return;
+  fetch('/api/tasks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({body:body.trim()})}).then(function(){ renderHomeTasks(); showToast('Task added'); }).catch(function(){});
+}
 function loadHome(){
   if(typeof loadFollowups==='function') loadFollowups();
   if(typeof loadHomeRouteMap==='function') loadHomeRouteMap();
+  renderHomeSchedule();
+  renderHomeTasks();
   var d=new Date();
   var de=document.getElementById('home-date'); if(de) de.textContent=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
   var g=document.getElementById('home-greeting');
