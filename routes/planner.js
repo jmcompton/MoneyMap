@@ -1322,4 +1322,27 @@ router.post('/items/:id/undone', async (req, res) => {
   }
 });
 
+// GET /api/planner/account-geo — coordinates for the rep's accounts (geocoded by
+// city, cached) so the Accounts tab can sort by distance for "Near me".
+router.get('/account-geo', async (req, res) => {
+  try {
+    const repId = (req.session && req.session.user && req.session.user.id);
+    if (!repId) return res.json({ accounts: [] });
+    const rows = (await pool.query(
+      `SELECT DISTINCT ON (LOWER(company)) id, company, city
+         FROM prospects WHERE user_id=$1 AND city IS NOT NULL AND city <> '' ORDER BY LOWER(company)`,
+      [repId]
+    )).rows;
+    const out = [];
+    for (const r of rows) {
+      const g = await geocodeCity(r.city);
+      if (g && g.lat) out.push({ id: r.id, company: r.company, city: r.city, lat: g.lat, lng: g.lng });
+    }
+    res.json({ accounts: out });
+  } catch (e) {
+    console.error('[account-geo]', e.message);
+    res.json({ accounts: [] });
+  }
+});
+
 module.exports = router;
