@@ -3447,11 +3447,11 @@ window.addEventListener('load', function() {
   </div>
 
   <!-- Planner mobile add sheet -->
-  <div class="modal-overlay" id="modal-pl-add" style="display:none">
-    <div class="modal" style="max-width:440px;padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:88vh">
+  <div class="mo" id="modal-pl-add">
+    <div class="modal" style="width:100%;max-width:440px;padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:88vh;border-radius:16px">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;padding:16px 18px 10px">
         <div><h3 id="pl-add-title" style="margin:0;font-size:17px;font-weight:800;color:var(--navy)">Add to day</h3><div id="pl-add-sub" style="font-size:12px;color:var(--text3);margin-top:2px">Pick the accounts to visit</div></div>
-        <button class="modal-x" onclick="closeModal('pl-add')" style="font-size:22px">&times;</button>
+        <button class="modal-x" onclick="document.getElementById('modal-pl-add').classList.remove('open')" style="font-size:22px">&times;</button>
       </div>
       <input type="hidden" id="pl-add-date" />
       <div style="padding:2px 16px 10px"><input id="pl-add-search" placeholder="Search your accounts..." oninput="plAddRender()" autocomplete="off" style="width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--border);border-radius:11px;font-family:inherit;font-size:15px;background:var(--surface)" /></div>
@@ -16944,10 +16944,11 @@ function plAddConfirm(){
   var ids=Object.keys(_plAdd.picked); if(!ids.length) return;
   var date=_plAdd.date;
   var btn=document.getElementById('pl-add-btn'); if(btn){ btn.disabled=true; btn.textContent='Adding…'; }
+  function done(){ document.getElementById('modal-pl-add').classList.remove('open'); plLoad(); }
   Promise.all(ids.map(function(id){
     return fetch('/api/planner/items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rep_id:plState.repId,planned_date:date,item_type:'stop',account_id:parseInt(id,10)})});
-  })).then(function(){ closeModal('pl-add'); showToast(ids.length+' stop'+(ids.length>1?'s':'')+' added'); plLoad(); })
-    .catch(function(){ closeModal('pl-add'); plLoad(); });
+  })).then(function(){ showToast(ids.length+' stop'+(ids.length>1?'s':'')+' added'); done(); })
+    .catch(function(){ done(); });
 }
 
 // ── Weekly Planner AI assist (propose / review / apply) ───────────
