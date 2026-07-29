@@ -17073,16 +17073,20 @@ function plFindRun(){
       .catch(function(){ _plFind.results=[]; _plFind.stage='results'; plFindRender(); });
   }
   if(_plFind.loc==='day'){
-    // The day anchor can be a raw street address (auto-set from the first stop),
-    // which the lead engine can't search. Prefer a real city from the day's
-    // stops; if none is usable, fall back to the rep's GPS location.
-    var dayStops=(plState.items||[]).filter(function(it){ return it.planned_date===_plAdd.date && it.item_type==='stop' && it.account_city; });
-    var c = dayStops.length ? dayStops[0].account_city : '';
-    if(!c){
-      var anc=(plState.anchors && plState.anchors[_plAdd.date] && plState.anchors[_plAdd.date].city) || '';
-      if(anc && !/^\s*\d/.test(anc)) c=anc; // use anchor only if it looks like a city, not a street address
+    // Find a REAL city for this day. Stop "city" fields can hold junk (a street
+    // address), so validate before using; skip anything address-like, and fall
+    // back to the rep's GPS location if nothing usable is found.
+    function looksLikeCity(s){
+      if(!s) return false; s=String(s).trim();
+      if(/^\s*\d/.test(s)) return false; // starts with a street number
+      if(/\b(rd|road|st|street|ave|avenue|blvd|dr|drive|hwy|highway|ln|lane|suite|ste|service|pkwy|parkway|ct|court)\b/i.test(s)) return false;
+      return true;
     }
-    if(!c){ showToast('No city set for this day — using your location'); _plFind.loc='near'; plFindRun(); return; }
+    var dayStops=(plState.items||[]).filter(function(it){ return it.planned_date===_plAdd.date && it.item_type==='stop'; });
+    var c='';
+    for(var _i=0;_i<dayStops.length;_i++){ if(looksLikeCity(dayStops[_i].account_city)){ c=dayStops[_i].account_city; break; } }
+    if(!c){ var anc=(plState.anchors && plState.anchors[_plAdd.date] && plState.anchors[_plAdd.date].city) || ''; if(looksLikeCity(anc)) c=anc; }
+    if(!c){ showToast('Using your location for this day'); _plFind.loc='near'; plFindRun(); return; }
     run(c);
   } else {
     if(!navigator.geolocation){ showToast('Location not available'); _plFind.stage='setup'; plFindRender(); return; }
