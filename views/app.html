@@ -1644,7 +1644,6 @@ window.addEventListener('load', function() {
     <button class="sb-item" data-roles="rep manager" onclick="go('quotes')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" style="width:14px;height:14px;flex-shrink:0"><path d="M3 2h10a1 1 0 011 1v11a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zM5 7h6M5 9.5h4"/></svg>Quotes</button>
     <button class="sb-item" data-roles="rep manager" onclick="go('manufacturers')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 14V6l4-2v3l4-2v3l4-2v8z"/><path d="M2 14h12"/></svg>Manufacturers</button>
     <button class="sb-item" data-roles="rep manager" onclick="go('territory')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M8 1.5C5.2 1.5 3 3.7 3 6.4c0 3.3 5 8.1 5 8.1s5-4.8 5-8.1C13 3.7 10.8 1.5 8 1.5z"/><circle cx="8" cy="6.3" r="1.7"/></svg>Territory</button>
-    <button class="sb-item" data-roles="rep manager" onclick="go('fortress')"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0"><path d="M2 14V5l3-2 3 2 3-2 3 2v9z"/><path d="M5 14V8M11 14V8M2 11h12"/></svg>Fortress Promo</button>
   </div>
   <div class="sb-section" data-roles="rep manager">
     <div class="sb-sec-label">Activities</div>
@@ -1777,6 +1776,15 @@ window.addEventListener('load', function() {
 
       <!-- Follow-ups you owe (due or overdue) -->
       <div id="home-followups" style="margin-bottom:22px"></div>
+
+      <!-- Today's route map -->
+      <div id="home-route-card" style="display:none;background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:0 1px 3px rgba(15,25,35,.05);padding:14px 15px;margin-bottom:22px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:13px;font-weight:800;color:var(--navy)">Today's route <span id="home-route-count" style="font-weight:600;color:var(--text3)"></span></div>
+          <button onclick="go('today')" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Open Today &rarr;</button>
+        </div>
+        <div id="home-map" style="height:200px;border-radius:11px;border:1px solid var(--border);z-index:0;background:#eef2f6"></div>
+      </div>
 
       <!-- Headline stats -->
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px" id="home-stats">
@@ -2902,20 +2910,6 @@ window.addEventListener('load', function() {
   </div>
 
   <!-- FORTRESS RAILING PROMO PAGE -->
-  <div class="page" id="page-fortress" style="overflow-y:auto;padding-bottom:90px">
-    <div style="max-width:760px;margin:0 auto;padding:14px 14px 40px">
-      <div style="margin-bottom:12px">
-        <div style="font-size:17px;font-weight:800;color:var(--navy);letter-spacing:-.3px">Fortress Railing Promo</div>
-        <div style="font-size:12px;color:var(--text3);margin-top:2px">Pre-routed dealer-visit campaign. Tap a stop's phone to call, then mark it visited with an outcome.</div>
-      </div>
-      <!-- Rep toggle -->
-      <div id="fortress-reptoggle" style="display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px"></div>
-      <!-- Progress -->
-      <div id="fortress-progress" style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px"></div>
-      <!-- Day-grouped stop list -->
-      <div id="fortress-list"><div style="font-size:13px;color:var(--text3);text-align:center;padding:24px">Loading…</div></div>
-    </div>
-  </div>
 
   <!-- QUOTES PAGE -->
   <div class="page" id="page-quotes">
@@ -4384,7 +4378,6 @@ function go(id) {
   if (id === 'territory') territoryInit();
   if (id === 'reconnect') loadReconnect();
   if (id === 'found-money') loadFoundMoney();
-  if (id === 'fortress') loadFortress();
   if (id === 'recap') loadRecap();
   // Refresh route panel whenever user navigates to home/dashboard
   if (id === 'leads') { if (typeof loadLeadManufacturers==='function') loadLeadManufacturers(); }
@@ -4575,8 +4568,41 @@ function loadFollowups(){
       }).join('')+'</div></div>';
   }).catch(function(){ el.innerHTML=''; });
 }
+var _homeMap=null;
+function loadHomeRouteMap(){
+  var card=document.getElementById('home-route-card');
+  fetch('/api/planner/today').then(function(r){return r.ok?r.json():null;}).then(function(d){
+    var stops=((d&&d.stops)||[]).filter(function(s){return s.lat&&s.lng;});
+    if(!card) return;
+    if(!stops.length){ card.style.display='none'; return; }
+    card.style.display='block';
+    var cnt=document.getElementById('home-route-count'); if(cnt) cnt.textContent='\u00B7 '+stops.length+' stop'+(stops.length!==1?'s':'');
+    function boot(){
+      var el=document.getElementById('home-map'); if(!el) return;
+      if(_homeMap){ try{_homeMap.remove();}catch(e){} _homeMap=null; }
+      _homeMap=L.map('home-map',{scrollWheelZoom:false});
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,opacity:.7}).addTo(_homeMap);
+      var latlngs=[];
+      stops.forEach(function(s,i){
+        var done=!!s.done;
+        var icon=L.divIcon({className:'',html:'<div style="width:24px;height:24px;border-radius:50%;background:'+(done?'#0f9d58':'#16283d')+';color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)">'+(i+1)+'</div>',iconSize:[24,24],iconAnchor:[12,12]});
+        L.marker([s.lat,s.lng],{icon:icon}).addTo(_homeMap).bindPopup('<b>'+_tEsc(s.company||'')+'</b><br>'+_tEsc(s.city||''));
+        latlngs.push([s.lat,s.lng]);
+      });
+      if(latlngs.length>1) L.polyline(latlngs,{color:'#2f6df6',weight:3,opacity:.6,dashArray:'6 6'}).addTo(_homeMap);
+      if(latlngs.length) _homeMap.fitBounds(L.latLngBounds(latlngs).pad(0.25));
+      setTimeout(function(){ try{_homeMap.invalidateSize();}catch(e){} },200);
+    }
+    if(window.L) boot();
+    else {
+      if(!document.getElementById('leaflet-css-today')){ var l=document.createElement('link'); l.id='leaflet-css-today'; l.rel='stylesheet'; l.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(l); }
+      var sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'; sc.onload=boot; document.head.appendChild(sc);
+    }
+  }).catch(function(){ if(card) card.style.display='none'; });
+}
 function loadHome(){
   if(typeof loadFollowups==='function') loadFollowups();
+  if(typeof loadHomeRouteMap==='function') loadHomeRouteMap();
   var d=new Date();
   var de=document.getElementById('home-date'); if(de) de.textContent=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
   var g=document.getElementById('home-greeting');
