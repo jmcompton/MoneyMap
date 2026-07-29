@@ -304,8 +304,8 @@ router.put('/route', async (req, res) => {
     let optimized = 0;
     try {
       const stopsRes = await pool.query(
-        `SELECT pi.id, p.city AS city, p.state AS state
-           FROM planner_items pi JOIN prospects p ON pi.account_id = p.id
+        `SELECT pi.id, pi.title, pi.note, p.city AS city, p.state AS state
+           FROM planner_items pi LEFT JOIN prospects p ON pi.account_id = p.id
           WHERE pi.rep_id=$1 AND pi.planned_date=$2 AND pi.item_type='stop'
           ORDER BY pi.sort_order ASC, pi.id ASC`,
         [r.repId, date]
@@ -316,8 +316,11 @@ router.put('/route', async (req, res) => {
         const startCoord = sp ? await geocodeCity(geoPart(sp)) : null;
         const cache = {};
         for (const s of stops) {
-          const key = (s.city || '') + '|' + (s.state || '');
-          if (!(key in cache)) cache[key] = s.city ? await geocodeCity(s.city + (s.state ? (' ' + s.state) : '')) : null;
+          // Account stops geocode by city; found-lead stops (no account) geocode
+          // by their stored address (note), so they're routed too.
+          let loc = s.city ? (s.city + (s.state ? (' ' + s.state) : '')) : (s.note || s.title || '');
+          const key = loc;
+          if (!(key in cache)) cache[key] = loc ? await geocodeCity(loc) : null;
           s.coords = cache[key];
         }
         let cur = startCoord || (stops.find(s => s.coords) || {}).coords || null;
