@@ -1810,17 +1810,17 @@ window.addEventListener('load', function() {
 
       <div id="home-grid" style="display:grid;grid-template-columns:1.35fr 1fr;gap:18px;margin-bottom:22px">
         <!-- LEFT: today's schedule + route map -->
-        <div>
+        <div style="display:flex;flex-direction:column">
           <div class="home-card" style="margin-bottom:18px">
             <div class="home-card-hdr"><span>Today's schedule <span id="home-sched-count" style="font-weight:600;color:var(--text3)"></span></span><a onclick="go('today')" class="home-card-link">Open Today →</a></div>
             <div id="home-schedule"><div class="home-empty">Loading…</div></div>
           </div>
-          <div id="home-route-card" style="display:none;background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:0 1px 3px rgba(15,25,35,.05);padding:14px 15px">
+          <div id="home-route-card" style="display:none;flex:1;flex-direction:column;background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:0 1px 3px rgba(15,25,35,.05);padding:14px 15px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
               <div style="font-size:13px;font-weight:800;color:var(--navy)">Today's route <span id="home-route-count" style="font-weight:600;color:var(--text3)"></span></div>
               <button onclick="go('today')" style="background:none;border:none;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">Open Today &rarr;</button>
             </div>
-            <div id="home-map" style="height:200px;border-radius:11px;border:1px solid var(--border);z-index:0;background:#eef2f6"></div>
+            <div id="home-map" style="flex:1;min-height:300px;border-radius:11px;border:1px solid var(--border);z-index:0;background:#eef2f6"></div>
           </div>
         </div>
         <!-- RIGHT: tasks + needs attention + accounts -->
@@ -4596,7 +4596,7 @@ function loadHomeRouteMap(){
     var stops=((d&&d.stops)||[]).filter(function(s){return s.lat&&s.lng;});
     if(!card) return;
     if(!stops.length){ card.style.display='none'; return; }
-    card.style.display='block';
+    card.style.display='flex';
     var cnt=document.getElementById('home-route-count'); if(cnt) cnt.textContent='\u00B7 '+stops.length+' stop'+(stops.length!==1?'s':'');
     function boot(){
       var el=document.getElementById('home-map'); if(!el) return;
@@ -4611,8 +4611,8 @@ function loadHomeRouteMap(){
         latlngs.push([s.lat,s.lng]);
       });
       if(latlngs.length>1) L.polyline(latlngs,{color:'#2f6df6',weight:3,opacity:.6,dashArray:'6 6'}).addTo(_homeMap);
-      if(latlngs.length) _homeMap.fitBounds(L.latLngBounds(latlngs).pad(0.25));
-      setTimeout(function(){ try{_homeMap.invalidateSize();}catch(e){} },200);
+      if(latlngs.length) _homeMap.fitBounds(L.latLngBounds(latlngs).pad(0.2), {maxZoom:12});
+      setTimeout(function(){ try{ _homeMap.invalidateSize(); if(latlngs.length) _homeMap.fitBounds(L.latLngBounds(latlngs).pad(0.2), {maxZoom:12}); }catch(e){} },200);
     }
     if(window.L) boot();
     else {

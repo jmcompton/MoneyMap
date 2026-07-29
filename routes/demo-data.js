@@ -286,7 +286,7 @@ router.post('/seed', async (req, res) => {
     //    Pull the demo accounts we just made, clear any lingering demo schedule/
     //    tasks (clean re-seed), then plant a few stops, one meeting, and tasks.
     const demoRows = await client.query(
-      `SELECT id, company FROM prospects WHERE source='Demo Data' AND user_id=$1 ORDER BY id ASC`, [uid]);
+      `SELECT id, company, city FROM prospects WHERE source='Demo Data' AND user_id=$1 ORDER BY id ASC`, [uid]);
     const demo = demoRows.rows;
     const demoIds = demo.map(r => r.id);
     if (demoIds.length) {
@@ -295,19 +295,24 @@ router.post('/seed', async (req, res) => {
     }
     const dayISO = (off) => iso(new Date(Date.now() + off * 86400000));
     const todayISO = dayISO(0);
-    // Today's stops (first 3 accounts) + one confirmed meeting.
+    // Today's stops must sit in ONE metro so the route + home map stay tight and
+    // realistic (not Birmingham→Mobile). Prefer the Birmingham cluster.
+    const METRO = ['birmingham','hoover','vestavia hills','vestavia','bessemer','trussville','homewood','pelham','alabaster','tuscaloosa'];
+    let dayAccts = demo.filter(r => METRO.indexOf(String(r.city || '').toLowerCase()) >= 0);
+    if (dayAccts.length < 2) dayAccts = demo.slice(0, 3);
+    dayAccts = dayAccts.slice(0, 3);
     let so = 1;
-    for (let i = 0; i < Math.min(3, demo.length); i++) {
+    for (let i = 0; i < dayAccts.length; i++) {
       await client.query(
         `INSERT INTO planner_items (rep_id, planned_date, item_type, account_id, sort_order, source)
          VALUES ($1,$2,'stop',$3,$4,'manual')`,
-        [uid, todayISO, demo[i].id, so++]);
+        [uid, todayISO, dayAccts[i].id, so++]);
     }
-    if (demo.length > 1) {
+    if (dayAccts.length > 1) {
       await client.query(
         `INSERT INTO planner_items (rep_id, planned_date, item_type, account_id, title, appt_time, note, sort_order, source)
          VALUES ($1,$2,'appointment',$3,$4,$5,$6,$7,'manual')`,
-        [uid, todayISO, demo[1].id, 'Quarterly review — ' + demo[1].company, '10:30 AM', 'Confirmed with buyer', so++]);
+        [uid, todayISO, dayAccts[1].id, 'Quarterly review — ' + dayAccts[1].company, '10:30 AM', 'Confirmed with buyer', so++]);
     }
     // Tasks: one overdue, two due today (tied to demo accounts).
     const demoTasks = [
