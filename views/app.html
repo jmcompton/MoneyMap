@@ -1476,6 +1476,29 @@ body{font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-seri
 #page-home .home-tile-i{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700}
 @media(max-width:760px){#page-home #home-stats{grid-template-columns:1fr 1fr}#page-home #home-cols{grid-template-columns:1fr}}
 
+/* ── NEW SCREENS on mobile: Planner (swipe days), Territory, route maps ── */
+@media(max-width:768px){
+  /* Weekly Planner: stack the Add-Accounts panel below, and swipe through the
+     five days instead of cramming them into five tiny columns. */
+  #pl-layout{ flex-direction:column !important; }
+  #pl-grid{
+    grid-template-columns:none !important;
+    grid-auto-flow:column !important;
+    grid-auto-columns:82% !important;
+    overflow-x:auto !important;
+    -webkit-overflow-scrolling:touch;
+    scroll-snap-type:x mandatory;
+    padding-bottom:8px; width:100%;
+  }
+  #pl-grid > div{ scroll-snap-align:start; }
+  /* Territory county map — shorter so the whole page fits a phone screen */
+  #terr-map{ height:400px !important; }
+  /* Today + Home route maps — comfortable phone heights */
+  #today-map{ height:190px !important; }
+  #home-map{ height:180px !important; }
+  #home-route-card{ padding:12px !important; }
+}
+
 .mfr-prod{display:inline-flex;align-items:center;cursor:pointer;background:#fff;border:1.5px solid var(--border);border-radius:99px;padding:6px 13px;font-size:12px;font-weight:600;color:var(--text2);user-select:none}
 .mfr-prod:has(input:checked){background:var(--navy);border-color:var(--navy);color:#fff}
 .mfr-prod input{position:absolute;opacity:0;width:0;height:0;margin:0}
@@ -5761,6 +5784,7 @@ function initTodayMap(stops){
     });
     if(latlngs.length>1) L.polyline(latlngs,{color:'#2f6df6',weight:3,opacity:.6,dashArray:'6 6'}).addTo(_todayMap);
     if(latlngs.length) _todayMap.fitBounds(L.latLngBounds(latlngs).pad(0.25));
+    setTimeout(function(){ try{_todayMap.invalidateSize();}catch(e){} },250);
   }
   if(window.L) boot();
   else {
@@ -16999,6 +17023,7 @@ function _terrDraw(){
     }
   }).addTo(_terrMap);
   try{ _terrMap.fitBounds(_terrLayer.getBounds(),{padding:[10,10]}); }catch(e){}
+  setTimeout(function(){ try{_terrMap.invalidateSize();}catch(e){} },250);
   _terrCount();
 }
 function _terrToggle(id,layer){
