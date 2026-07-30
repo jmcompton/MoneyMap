@@ -4594,55 +4594,34 @@ function loadFollowups(){
 var _homeMap=null;
 function loadHomeRouteMap(){
   var card=document.getElementById('home-route-card');
-  if(!card) return;
-  card.style.setProperty('display','flex','important');
   fetch('/api/planner/today').then(function(r){return r.ok?r.json():null;}).then(function(d){
     var stops=((d&&d.stops)||[]).filter(function(s){return s.lat&&s.lng;});
-    var cnt=document.getElementById('home-route-count');
-    if(cnt) cnt.textContent = stops.length ? ('\u00B7 '+stops.length+' stop'+(stops.length!==1?'s':'')) : '\u00B7 your territory';
-    _homeBootMap(stops);
-  }).catch(function(){ _homeBootMap([]); });
-}
-function _homeBootMap(stops){
-  function boot(){
-    var el=document.getElementById('home-map'); if(!el) return;
-    el.style.minHeight='220px';
-    if(_homeMap){ try{_homeMap.remove();}catch(e){} _homeMap=null; }
-    _homeMap=L.map('home-map',{scrollWheelZoom:false});
-    _homeMap.setView([33.5186,-86.8104],9);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,opacity:.7}).addTo(_homeMap);
-    var latlngs=[];
-    stops.forEach(function(s,i){
-      var done=!!s.done;
-      var icon=L.divIcon({className:'',html:'<div style="width:24px;height:24px;border-radius:50%;background:'+(done?'#0f9d58':'#16283d')+';color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)">'+(i+1)+'</div>',iconSize:[24,24],iconAnchor:[12,12]});
-      L.marker([s.lat,s.lng],{icon:icon}).addTo(_homeMap).bindPopup('<b>'+_tEsc(s.company||'')+'</b><br>'+_tEsc(s.city||''));
-      latlngs.push([s.lat,s.lng]);
-    });
-    if(latlngs.length>1) L.polyline(latlngs,{color:'#2f6df6',weight:3,opacity:.6,dashArray:'6 6'}).addTo(_homeMap);
-    if(latlngs.length) _homeMap.fitBounds(L.latLngBounds(latlngs).pad(0.2),{maxZoom:12});
-    setTimeout(function(){ try{ _homeMap.invalidateSize(); if(latlngs.length) _homeMap.fitBounds(L.latLngBounds(latlngs).pad(0.2),{maxZoom:12}); }catch(e){} },200);
-    if(!latlngs.length) _homeMapAccounts();
-  }
-  if(window.L) boot();
-  else {
-    if(!document.getElementById('leaflet-css-today')){ var l=document.createElement('link'); l.id='leaflet-css-today'; l.rel='stylesheet'; l.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(l); }
-    var sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'; sc.onload=boot; document.head.appendChild(sc);
-  }
-}
-function _homeMapAccounts(){
-  fetch('/api/prospects').then(function(r){return r.ok?r.json():[];}).then(function(list){
-    list = Array.isArray(list) ? list : ((list&&(list.prospects||list.accounts))||[]);
-    var pts=[];
-    list.forEach(function(a){
-      var la=parseFloat(a.lat), ln=parseFloat(a.lng);
-      if(!isFinite(la)||!isFinite(ln)) return;
-      var icon=L.divIcon({className:'',html:'<div style="width:11px;height:11px;border-radius:50%;background:#2f6df6;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35)"></div>',iconSize:[11,11],iconAnchor:[5,5]});
-      L.marker([la,ln],{icon:icon}).addTo(_homeMap).bindPopup('<b>'+_tEsc(a.company||a.name||'')+'</b><br>'+_tEsc(a.city||''));
-      pts.push([la,ln]);
-    });
-    if(pts.length) _homeMap.fitBounds(L.latLngBounds(pts).pad(0.2),{maxZoom:11});
-    setTimeout(function(){ try{_homeMap.invalidateSize();}catch(e){} },200);
-  }).catch(function(){});
+    if(!card) return;
+    if(!stops.length){ card.style.display='none'; return; }
+    card.style.display='flex';
+    var cnt=document.getElementById('home-route-count'); if(cnt) cnt.textContent='\u00B7 '+stops.length+' stop'+(stops.length!==1?'s':'');
+    function boot(){
+      var el=document.getElementById('home-map'); if(!el) return;
+      if(_homeMap){ try{_homeMap.remove();}catch(e){} _homeMap=null; }
+      _homeMap=L.map('home-map',{scrollWheelZoom:false});
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,opacity:.7}).addTo(_homeMap);
+      var latlngs=[];
+      stops.forEach(function(s,i){
+        var done=!!s.done;
+        var icon=L.divIcon({className:'',html:'<div style="width:24px;height:24px;border-radius:50%;background:'+(done?'#0f9d58':'#16283d')+';color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)">'+(i+1)+'</div>',iconSize:[24,24],iconAnchor:[12,12]});
+        L.marker([s.lat,s.lng],{icon:icon}).addTo(_homeMap).bindPopup('<b>'+_tEsc(s.company||'')+'</b><br>'+_tEsc(s.city||''));
+        latlngs.push([s.lat,s.lng]);
+      });
+      if(latlngs.length>1) L.polyline(latlngs,{color:'#2f6df6',weight:3,opacity:.6,dashArray:'6 6'}).addTo(_homeMap);
+      if(latlngs.length) _homeMap.fitBounds(L.latLngBounds(latlngs).pad(0.2), {maxZoom:12});
+      setTimeout(function(){ try{ _homeMap.invalidateSize(); if(latlngs.length) _homeMap.fitBounds(L.latLngBounds(latlngs).pad(0.2), {maxZoom:12}); }catch(e){} },200);
+    }
+    if(window.L) boot();
+    else {
+      if(!document.getElementById('leaflet-css-today')){ var l=document.createElement('link'); l.id='leaflet-css-today'; l.rel='stylesheet'; l.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'; document.head.appendChild(l); }
+      var sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'; sc.onload=boot; document.head.appendChild(sc);
+    }
+  }).catch(function(){ if(card) card.style.display='none'; });
 }
 function _homeSchedRow(time, kind, name, sub){
   var dot = kind==='appt' ? '#6d28d9' : (kind==='lead' ? '#2f6df6' : '#16283d');
